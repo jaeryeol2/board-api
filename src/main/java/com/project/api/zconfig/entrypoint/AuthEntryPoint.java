@@ -1,0 +1,27 @@
+package com.project.api.zconfig.entrypoint;
+
+import java.io.IOException;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@Component
+public class AuthEntryPoint implements AuthenticationEntryPoint {
+  @Override
+  public void commence(HttpServletRequest request, HttpServletResponse response,
+      AuthenticationException authException) throws IOException, ServletException {
+    setResponse(response);
+
+  }
+
+  private void setResponse(HttpServletResponse response) throws IOException {
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "잘못된 접근입니다.");
+  }
+
+}

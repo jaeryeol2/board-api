@@ -1,0 +1,33 @@
+server:
+  port: 8010
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: board-api
+  config:
+    additional-location: classpath:/config/
+  profiles:
+    active: local
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: com.project.api.zconfig.orm.JpaNamingStrategy
+    properties:
+      hibernate:
+        "[format_sql]": true
+
+jasypt:
+  encryptor:
+    password: ${JASYPT_PASSWORD}
+
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}
