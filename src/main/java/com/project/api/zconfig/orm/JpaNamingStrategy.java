@@ -12,10 +12,14 @@ public class JpaNamingStrategy implements PhysicalNamingStrategy {
     }
     StringBuilder builder = new StringBuilder(name.getText().replace('.', '_'));
     for (int i = 1; i < builder.length() - 1; i++) {
+      int count = i;
+
       if (isUnderscoreRequired(builder.charAt(i - 1), builder.charAt(i), builder.charAt(i + 1))) {
-        builder.insert(i++, '_');
+        count += 1;
+        builder.insert(count, '_');
       }
     }
+
     return getIdentifier(builder.toString(), name.isQuoted(), jdbcEnvironment);
   }
 
