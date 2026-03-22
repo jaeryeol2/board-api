@@ -19,24 +19,21 @@ datasource:
       maximum-pool-size: 5
       minimum-idle: 3
       transaction-pointcut: execution(* com.project.api.*.*..*Service.*(..))
-    
+
 spring:
-  config:
-    activate:
-      on-profile: prod
   servlet:
     multipart:
       maxFileSize: 10MB
       maxRequestSize: 10MB
-  data:
-    redis:
-      url: 
-      password: 
-      host: localhost
-      port: 6379
-      lettuce:
-        pool:
-          max-active: 5
+  # data:
+  #   redis:
+  #     url: 
+  #     password: 
+  #     host: localhost
+  #     port: 6379
+  #     lettuce:
+  #       pool:
+  #         max-active: 5
 # logging:
 #   config: classpath:logback/logback-local.xml
 #   level:

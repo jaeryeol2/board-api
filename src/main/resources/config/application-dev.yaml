@@ -21,9 +21,6 @@ datasource:
       transaction-pointcut: execution(* com.project.api.*.*..*Service.*(..))
 
 spring:
-  config:
-    activate:
-      on-profile: local
   servlet:
     multipart:
       maxFileSize: 10MB
