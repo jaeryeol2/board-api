@@ -33,6 +33,13 @@ public class IndexController {
     return userService.authCheck(request, response);
   }
 
+  @PostMapping("/auth/access")
+  public CompletableFuture<ResponseApi<Boolean>> getToken(HttpServletRequest request,
+      HttpServletResponse response) {
+    return userService.getAccessToken(request, response);
+  }
+
+
   @PostMapping("/login")
   public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody Login login,
       HttpServletRequest request, HttpServletResponse response) {

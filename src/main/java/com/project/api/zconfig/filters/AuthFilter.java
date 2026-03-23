@@ -2,6 +2,7 @@ package com.project.api.zconfig.filters;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.GrantedAuthority;
@@ -44,8 +45,8 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     if (isLogin) {
-      final String token =
-          request.getHeader(HttpHeaders.AUTHORIZATION).replaceAll("^(?i)Bearer\\s+", "");
+      final String token = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))
+          .orElseGet(() -> "").replaceAll("^(?i)Bearer\\s+", "");
       GrantedAuthority authority = new SimpleGrantedAuthority("USER");
       List<GrantedAuthority> authorities = List.of(authority);
       DefaultAuthority authentication = new DefaultAuthority("user", token, authorities);

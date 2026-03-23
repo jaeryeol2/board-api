@@ -4,6 +4,7 @@ import static com.project.api.constants.GlobalConstant.ACCESS_TOKEN;
 import static com.project.api.constants.GlobalConstant.REFRESH_TOKEN;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -26,23 +27,38 @@ public class UserService {
   @Async("appAsync")
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
       HttpServletResponse response) {
-    return ResponseApi.completedOk(true);
+    final Optional<String> accessToken =
+        Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION));
+    return ResponseApi.completedOk(accessToken.isPresent());
   }
 
   @Async("appAsync")
   public CompletableFuture<ResponseApi<Boolean>> login(Login login, HttpServletRequest request,
       HttpServletResponse response) {
-    final String authToken = tokenUtil.createToken(login.getLoginId(), 1L);
+    final String accessToken = tokenUtil.createToken(login.getLoginId(), 1L);
     final String refreshToken = tokenUtil.createToken(login.getLoginId(), 8760L);
     final LocalDateTime now = LocalDateTime.now();
-    final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), authToken)
+    final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
         .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
     final ResponseCookie refreshCookie =
         ResponseCookie.from(REFRESH_TOKEN.getValue(), refreshToken).path("/").httpOnly(true)
             .secure(true).sameSite("Lax").maxAge(Duration.between(now, now.plusYears(1L))).build();
 
+    response.addHeader("X-Login-Id", login.getLoginId());
     response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+    return ResponseApi.completedOk(true);
+  }
+
+  @Async("appAsync")
+  public CompletableFuture<ResponseApi<Boolean>> getAccessToken(HttpServletRequest request,
+      HttpServletResponse response) {
+    final String loginId = request.getHeader("X-Login-Id");
+    final String accessToken = tokenUtil.createToken(loginId, 1L);
+    final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
+        .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
+    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
     return ResponseApi.completedOk(true);
   }
