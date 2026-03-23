@@ -21,7 +21,7 @@ public class AsyncConfig {
   @Bean(name = "appAsync")
   public TaskExecutor appAsync() {
     // 1. 가상 스레드 기반 Executor 생성
-    TaskExecutorAdapter executor =
+    final TaskExecutorAdapter executor =
         new TaskExecutorAdapter(new VirtualThreadTaskExecutor(VIRTUAL_THREAD_NAME));
 
     // 2. TaskDecorator 설정 (MDC 복사)

@@ -6,7 +6,6 @@ import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
 
 @Configuration
@@ -17,9 +16,8 @@ public class JasyptConfig {
 
   @Bean
   public StringEncryptor encryptor() {
-    System.out.println("::::::::::::::::::::::: " + jasyptKey);
-    PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
-    SimpleStringPBEConfig config = new SimpleStringPBEConfig();
+    final PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
+    final SimpleStringPBEConfig config = new SimpleStringPBEConfig();
 
     // 암호화키
     config.setPassword(jasyptKey);

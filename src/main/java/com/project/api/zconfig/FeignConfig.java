@@ -21,7 +21,7 @@ public class FeignConfig {
   @Bean
   public RequestInterceptor requestInterceptor() {
     return requestTemplate -> {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
       if (authentication != null && authentication.getCredentials() != null) {
         // 2. 인증 객체에서 토큰 추출 (Security 설정에 따라 getCredentials() 또는 getDetails() 등에 토큰이 있을 수 있습니다)
