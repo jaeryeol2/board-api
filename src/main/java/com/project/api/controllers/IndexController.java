@@ -47,8 +47,8 @@ public class IndexController {
   }
 
   @PostMapping("/logout")
-  public ResponseApi<Boolean> postMethodName(@RequestBody String entity) {
-    return ResponseApi.ok(true);
+  public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletResponse response) {
+    return userService.logout(response);
   }
 
 }

@@ -9,7 +9,8 @@ import lombok.Getter;
 
 @Getter
 public enum GlobalConstant {
-  ACCESS_TOKEN("access_token"), REFRESH_TOKEN("auth_token");
+  ACCESS_TOKEN("access_token"), //
+  REFRESH_TOKEN("auth_token");
 
   private String value;
 
