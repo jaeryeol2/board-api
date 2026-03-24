@@ -6,6 +6,9 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -29,6 +32,15 @@ public class TokenUtil {
         .expiration(Date.from(OffsetDateTime.now().plusHours(hour).toInstant()))
         .signWith(secretKey, Jwts.SIG.HS256) // HS256 알고리즘으로 서명
         .compact();
+  }
+
+  public Claims getTokenInfo(final String refreshToken) {
+    try {
+      Jws<Claims> jws = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(refreshToken);
+      return jws.getPayload();
+    } catch (ExpiredJwtException e) {
+      return e.getClaims();
+    }
   }
 
 }

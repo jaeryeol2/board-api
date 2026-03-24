@@ -8,7 +8,7 @@ datasource:
       connection-test-query: SELECT 1
       maximum-pool-size: 5
       minimum-idle: 3
-      transaction-pointcut: execution(* com.project.api.*.*..*Service.*(..))
+      transaction-pointcut: execution(* com.project.api.services.*..*Service.*(..))
   write:
     hikari:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
@@ -18,8 +18,8 @@ datasource:
       connection-test-query: SELECT 1
       maximum-pool-size: 5
       minimum-idle: 3
-      transaction-pointcut: execution(* com.project.api.*.*..*Service.*(..))
-    
+      transaction-pointcut: execution(* com.project.api.services.*..*Service.*(..))
+
 spring:
   servlet:
     multipart:
@@ -27,8 +27,8 @@ spring:
       maxRequestSize: 10MB
   data:
     redis:
-      url: 
-      password: 
+      url:
+      password:
       host: localhost
       port: 6379
       lettuce:
