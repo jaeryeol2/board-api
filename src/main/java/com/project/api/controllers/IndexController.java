@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
-import com.project.api.dtos.User;
+import com.project.api.dtos.Login;
 import com.project.api.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,9 +41,9 @@ public class IndexController {
 
 
   @PostMapping("/login")
-  public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody User user,
+  public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody Login login,
       HttpServletRequest request, HttpServletResponse response) {
-    return userService.login(user, request, response);
+    return userService.login(login, request, response);
   }
 
   @PostMapping("/logout")

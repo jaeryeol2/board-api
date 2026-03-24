@@ -29,4 +29,12 @@ public class AppUser {
     this.password = password;
   }
 
+  @QueryProjection
+  public AppUser(String userId, String userName, String userAddr, String email) {
+    this.userId = userId;
+    this.userName = userName;
+    this.userAddr = userAddr;
+    this.email = email;
+  }
+
 }

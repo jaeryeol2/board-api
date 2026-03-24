@@ -1,6 +1,7 @@
 package com.project.api.zconfig;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -22,7 +23,8 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
+  @Value("${spring.profiles.active}")
+  private String active;
   private final AuthFilter authFilter;
 
   @Bean
@@ -42,6 +44,13 @@ public class SecurityConfig {
         .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers(ignorePathArray).permitAll();
+          if (!"prod".equalsIgnoreCase(active)) {
+            auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")
+                .permitAll();
+          } else {
+            auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")
+                .denyAll();
+          }
 
           auth.anyRequest().authenticated();
         });

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.common.utils.TokenUtil;
+import com.project.api.dtos.Login;
 import com.project.api.dtos.User;
 import com.project.api.repositories.read.ReadUserRepository;
 import jakarta.servlet.http.Cookie;
@@ -57,18 +58,18 @@ public class UserService {
   }
 
   @Async("appAsync")
-  public CompletableFuture<ResponseApi<Boolean>> login(final User user, HttpServletRequest request,
-      HttpServletResponse response) {
+  public CompletableFuture<ResponseApi<Boolean>> login(final Login login,
+      HttpServletRequest request, HttpServletResponse response) {
     return ResponseApi.asyncOk(() -> {
       final Optional<User> checker =
-          Optional.ofNullable(readUserRepository.findLoginInfoById(user.getUserId()));
+          Optional.ofNullable(readUserRepository.findLoginInfoById(login.getUserId()));
       if (!checker.isPresent()) {
         throw new BusinessException("존재하지 않는 사용자입니다.");
       }
 
-      if (passwordEncoder.matches(user.getPassword(), checker.get().getPassword())) {
-        final String accessToken = tokenUtil.createToken(user.getUserId(), 1L);
-        final String refreshToken = tokenUtil.createToken(user.getUserId(), 8760L);
+      if (passwordEncoder.matches(login.getPassword(), checker.get().getPassword())) {
+        final String accessToken = tokenUtil.createToken(login.getUserId(), 1L);
+        final String refreshToken = tokenUtil.createToken(login.getUserId(), 8760L);
         final LocalDateTime now = LocalDateTime.now();
         final ResponseCookie accessCookie =
             ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken).path("/").httpOnly(true)

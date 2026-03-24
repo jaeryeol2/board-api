@@ -1,5 +1,6 @@
 package com.project.api.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -9,6 +10,7 @@ import lombok.ToString;
 @NoArgsConstructor
 public class User {
   private String userId;
+  @JsonIgnore
   private String password;
   private String userName;
   private String userAddr;
