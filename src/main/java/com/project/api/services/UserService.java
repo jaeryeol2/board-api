@@ -31,13 +31,27 @@ public class UserService {
   private final PasswordEncoder passwordEncoder;
   private final ReadUserRepository readUserRepository;
 
+  private String getAccessToken(HttpServletRequest request) {
+    Optional<String> optional = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION));
+
+    if (optional.isPresent()) {
+      return optional.get().replaceAll("^(?i)Bearer\\s+", "");
+    }
+
+    return null;
+  }
+
+  private String getRefreshToken(HttpServletRequest request) {
+    return Arrays.asList(request.getCookies()).stream()
+        .filter(
+            cookie -> cookie != null && REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))
+        .findFirst().orElseGet(() -> new Cookie(REFRESH_TOKEN.getValue(), null)).getValue();
+  }
+
   @Async("appAsync")
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
       HttpServletResponse response) {
-    final Optional<Cookie> refreshToken = Arrays.asList(request.getCookies()).stream()
-        .filter(
-            cookie -> cookie != null && REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))
-        .findFirst();
+    final Optional<String> refreshToken = Optional.ofNullable(getRefreshToken(request));
 
     return ResponseApi.completedOk(refreshToken.isPresent());
   }
@@ -47,7 +61,7 @@ public class UserService {
       HttpServletResponse response) {
     return ResponseApi.asyncOk(() -> {
       final Optional<User> checker =
-          Optional.ofNullable(readUserRepository.findUserById(user.getUserId()));
+          Optional.ofNullable(readUserRepository.findLoginInfoById(user.getUserId()));
       if (!checker.isPresent()) {
         throw new BusinessException("존재하지 않는 사용자입니다.");
       }
@@ -99,6 +113,12 @@ public class UserService {
     response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
     return ResponseApi.completedOk(true);
+  }
+
+  @Async("appAsync")
+  public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
+    final String userId = tokenUtil.getTokenInfo(getAccessToken(request)).getSubject();
+    return ResponseApi.asyncOk(() -> readUserRepository.findUserById(userId));
   }
 
 }
