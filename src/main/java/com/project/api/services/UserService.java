@@ -12,6 +12,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.common.utils.TokenUtil;
 import com.project.api.dtos.User;
@@ -45,9 +46,13 @@ public class UserService {
   public CompletableFuture<ResponseApi<Boolean>> login(final User user, HttpServletRequest request,
       HttpServletResponse response) {
     return ResponseApi.asyncOk(() -> {
-      final User checker = readUserRepository.findUserById(user.getUserId());
+      final Optional<User> checker =
+          Optional.ofNullable(readUserRepository.findUserById(user.getUserId()));
+      if (!checker.isPresent()) {
+        throw new BusinessException("존재하지 않는 사용자입니다.");
+      }
 
-      if (passwordEncoder.matches(user.getPassword(), checker.getPassword())) {
+      if (passwordEncoder.matches(user.getPassword(), checker.get().getPassword())) {
         final String accessToken = tokenUtil.createToken(user.getUserId(), 1L);
         final String refreshToken = tokenUtil.createToken(user.getUserId(), 8760L);
         final LocalDateTime now = LocalDateTime.now();
@@ -64,7 +69,7 @@ public class UserService {
         return true;
       }
 
-      return false;
+      throw new BusinessException("비밀번호가 일치하지 않습니다.");
     });
   }
 

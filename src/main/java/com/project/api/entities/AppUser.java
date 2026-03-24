@@ -1,5 +1,6 @@
 package com.project.api.entities;
 
+import java.time.LocalDateTime;
 import com.querydsl.core.annotations.QueryProjection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -16,6 +17,11 @@ public class AppUser {
   private String userName;
   private String userAddr;
   private String userRole;
+  private String email;
+  private boolean isActive;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
+  private LocalDateTime lastLoginAt;
 
   @QueryProjection
   public AppUser(String userId, String password) {

@@ -1,6 +1,7 @@
 package com.project.api.zconfig.orm;
 
 import java.util.Locale;
+import java.util.Optional;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -10,13 +11,15 @@ public class JpaNamingStrategy implements PhysicalNamingStrategy {
     if (name == null) {
       return null;
     }
-    StringBuilder builder = new StringBuilder(name.getText().replace('.', '_'));
-    for (int i = 1; i < builder.length() - 1; i++) {
-      int count = i;
+    final StringBuilder builder = new StringBuilder(name.getText().replace('.', '_'));
+    int i = 1;
 
+    while (i < builder.length() - 1) {
       if (isUnderscoreRequired(builder.charAt(i - 1), builder.charAt(i), builder.charAt(i + 1))) {
-        count += 1;
-        builder.insert(count, '_');
+        builder.insert(i, '_');
+        i += 2; // 삽입된 언더스코어와 현재 문자를 건너뜀
+      } else {
+        i++;
       }
     }
 
@@ -32,7 +35,7 @@ public class JpaNamingStrategy implements PhysicalNamingStrategy {
   }
 
   protected boolean isCaseInsensitive(JdbcEnvironment jdbcEnvironment) {
-    return true;
+    return Optional.ofNullable(jdbcEnvironment).isPresent();
   }
 
   private boolean isUnderscoreRequired(final char before, final char current, final char after) {
