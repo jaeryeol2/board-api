@@ -9,7 +9,16 @@ import lombok.Getter;
 
 @Getter
 public enum BoardType {
-  BOARD_GAME("0001");
+  /** 자유게시판 */
+  BOARD_FREE("0001"),
+  /** 스포츠게시판 */
+  BOARD_SPORT("0002"),
+  /** 연예게시판 */
+  BOARD_ENTERTAIN("0003"),
+  /** 음식게시판 */
+  BOARD_FOOD("0004"),
+  /** 익명게시판 */
+  BOARD_ANONY("9999");
 
   private String code;
 
