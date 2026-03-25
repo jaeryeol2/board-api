@@ -1,5 +1,6 @@
 package com.project.api.controllers;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.dtos.Login;
+import com.project.api.dtos.Menu;
+import com.project.api.services.CommonService;
 import com.project.api.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 public class IndexController {
-
+  private final CommonService commonService;
   private final UserService userService;
 
   @GetMapping("/status")
@@ -50,5 +53,11 @@ public class IndexController {
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletResponse response) {
     return userService.logout(response);
   }
+
+  @GetMapping("/menus")
+  public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {
+    return commonService.getMenuList();
+  }
+
 
 }

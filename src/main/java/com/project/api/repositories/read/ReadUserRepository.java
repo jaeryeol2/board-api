@@ -17,7 +17,8 @@ public class ReadUserRepository {
   public User findLoginInfoById(final String userId) {
     final AppUser user = factory.select(QAppUser.create(entity.userId, entity.password))//
         .from(entity)//
-        .where(entity.userId.eq(userId))//
+        .where(entity.userId.eq(userId)//
+            .and(entity.isActive.eq(true)))//
         .fetchOne();
 
     return ObjectUtils.isEmpty(user) ? null : new User(user.getUserId(), user.getPassword());
@@ -27,7 +28,8 @@ public class ReadUserRepository {
     final AppUser user = factory
         .select(QAppUser.create(entity.userId, entity.userName, entity.userAddr, entity.email))//
         .from(entity)//
-        .where(entity.userId.eq(userId))//
+        .where(entity.userId.eq(userId)//
+            .and(entity.isActive.eq(true)))//
         .fetchOne();
 
     return ObjectUtils.isEmpty(user) ? null

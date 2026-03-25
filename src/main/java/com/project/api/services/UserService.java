@@ -53,7 +53,6 @@ public class UserService {
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
       HttpServletResponse response) {
     final Optional<String> refreshToken = Optional.ofNullable(getRefreshToken(request));
-
     return ResponseApi.completedOk(refreshToken.isPresent());
   }
 
