@@ -26,7 +26,6 @@ public class AppBoard {
   private String writerId;
   private String writerName;
   private Integer viewCount = 0;
-  private boolean isNotice = false;
   private boolean isDeleted = false;
 
   // --- 계층형 답글 관련 필드 추가 ---

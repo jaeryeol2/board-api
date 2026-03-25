@@ -1,17 +1,65 @@
 package com.project.api.dtos;
 
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
+import java.util.List;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 @Getter
 @ToString
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class Board {
-  private long id;
-  private String title;
-  private String writerId;
-  private String writerName;
-  private LocalDateTime createdAt;
+  private final long id;
+  private final String title;
+  private final String writerId;
+  private final String writerName;
+  private final LocalDateTime createdAt;
+
+  @Getter
+  @ToString
+  @RequiredArgsConstructor
+  public static class BoardDetail {
+    private final long id;
+    private final String title;
+    private final String writerId;
+    private final String writerName;
+    private final String content;
+    private final int viewCount;
+    private final long likeCount;
+    private final boolean isDeleted;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
+    private final List<BoardComment> commentList;
+    private final List<BoardFile> fileList;
+
+  }
+
+  @Getter
+  @ToString
+  @RequiredArgsConstructor
+  public static class BoardComment {
+    private final long id;
+    private final long parentId;
+    private final String content;
+    private final String writerId;
+    private final String writerName;
+    private final boolean isDeleted;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
+  }
+
+  @Getter
+  @ToString
+  @RequiredArgsConstructor
+  public static class BoardFile {
+    private final long id;
+    private final String originalFileName;
+    private final String fileUrl;
+    private final String fileType;
+    private final long fileSize;
+    private final LocalDateTime createdAt;
+  }
+
+
 }
