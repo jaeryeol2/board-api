@@ -4,13 +4,18 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.constants.BoardType;
 import com.project.api.dtos.Board;
 import com.project.api.dtos.Board.BoardDetail;
+import com.project.api.dtos.Board.BoardFile;
 import com.project.api.dtos.BoardFilter;
+import com.project.api.dtos.BoardWrite;
 import com.project.api.repositories.read.ReadBoardRepository;
+import com.project.api.repositories.write.WriteBoardRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class BoardService {
   private final ReadBoardRepository readBoardRepository;
+  private final WriteBoardRepository writeBoardRepository;
 
   @Async("appAsync")
   public CompletableFuture<ResponseApi<List<Board>>> getBoardList(final BoardType type,
@@ -36,5 +42,39 @@ public class BoardService {
           log.error("getBoardDetail error : ", e);
           throw new BusinessException("존재하지 않는 게시물입니다.");
         });
+  }
+
+  @Transactional
+  public ResponseApi<Boolean> writeBoard(final BoardType boardType, final BoardWrite write) {
+    try {
+      write.setBoardTypeCode(boardType.getCode());
+      final long count = writeBoardRepository.writeBoard(write);
+
+      if (count > 0) {
+        List<MultipartFile> fileList = write.getFileList();
+
+        for (MultipartFile file : fileList) {
+          final String originName = file.getOriginalFilename();
+          final String fileUrl = "";
+          final String fileType = "";
+          final long fileSize = file.getSize();
+          // TODO: s3 service 적용하기...
+          final BoardFile boardFile =
+              new BoardFile(0, originName, fileUrl, fileType, fileSize, null);
+          final long fileInserCount = writeBoardRepository.insertBoardFile(boardFile);
+
+          if (fileInserCount <= 0) {
+            log.warn("file insert fail... file info : {}", boardFile);
+          }
+        }
+
+      }
+    } catch (Exception e) {
+      log.error("writeBoard error : ", e);
+      throw new BusinessException("게시글 저장에 실패했습니다.");
+    }
+
+    return ResponseApi.ok(true);
+
   }
 }
