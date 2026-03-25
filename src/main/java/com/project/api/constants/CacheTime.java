@@ -18,15 +18,19 @@ public enum CacheTime {
   private final String cacheName;
   private final Duration ttl;
 
-  CacheTime(String name, Duration time) {
+  private CacheTime(String name, Duration time) {
     cacheName = name;
     ttl = time;
   }
 
   private static final Map<String, CacheTime> cacheMap = Collections.unmodifiableMap(
-      Stream.of(values()).collect(Collectors.toMap(CacheTime::getCacheName, Function.identity())));
+      Stream.of(values()).collect(Collectors.toMap(CacheTime::name, Function.identity())));
 
-  public static CacheTime find(String cacheName) {
-    return cacheMap.get(cacheName);
+  public static CacheTime find(String name) {
+    if (name == null) {
+      return null;
+    }
+
+    return cacheMap.get(name.toUpperCase());
   }
 }

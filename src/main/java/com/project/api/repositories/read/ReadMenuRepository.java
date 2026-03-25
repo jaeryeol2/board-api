@@ -15,8 +15,7 @@ public class ReadMenuRepository {
   private static final QAppMenu entity = QAppMenu.appMenu;
 
   public List<Menu> selectMenuList() {
-    List<AppMenu> list = factory.selectFrom(entity).where(entity.isActive.eq(true)).fetch();
-
+    final List<AppMenu> list = factory.selectFrom(entity).where(entity.isActive.eq(true)).fetch();
     return list.stream().map(item -> new Menu(item.getMenuName(), item.getHref(), item.isActive()))
         .toList();
   }

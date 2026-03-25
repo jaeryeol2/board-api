@@ -22,6 +22,10 @@ public enum GlobalConstant {
       Stream.of(values()).collect(Collectors.toMap(GlobalConstant::getValue, Function.identity())));
 
   public static GlobalConstant find(String value) {
-    return contstanteMap.get(value);
+    if (value == null) {
+      return null;
+    }
+
+    return contstanteMap.get(value.toUpperCase());
   }
 }
