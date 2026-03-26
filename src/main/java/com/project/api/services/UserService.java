@@ -101,7 +101,7 @@ public class UserService {
   }
 
   @Async("appAsync")
-  public CompletableFuture<ResponseApi<Boolean>> getAccessToken(HttpServletRequest request,
+  public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
     final Cookie refreshToken = Arrays.asList(request.getCookies()).stream()
         .filter(cookie -> REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName())).findFirst()

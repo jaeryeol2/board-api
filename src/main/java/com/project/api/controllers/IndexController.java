@@ -37,9 +37,9 @@ public class IndexController {
   }
 
   @PostMapping("/auth/access")
-  public CompletableFuture<ResponseApi<Boolean>> getToken(HttpServletRequest request,
+  public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
-    return userService.getAccessToken(request, response);
+    return userService.getNewAccessToken(request, response);
   }
 
 
