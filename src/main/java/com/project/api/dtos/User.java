@@ -1,11 +1,14 @@
 package com.project.api.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
 @ToString(exclude = {"password"})
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class User {
   private String userId;
   @JsonIgnore
