@@ -3,7 +3,6 @@ package com.project.api.zconfig.filters;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -30,19 +29,9 @@ public class AuthFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     final String path = request.getRequestURI();
-    boolean isLogin = false;
+    boolean isLogin = userService.authCheck(request, response).join().getData();
 
     log.info("api path : {}", path);
-
-    try {
-      isLogin = userService.authCheck(request, response).get().getData();
-    } catch (InterruptedException | ExecutionException e) {
-      if (Thread.interrupted()) {
-        Thread.currentThread().interrupt();
-      }
-
-      log.error("auth check error.", e);
-    }
 
     if (isLogin) {
       final String token = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))
