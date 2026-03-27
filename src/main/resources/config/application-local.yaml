@@ -25,6 +25,17 @@ spring:
     multipart:
       maxFileSize: 10MB
       maxRequestSize: 10MB
+  cloud:
+    aws:
+      s3:
+        endpoint: http://localhost:4566
+        path-style-access-enabled: true
+      credentials:
+        access-key: test
+        secret-key: test
+      region:
+        static: ap-northeast-2
+
   # data:
   #   redis:
   #     url:
