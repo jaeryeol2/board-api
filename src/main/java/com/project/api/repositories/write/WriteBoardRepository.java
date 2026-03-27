@@ -17,8 +17,10 @@ public class WriteBoardRepository {
 
   public long writeBoard(BoardWrite write) {
     return factory.insert(entity)//
-        .columns(entity)//
-        .values(write.getTitle(), write.getBoardTypeCode(), write.getContent())//
+        .columns(entity.boardTypeCode, entity.title, entity.content, entity.groupId,
+            entity.groupSeq, entity.groupDepth, entity.writerId)//
+        .values(write.getBoardTypeCode(), write.getTitle(), write.getContent(), 0L, 0, 0,
+            write.getWriterId())//
         .execute();
   }
 

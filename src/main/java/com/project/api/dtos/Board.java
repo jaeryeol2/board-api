@@ -22,9 +22,9 @@ public class Board {
   public static class BoardDetail {
     private final long id;
     private final String title;
+    private final String content;
     private final String writerId;
     private final String writerName;
-    private final String content;
     private final int viewCount;
     private final long likeCount;
     private final boolean isDeleted;

@@ -5,13 +5,15 @@ import org.springframework.stereotype.Repository;
 import com.project.api.dtos.Board;
 import com.project.api.dtos.Board.BoardDetail;
 import com.project.api.dtos.BoardFilter;
-import com.project.api.entities.AppBoard;
 import com.project.api.entities.AppBoardComment;
 import com.project.api.entities.AppBoardFile;
 import com.project.api.entities.QAppBoard;
 import com.project.api.entities.QAppBoardComment;
 import com.project.api.entities.QAppBoardFile;
 import com.project.api.entities.QAppBoardLike;
+import com.project.api.entities.QAppUser;
+import com.querydsl.core.types.ConstructorExpression;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -20,27 +22,32 @@ import lombok.RequiredArgsConstructor;
 public class ReadBoardRepository {
   private final JPAQueryFactory factory;
 
+  private static final QAppUser user = QAppUser.appUser;
   private static final QAppBoard board = QAppBoard.appBoard;
   private static final QAppBoardFile file = QAppBoardFile.appBoardFile;
   private static final QAppBoardComment comment = QAppBoardComment.appBoardComment;
   private static final QAppBoardLike like = QAppBoardLike.appBoardLike;
 
-
   public List<Board> findBoardListByFilter(BoardFilter filter) {
-    return factory
-        .select(QAppBoard.create(board.id, board.title, board.writerId, board.writerName,
-            board.createdAt))
-        .from(board)//
+    final ConstructorExpression<Board> colums = Projections.constructor(Board.class, board.id,
+        board.title, board.writerId, user.userName.as("writerName"), board.createdAt);
+
+    return factory.select(colums).from(board)//
+        .leftJoin(user)//
+        .on(board.writerId.eq(user.userId))//
         .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
-        .fetch()//
-        .stream()//
-        .map(item -> new Board(item.getId(), item.getTitle(), item.getWriterId(),
-            item.getWriterName(), item.getCreatedAt()))//
-        .toList();
+        .orderBy(board.createdAt.desc())//
+        .fetch();
   }
 
   public BoardDetail findBoardById(final long id) {
-    final AppBoard detail = factory.selectFrom(board)//
+    final ConstructorExpression<BoardDetail> colums = Projections.constructor(BoardDetail.class,
+        board.id, board.title, board.content, board.writerId, user.userName.as("writerName"),
+        board.viewCount, board.createdAt, board.updatedAt);
+    final BoardDetail detail = factory.select(colums)//
+        .from(board)//
+        .leftJoin(user)//
+        .on(board.writerId.eq(user.userId))//
         .where(board.id.eq(id))//
         .fetchOne();
     final List<AppBoardComment> commentList = factory.selectFrom(comment)//

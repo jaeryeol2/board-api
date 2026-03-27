@@ -24,7 +24,6 @@ public class AppBoard {
   private String title;
   private String content;
   private String writerId;
-  private String writerName;
   private Integer viewCount = 0;
   private boolean isDeleted = false;
 
@@ -40,12 +39,10 @@ public class AppBoard {
   private LocalDateTime updatedAt;
 
   @QueryProjection
-  public AppBoard(long id, String title, String writerId, String writerName,
-      LocalDateTime createdAt) {
+  public AppBoard(long id, String title, String writerId, LocalDateTime createdAt) {
     this.id = id;
     this.title = title;
     this.writerId = writerId;
-    this.writerName = writerName;
     this.createdAt = createdAt;
   }
 }

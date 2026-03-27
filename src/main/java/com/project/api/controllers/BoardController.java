@@ -15,6 +15,7 @@ import com.project.api.dtos.Board.BoardDetail;
 import com.project.api.dtos.BoardFilter;
 import com.project.api.dtos.BoardWrite;
 import com.project.api.services.BoardService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,9 +43,9 @@ public class BoardController {
 
   @PostMapping("/{boardType}")
   public ResponseApi<Boolean> writeBoard(@PathVariable BoardType boardType,
-      @RequestBody BoardWrite write) {
+      @RequestBody BoardWrite write, HttpServletRequest request) {
 
-    return boardService.writeBoard(boardType, write);
+    return boardService.writeBoard(boardType, write, request);
   }
 
 

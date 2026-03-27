@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
@@ -18,8 +19,10 @@ import com.project.api.dtos.Board.BoardDetail;
 import com.project.api.dtos.Board.BoardFile;
 import com.project.api.dtos.BoardFilter;
 import com.project.api.dtos.BoardWrite;
+import com.project.api.dtos.User;
 import com.project.api.repositories.read.ReadBoardRepository;
 import com.project.api.repositories.write.WriteBoardRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +33,7 @@ public class BoardService {
   @Value("${spring.cloud.aws.s3.endpoint}")
   private String s3Url;
   private final S3Service s3Service;
+  private final UserService userService;
   private final ReadBoardRepository readBoardRepository;
   private final WriteBoardRepository writeBoardRepository;
 
@@ -52,12 +56,16 @@ public class BoardService {
   }
 
   @Transactional
-  public ResponseApi<Boolean> writeBoard(final BoardType boardType, final BoardWrite write) {
+  public ResponseApi<Boolean> writeBoard(final BoardType boardType, final BoardWrite write,
+      final HttpServletRequest request) {
     try {
       write.setBoardTypeCode(boardType.getCode());
+      User user = userService.getUserInfo(request).join().getData();
+      write.setWriterId(user.getUserId());
       final long count = writeBoardRepository.writeBoard(write);
 
-      if (count > 0) {
+      if (count > 0 && !ObjectUtils.isEmpty(write.getFileList())
+          && !write.getFileList().isEmpty()) {
         List<MultipartFile> fileList = write.getFileList();
         final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
