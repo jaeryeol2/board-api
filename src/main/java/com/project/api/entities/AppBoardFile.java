@@ -27,6 +27,7 @@ public class AppBoardFile {
   private AppBoard board;
 
   private String originalFileName;
+  private String fileName;
   private String fileUrl;
   private String fileType;
   private Long fileSize;

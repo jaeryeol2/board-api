@@ -34,9 +34,9 @@ public class TokenUtil {
         .compact();
   }
 
-  public Claims getTokenInfo(final String refreshToken) {
+  public Claims getTokenInfo(final String token) {
     try {
-      Jws<Claims> jws = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(refreshToken);
+      Jws<Claims> jws = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
       return jws.getPayload();
     } catch (ExpiredJwtException e) {
       return e.getClaims();

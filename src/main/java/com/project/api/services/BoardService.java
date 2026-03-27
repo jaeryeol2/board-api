@@ -1,7 +1,11 @@
 package com.project.api.services;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class BoardService {
+  @Value("${spring.cloud.aws.s3.endpoint}")
+  private String s3Url;
+  private final S3Service s3Service;
   private final ReadBoardRepository readBoardRepository;
   private final WriteBoardRepository writeBoardRepository;
 
@@ -52,15 +59,18 @@ public class BoardService {
 
       if (count > 0) {
         List<MultipartFile> fileList = write.getFileList();
+        final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         for (MultipartFile file : fileList) {
+          final String key = now.concat("/").concat(UUID.randomUUID().toString());
           final String originName = file.getOriginalFilename();
-          final String fileUrl = "";
-          final String fileType = "";
+          final String fileName = key;
+          final String fileUrl = s3Url.concat("/board-image/").concat(key);
+          final String fileType = "image";
           final long fileSize = file.getSize();
-          // TODO: s3 service 적용하기...
+          s3Service.uploadImage(key, file.getInputStream());
           final BoardFile boardFile =
-              new BoardFile(0, originName, fileUrl, fileType, fileSize, null);
+              new BoardFile(0, originName, fileName, fileUrl, fileType, fileSize, null);
           final long fileInserCount = writeBoardRepository.insertBoardFile(boardFile);
 
           if (fileInserCount <= 0) {

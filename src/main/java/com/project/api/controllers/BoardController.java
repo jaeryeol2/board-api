@@ -30,6 +30,7 @@ public class BoardController {
   @GetMapping("/{boardType}")
   public CompletableFuture<ResponseApi<List<Board>>> getBoardList(@PathVariable BoardType boardType,
       BoardFilter boardFilter) {
+    log.info("board type name : {}, code : {}", boardType.name(), boardType.getCode());
     return boardService.getBoardList(boardType, boardFilter);
   }
 

@@ -55,6 +55,7 @@ public class Board {
   public static class BoardFile {
     private final long id;
     private final String originalFileName;
+    private final String fileName;
     private final String fileUrl;
     private final String fileType;
     private final long fileSize;

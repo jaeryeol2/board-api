@@ -63,7 +63,8 @@ public class ReadBoardRepository {
                 c.getUpdatedAt()))
             .toList(),
         fileList.stream().map(f -> new Board.BoardFile(f.getId(), f.getOriginalFileName(),
-            f.getFileUrl(), f.getFileType(), f.getFileSize(), f.getCreatedAt())).toList());
+            f.getFileName(), f.getFileUrl(), f.getFileType(), f.getFileSize(), f.getCreatedAt()))
+            .toList());
 
   }
 
