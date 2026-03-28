@@ -43,7 +43,8 @@ public class UserService {
   }
 
   private String getRefreshToken(HttpServletRequest request) {
-    return Arrays.asList(request.getCookies()).stream()
+    final Cookie[] cookies = Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]);
+    return Arrays.asList(cookies).stream()
         .filter(
             cookie -> cookie != null && REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))
         .findFirst().orElseGet(() -> new Cookie(REFRESH_TOKEN.getValue(), null)).getValue();
