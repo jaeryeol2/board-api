@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
+import com.project.api.dtos.Join;
 import com.project.api.dtos.Login;
 import com.project.api.dtos.Menu;
 import com.project.api.services.CommonService;
@@ -53,6 +54,12 @@ public class IndexController {
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletResponse response) {
     return userService.logout(response);
   }
+
+  @PostMapping("/signup")
+  public ResponseApi<Boolean> signup(@RequestBody Join join) {
+    return userService.join(join);
+  }
+
 
   @GetMapping("/menus")
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {

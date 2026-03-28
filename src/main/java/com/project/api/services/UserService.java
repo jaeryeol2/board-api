@@ -8,16 +8,21 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.common.utils.TokenUtil;
+import com.project.api.dtos.Join;
 import com.project.api.dtos.Login;
 import com.project.api.dtos.User;
 import com.project.api.repositories.read.ReadUserRepository;
+import com.project.api.repositories.write.WriteUserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,7 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
+  private final TransactionTemplate transactionTemplate;
+  private final WriteUserRepository writeUserRepository;
   private final ReadUserRepository readUserRepository;
+
 
   private String getAccessToken(HttpServletRequest request) {
     Optional<String> optional = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -81,6 +89,11 @@ public class UserService {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
+        transactionTemplate.execute(status -> {
+          writeUserRepository.updateLoginTime(login.getUserId());
+          return status;
+        });
+
         return true;
       }
 
@@ -120,6 +133,24 @@ public class UserService {
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
     final String userId = tokenUtil.getTokenInfo(getAccessToken(request)).getSubject();
     return ResponseApi.asyncOk(() -> readUserRepository.findUserById(userId));
+  }
+
+  @Transactional
+  public ResponseApi<Boolean> join(Join join) {
+    try {
+      final long isJoin = writeUserRepository.insertJoin(join);
+      final boolean data = isJoin > 0;
+
+      if (data) {
+        return ResponseApi.ok(HttpStatus.CREATED, "success", data);
+      } else {
+        return ResponseApi.fail("fail.");
+      }
+    } catch (Exception e) {
+      log.error("join error : ", e);
+      throw new BusinessException("회원가입에 실패 했습니다.");
+    }
+
   }
 
 }
