@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
+import com.project.api.common.condition.Case;
 import com.project.api.common.utils.TokenUtil;
 import com.project.api.dtos.Join;
 import com.project.api.dtos.Login;
@@ -148,7 +150,24 @@ public class UserService {
       }
     } catch (Exception e) {
       log.error("join error : ", e);
-      throw new BusinessException("회원가입에 실패 했습니다.");
+      final String message = e.getMessage();
+      final boolean isDuplicate = e instanceof DataIntegrityViolationException;
+      Case.when(isDuplicate && message.contains("user_id"))//
+          .then(() -> {
+            throw new BusinessException("이미 존재하는 아이디입니다.");
+          })//
+          .when(isDuplicate && message.contains("email"))//
+          .then(() -> {
+            throw new BusinessException("이미 존재하는 이메일입니다.");
+          })//
+          .when(isDuplicate)//
+          .then(() -> {
+            throw new BusinessException("중복되는 데이터가 있습니다.");
+          }).other(() -> {
+            throw new BusinessException("회원가입에 실패 했습니다.");
+          }).execute();
+
+      return ResponseApi.ok(true);
     }
 
   }
