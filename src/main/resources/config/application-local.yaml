@@ -2,7 +2,7 @@ datasource:
   read:
     hikari:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      jdbc-url: jdbc:log4jdbc:postgresql://localhost:5432/postgres
+      jdbc-url: jdbc:log4jdbc:postgresql://localhost:5432/postgres?currentSchema=board_store
       username: postgres
       password: root
       connection-test-query: SELECT 1
@@ -12,7 +12,7 @@ datasource:
   write:
     hikari:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      jdbc-url: jdbc:log4jdbc:postgresql://localhost:5432/postgres
+      jdbc-url: jdbc:log4jdbc:postgresql://localhost:5432/postgres?currentSchema=board_store
       username: postgres
       password: root
       connection-test-query: SELECT 1
