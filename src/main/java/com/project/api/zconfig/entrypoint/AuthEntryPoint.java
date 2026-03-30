@@ -38,7 +38,7 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
     ResponseApi<Boolean> fail = ResponseApi.fail(HttpStatus.UNAUTHORIZED, "접근권한이 없습니다.");
 
     // 4. 응답 Body에 직접 JSON 문자열 쓰기
-    response.getWriter().print(objectMapper.writeValueAsString(fail));
+    response.getWriter().print(this.objectMapper.writeValueAsString(fail));
   }
 
 }

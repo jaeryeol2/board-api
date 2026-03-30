@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Getter
@@ -30,8 +31,10 @@ public class Board {
     private final boolean isDeleted;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
-    private final List<BoardComment> commentList;
-    private final List<BoardFile> fileList;
+    @Setter
+    private List<BoardComment> commentList;
+    @Setter
+    private List<BoardFile> fileList;
 
   }
 
