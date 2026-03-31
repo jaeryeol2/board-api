@@ -5,7 +5,6 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
@@ -42,8 +41,8 @@ public class BoardController {
   }
 
   @PostMapping("/{boardType}")
-  public ResponseApi<Boolean> writeBoard(@PathVariable BoardType boardType,
-      @RequestBody BoardWrite write, HttpServletRequest request) {
+  public ResponseApi<Boolean> writeBoard(@PathVariable BoardType boardType, BoardWrite write,
+      HttpServletRequest request) {
 
     return boardService.writeBoard(boardType, write, request);
   }

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,10 @@ import com.project.api.dtos.Board.BoardFile;
 import com.project.api.dtos.BoardFilter;
 import com.project.api.dtos.BoardWrite;
 import com.project.api.dtos.User;
+import com.project.api.entities.AppBoard;
+import com.project.api.entities.AppBoardFile;
 import com.project.api.repositories.read.ReadBoardRepository;
+import com.project.api.repositories.write.WriteBoardFileRepository;
 import com.project.api.repositories.write.WriteBoardRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,7 @@ public class BoardService {
   private final UserService userService;
   private final ReadBoardRepository readBoardRepository;
   private final WriteBoardRepository writeBoardRepository;
+  private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async("appAsync")
   public CompletableFuture<ResponseApi<List<Board>>> getBoardList(final BoardType type,
@@ -62,11 +67,13 @@ public class BoardService {
       write.setBoardTypeCode(boardType.getCode());
       User user = userService.getUserInfo(request).join().getData();
       write.setWriterId(user.getUserId());
-      final long count = writeBoardRepository.writeBoard(write);
 
-      if (count > 0 && !ObjectUtils.isEmpty(write.getFileList())
-          && !write.getFileList().isEmpty()) {
-        List<MultipartFile> fileList = write.getFileList();
+      final AppBoard appBoard = writeBoardRepository.save(new AppBoard(write.getTitle(),
+          write.getContent(), boardType.getCode(), write.getWriterId()));
+
+      if (appBoard.getId() > 0 && !ObjectUtils.isEmpty(write.getAttachments())
+          && !write.getAttachments().isEmpty()) {
+        final List<MultipartFile> fileList = write.getAttachments();
         final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         for (MultipartFile file : fileList) {
@@ -77,11 +84,14 @@ public class BoardService {
           final String fileType = "image";
           final long fileSize = file.getSize();
           s3Service.uploadImage(key, file.getInputStream());
-          final BoardFile boardFile =
-              new BoardFile(0, originName, fileName, fileUrl, fileType, fileSize, null);
-          final long fileInserCount = writeBoardRepository.insertBoardFile(boardFile);
+          final BoardFile boardFile = new BoardFile(0, appBoard.getId(), originName, fileName,
+              fileUrl, fileType, fileSize, null);
+          final AppBoardFile appBoardFile =
+              writeBoardFileRepository.save(new AppBoardFile(boardFile.getBoardId(),
+                  boardFile.getOriginalFileName(), boardFile.getFileName(), boardFile.getFileUrl(),
+                  boardFile.getFileType(), boardFile.getFileSize()));
 
-          if (fileInserCount <= 0) {
+          if (appBoardFile.getId() <= 0) {
             log.warn("file insert fail... file info : {}", boardFile);
           }
         }
@@ -92,7 +102,7 @@ public class BoardService {
       throw new BusinessException("게시글 저장에 실패했습니다.");
     }
 
-    return ResponseApi.ok(true);
+    return ResponseApi.ok(HttpStatus.CREATED, "created", true);
 
   }
 }

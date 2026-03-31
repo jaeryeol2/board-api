@@ -9,12 +9,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
 @Entity
 @Table(name = "app_board")
 @ToString
+@NoArgsConstructor
 public class AppBoard {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,5 +46,12 @@ public class AppBoard {
     this.title = title;
     this.writerId = writerId;
     this.createdAt = createdAt;
+  }
+
+  public AppBoard(String title, String content, String boardTypeCode, String writerId) {
+    this.title = title;
+    this.content = content;
+    this.boardTypeCode = boardTypeCode;
+    this.writerId = writerId;
   }
 }

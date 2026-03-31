@@ -57,6 +57,7 @@ public class Board {
   @RequiredArgsConstructor
   public static class BoardFile {
     private final long id;
+    private final long boardId;
     private final String originalFileName;
     private final String fileName;
     private final String fileUrl;

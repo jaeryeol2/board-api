@@ -66,8 +66,9 @@ public class ReadBoardRepository {
         .stream().map(c -> new BoardComment(c.getId(), c.getParentId(), c.getContent(),
             c.getWriterId(), c.getWriterName(), c.isDeleted(), c.getCreatedAt(), c.getUpdatedAt()))
         .toList());
-    detail.setFileList(fileList.stream().map(f -> new BoardFile(f.getId(), f.getOriginalFileName(),
-        f.getFileName(), f.getFileUrl(), f.getFileType(), f.getFileSize(), f.getCreatedAt()))
+    detail.setFileList(fileList.stream()
+        .map(f -> new BoardFile(f.getId(), f.getBoard().getId(), f.getOriginalFileName(),
+            f.getFileName(), f.getFileUrl(), f.getFileType(), f.getFileSize(), f.getCreatedAt()))
         .toList());
 
     return detail;
