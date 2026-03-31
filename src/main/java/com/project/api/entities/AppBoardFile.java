@@ -10,15 +10,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Entity
 @Table(name = "app_board_file")
 @ToString(exclude = "board")
-@NoArgsConstructor
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AppBoardFile {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

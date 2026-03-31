@@ -10,13 +10,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Entity
 @Table(name = "app_board_like")
 @ToString(exclude = "board")
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AppBoardLike {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

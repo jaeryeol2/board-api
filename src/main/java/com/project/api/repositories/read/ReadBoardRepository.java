@@ -62,13 +62,18 @@ public class ReadBoardRepository {
         .where(file.id.eq(id)).fetch();
 
 
-    detail.setCommentList(commentList
-        .stream().map(c -> new BoardComment(c.getId(), c.getParentId(), c.getContent(),
-            c.getWriterId(), c.getWriterName(), c.isDeleted(), c.getCreatedAt(), c.getUpdatedAt()))
+    detail.setCommentList(commentList.stream()
+        .map(c -> BoardComment.builder().id(c.getId()).parentId(c.getParentId())
+            .content(c.getContent()).writerId(c.getWriterId()).writerName(c.getWriterName())
+            .isDeleted(c.isDeleted()).createdAt(c.getCreatedAt()).updatedAt(c.getUpdatedAt())
+            .build())
+
         .toList());
     detail.setFileList(fileList.stream()
-        .map(f -> new BoardFile(f.getId(), f.getBoard().getId(), f.getOriginalFileName(),
-            f.getFileName(), f.getFileUrl(), f.getFileType(), f.getFileSize(), f.getCreatedAt()))
+        .map(f -> BoardFile.builder().id(f.getId()).boardId(f.getBoard().getId())
+            .originalFileName(f.getOriginalFileName()).fileName(f.getFileName())
+            .fileUrl(f.getFileUrl()).fileType(f.getFileType()).fileSize(f.getFileSize())
+            .createdAt(f.getCreatedAt()).build())
         .toList());
 
     return detail;

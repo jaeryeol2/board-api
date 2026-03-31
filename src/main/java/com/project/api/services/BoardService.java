@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -68,8 +69,9 @@ public class BoardService {
       User user = userService.getUserInfo(request).join().getData();
       write.setWriterId(user.getUserId());
 
-      final AppBoard appBoard = writeBoardRepository.save(new AppBoard(write.getTitle(),
-          write.getContent(), boardType.getCode(), write.getWriterId()));
+      final AppBoard appBoard = writeBoardRepository
+          .save(AppBoard.builder().boardTypeCode(write.getBoardTypeCode()).title(write.getTitle())
+              .content(write.getContent()).writerId(write.getWriterId()).build());
 
       if (appBoard.getId() > 0 && !ObjectUtils.isEmpty(write.getAttachments())
           && !write.getAttachments().isEmpty()) {
@@ -80,16 +82,19 @@ public class BoardService {
           final String key = now.concat("/").concat(UUID.randomUUID().toString());
           final String originName = file.getOriginalFilename();
           final String fileName = key;
-          final String fileUrl = s3Url.concat("/board-image/").concat(key);
+          final String fileUrl = s3Url.concat("/board-image/")//
+              .concat(key)//
+              .concat(".")//
+              .concat(FilenameUtils.getExtension(originName));
           final String fileType = "image";
           final long fileSize = file.getSize();
           s3Service.uploadImage(key, file.getInputStream());
-          final BoardFile boardFile = new BoardFile(0, appBoard.getId(), originName, fileName,
-              fileUrl, fileType, fileSize, null);
-          final AppBoardFile appBoardFile =
-              writeBoardFileRepository.save(new AppBoardFile(boardFile.getBoardId(),
-                  boardFile.getOriginalFileName(), boardFile.getFileName(), boardFile.getFileUrl(),
-                  boardFile.getFileType(), boardFile.getFileSize()));
+          final BoardFile boardFile = BoardFile.builder().boardId(appBoard.getId())
+              .originalFileName(originName).fileName(fileName).fileUrl(fileUrl).fileType(fileType)
+              .fileSize(fileSize).build();
+          final AppBoardFile appBoardFile = writeBoardFileRepository.save(
+              AppBoardFile.builder().board(appBoard).originalFileName(originName).fileName(fileName)
+                  .fileUrl(fileUrl).fileType(fileType).fileSize(fileSize).build());
 
           if (appBoardFile.getId() <= 0) {
             log.warn("file insert fail... file info : {}", boardFile);

@@ -1,21 +1,19 @@
 package com.project.api.dtos;
 
-import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
 @ToString
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Menu {
   private String menuName;
   private String href;
   private boolean use;
 
-  public Menu(String menuName, String href, boolean use) {
-    this.menuName = menuName;
-    this.href = href;
-    this.use = use;
-  }
 }

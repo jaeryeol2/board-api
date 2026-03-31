@@ -8,6 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -16,7 +19,9 @@ import lombok.ToString;
 @Entity
 @Table(name = "app_board")
 @ToString
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AppBoard {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,12 +31,16 @@ public class AppBoard {
   private String title;
   private String content;
   private String writerId;
+  @Builder.Default
   private Integer viewCount = 0;
+  @Builder.Default
   private boolean isDeleted = false;
 
   // --- 계층형 답글 관련 필드 추가 ---
   private Long groupId;
+  @Builder.Default
   private Integer groupSeq = 0;
+  @Builder.Default
   private Integer groupDepth = 0;
   // ----------------------------------
 
@@ -48,10 +57,4 @@ public class AppBoard {
     this.createdAt = createdAt;
   }
 
-  public AppBoard(String title, String content, String boardTypeCode, String writerId) {
-    this.title = title;
-    this.content = content;
-    this.boardTypeCode = boardTypeCode;
-    this.writerId = writerId;
-  }
 }

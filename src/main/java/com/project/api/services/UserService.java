@@ -95,7 +95,6 @@ public class UserService {
 
         transactionTemplate.execute(status -> {
           writeUserRepository.updateLastLoginDate(login.getUserId());
-
           return status;
         });
 

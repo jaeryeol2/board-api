@@ -10,13 +10,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Entity
 @Table(name = "app_board_comment")
 @ToString(exclude = "board")
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AppBoardComment {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +36,7 @@ public class AppBoardComment {
   private String writerId;
   private String writerName;
   private String content;
+  @Builder.Default
   private boolean isDeleted = false;
 
   @Column(updatable = false)
