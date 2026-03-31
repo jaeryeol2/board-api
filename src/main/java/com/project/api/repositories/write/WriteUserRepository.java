@@ -1,32 +1,16 @@
 package com.project.api.repositories.write;
 
-import java.time.LocalDateTime;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import com.project.api.dtos.Join;
-import com.project.api.entities.QAppUser;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
+import com.project.api.entities.AppUser;
 
 @Repository
-@RequiredArgsConstructor
-public class WriteUserRepository {
-  private final PasswordEncoder passwordEncoder;
-  private final JPAQueryFactory factory;
-  private static final QAppUser entity = QAppUser.appUser;
+public interface WriteUserRepository extends JpaRepository<AppUser, String> {
 
-  public long updateLoginTime(final String userId) {
-    return factory.update(entity)//
-        .set(entity.lastLoginAt, LocalDateTime.now())//
-        .where(entity.userId.eq(userId))//
-        .execute();
-  }
-
-  public long insertJoin(Join join) {
-    return factory.insert(entity)//
-        .columns(entity.userId, entity.password, entity.userName, entity.email, entity.userRole)//
-        .values(join.getUserId(), passwordEncoder.encode(join.getPassword()), join.getUserName(),
-            join.getEmail(), "editor")//
-        .execute();
-  }
+  @Modifying
+  @Query("UPDATE AppUser u SET u.lastLoginAt = CURRENT_TIMESTAMP WHERE u.userId = :userId")
+  public void updateLastLoginDate(@Param("userId") String userId);
 }

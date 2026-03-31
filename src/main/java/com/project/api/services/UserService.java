@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.ObjectUtils;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.common.condition.Case;
@@ -23,6 +24,7 @@ import com.project.api.common.utils.TokenUtil;
 import com.project.api.dtos.Join;
 import com.project.api.dtos.Login;
 import com.project.api.dtos.User;
+import com.project.api.entities.AppUser;
 import com.project.api.repositories.read.ReadUserRepository;
 import com.project.api.repositories.write.WriteUserRepository;
 import jakarta.servlet.http.Cookie;
@@ -92,7 +94,8 @@ public class UserService {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         transactionTemplate.execute(status -> {
-          writeUserRepository.updateLoginTime(login.getUserId());
+          writeUserRepository.updateLastLoginDate(login.getUserId());
+
           return status;
         });
 
@@ -140,9 +143,14 @@ public class UserService {
   @Transactional
   public ResponseApi<Boolean> join(Join join) {
     try {
-      final long isJoin = writeUserRepository.insertJoin(join);
+      final AppUser appUser = writeUserRepository.save(AppUser.builder()//
+          .userId(join.getUserId())//
+          .password(join.getPassword())//
+          .userName(join.getUserName())//
+          .email(join.getEmail())//
+          .build());
 
-      return Optional.of(isJoin > 0)//
+      return Optional.of(!ObjectUtils.isEmpty(appUser))//
           .filter(bool -> bool)//
           .map(bool -> ResponseApi.ok(HttpStatus.CREATED, "success", bool))//
           .orElse(ResponseApi.fail("fail", false));
