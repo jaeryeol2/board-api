@@ -1,6 +1,7 @@
 package com.project.api.entities;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 import com.querydsl.core.annotations.QueryProjection;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,8 +21,8 @@ import lombok.ToString;
 @Table(name = "app_board")
 @ToString
 @Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AppBoard {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +45,7 @@ public class AppBoard {
   private Integer groupDepth = 0;
   // ----------------------------------
 
+  @CreationTimestamp
   @Column(updatable = false)
   private LocalDateTime createdAt;
 

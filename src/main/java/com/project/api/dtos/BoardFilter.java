@@ -1,5 +1,6 @@
 package com.project.api.dtos;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,8 +11,8 @@ import lombok.ToString;
 @Getter
 @ToString
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardFilter {
   @Setter
   private String boardTypeCode;

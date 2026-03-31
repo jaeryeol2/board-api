@@ -1,5 +1,6 @@
 package com.project.api.dtos;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,8 +10,8 @@ import lombok.ToString;
 @Getter
 @ToString(exclude = "password")
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Login {
   private String userId;
   private String password;

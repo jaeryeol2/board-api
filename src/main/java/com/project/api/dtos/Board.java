@@ -2,6 +2,7 @@ package com.project.api.dtos;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,8 +13,8 @@ import lombok.ToString;
 @Getter
 @ToString
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Board {
   private long id;
   private String title;
@@ -24,8 +25,8 @@ public class Board {
   @Getter
   @ToString
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
   public static class BoardDetail {
     private long id;
     private String title;
@@ -47,8 +48,8 @@ public class Board {
   @Getter
   @ToString
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
   public static class BoardComment {
     private long id;
     private long parentId;
@@ -63,8 +64,8 @@ public class Board {
   @Getter
   @ToString
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
   public static class BoardFile {
     private long id;
     private long boardId;
@@ -75,6 +76,5 @@ public class Board {
     private long fileSize;
     private LocalDateTime createdAt;
   }
-
 
 }

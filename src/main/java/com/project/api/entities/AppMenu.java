@@ -7,17 +7,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import lombok.experimental.SuperBuilder;
 
 @Getter
 @Entity
 @Table(name = "app_menu")
 @ToString
-@SuperBuilder
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AppMenu {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
