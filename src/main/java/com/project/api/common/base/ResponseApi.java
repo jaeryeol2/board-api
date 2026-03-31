@@ -178,6 +178,17 @@ public class ResponseApi<T> {
   }
 
   /**
+   * 에러 발생 시 공통 실패 응답 포맷을 생성합니다. (기본 HTTP 500)
+   *
+   * @param message 클라이언트에게 전달할 에러 메시지
+   * @param <T> 데이터의 타입
+   * @return 에러 메시지가 담긴 ResponseApi 객체
+   */
+  public static <T> ResponseApi<T> fail(final String message, final T data) {
+    return ok(HttpStatus.INTERNAL_SERVER_ERROR, message, data);
+  }
+
+  /**
    * 커스텀 상태 코드와 함께 에러 응답을 생성합니다. (예: 400 Bad Request, 404 Not Found 등)
    *
    * @param status HTTP 상태 코드

@@ -145,7 +145,7 @@ public class UserService {
       return Optional.of(isJoin > 0)//
           .filter(bool -> bool)//
           .map(bool -> ResponseApi.ok(HttpStatus.CREATED, "success", bool))//
-          .orElse(ResponseApi.fail("fail"));
+          .orElse(ResponseApi.fail("fail", false));
     } catch (Exception e) {
       log.error("join error : ", e);
       final int firstIndex = 0;
