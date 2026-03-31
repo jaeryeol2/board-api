@@ -141,33 +141,27 @@ public class UserService {
   public ResponseApi<Boolean> join(Join join) {
     try {
       final long isJoin = writeUserRepository.insertJoin(join);
-      final boolean data = isJoin > 0;
 
-      if (data) {
-        return ResponseApi.ok(HttpStatus.CREATED, "success", data);
-      } else {
-        return ResponseApi.fail("fail.");
-      }
+      return Optional.of(isJoin > 0)//
+          .filter(bool -> bool)//
+          .map(bool -> ResponseApi.ok(HttpStatus.CREATED, "success", bool))//
+          .orElse(ResponseApi.fail("fail"));
     } catch (Exception e) {
       log.error("join error : ", e);
+      final int firstIndex = 0;
       final String message = e.getMessage();
       final boolean isDuplicate = e instanceof DataIntegrityViolationException;
-      Case.when(isDuplicate && message.contains("user_id"))//
-          .then(() -> {
-            throw new BusinessException("이미 존재하는 아이디입니다.");
-          })//
-          .when(isDuplicate && message.contains("email"))//
-          .then(() -> {
-            throw new BusinessException("이미 존재하는 이메일입니다.");
-          })//
-          .when(isDuplicate)//
-          .then(() -> {
-            throw new BusinessException("중복되는 데이터가 있습니다.");
-          }).other(() -> {
-            throw new BusinessException("회원가입에 실패 했습니다.");
-          }).execute();
+      final String[] resMessage = new String[] {"회원가입에 실패 했습니다."};
 
-      return ResponseApi.ok(true);
+      Case.when(isDuplicate && message.contains("user_id"))//
+          .then(() -> resMessage[firstIndex] = "이미 존재하는 아이디입니다.")//
+          .when(isDuplicate && message.contains("email"))//
+          .then(() -> resMessage[firstIndex] = "이미 존재하는 이메일입니다.")//
+          .when(isDuplicate)//
+          .then(() -> resMessage[firstIndex] = "중복되는 데이터가 있습니다.")//
+          .execute();
+
+      throw new BusinessException(resMessage[firstIndex]);
     }
 
   }
