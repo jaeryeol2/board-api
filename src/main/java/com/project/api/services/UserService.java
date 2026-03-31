@@ -21,6 +21,7 @@ import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.common.condition.Case;
 import com.project.api.common.utils.TokenUtil;
+import com.project.api.constants.UserRole;
 import com.project.api.dtos.Join;
 import com.project.api.dtos.Login;
 import com.project.api.dtos.User;
@@ -147,6 +148,7 @@ public class UserService {
           .password(join.getPassword())//
           .userName(join.getUserName())//
           .email(join.getEmail())//
+          .userRole(UserRole.USER_GENERAL.getCode())//
           .build());
 
       return Optional.of(!ObjectUtils.isEmpty(appUser))//

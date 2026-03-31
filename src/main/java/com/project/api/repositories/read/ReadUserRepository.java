@@ -21,7 +21,11 @@ public class ReadUserRepository {
             .and(entity.isActive.eq(true)))//
         .fetchOne();
 
-    return ObjectUtils.isEmpty(user) ? null : new User(user.getUserId(), user.getPassword());
+    return ObjectUtils.isEmpty(user) ? null
+        : User.builder()//
+            .userId(user.getUserId())//
+            .password(user.getPassword())//
+            .build();
   }
 
   public User findUserById(final String userId) {
@@ -33,6 +37,10 @@ public class ReadUserRepository {
         .fetchOne();
 
     return ObjectUtils.isEmpty(user) ? null
-        : new User(user.getUserId(), user.getUserName(), user.getUserAddr(), user.getEmail());
+        : User.builder().userId(user.getUserId())//
+            .userName(user.getUserName())//
+            .userAddr(user.getUserAddr())//
+            .email(user.getEmail())//
+            .build();
   }
 }
