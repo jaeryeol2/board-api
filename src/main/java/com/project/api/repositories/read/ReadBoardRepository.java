@@ -39,7 +39,7 @@ public class ReadBoardRepository {
         .leftJoin(user)//
         .on(board.writerId.eq(user.userId))//
         .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
-        .orderBy(board.createdAt.desc())//
+        .orderBy(board.createdAt.desc(), board.id.desc())//
         .fetch();
   }
 
