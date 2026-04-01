@@ -1,6 +1,7 @@
 package com.project.api.entities;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,6 +36,7 @@ public class AppBoardFile {
   private Long fileSize;
 
   @Column(updatable = false)
+  @CreationTimestamp
   private LocalDateTime createdAt;
 
 }

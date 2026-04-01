@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
-@ToString(exclude = "password")
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(exclude = "password")
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Join {
   private String userId;
   private String password;

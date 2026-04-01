@@ -73,8 +73,8 @@ public class BoardService {
   public ResponseApi<Boolean> writeBoard(final BoardType boardType, final BoardWrite write,
       final HttpServletRequest request) {
     try {
+      final User user = userService.getUserInfo(request).join().getData();
       write.setBoardTypeCode(boardType.getCode());
-      User user = userService.getUserInfo(request).join().getData();
       write.setWriterId(user.getUserId());
 
       final AppBoard appBoard = writeBoardRepository
@@ -87,13 +87,14 @@ public class BoardService {
         final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         for (MultipartFile file : fileList) {
-          final String key = now.concat("/").concat(UUID.randomUUID().toString());
+          final String key = UUID.randomUUID().toString();
           final String originName = file.getOriginalFilename();
-          final String fileName = key;
+          final String extension = ".".concat(FilenameUtils.getExtension(originName));
+          final String fileName = key.concat(extension);
           final String fileUrl = s3Url.concat("/board-image/")//
-              .concat(key)//
-              .concat(".")//
-              .concat(FilenameUtils.getExtension(originName));
+              .concat(now.concat("/")//
+                  .concat(key))//
+              .concat(extension);
           final String fileType = "image";
           final long fileSize = file.getSize();
           s3Service.uploadImage(key, file.getInputStream());

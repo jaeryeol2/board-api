@@ -12,10 +12,10 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@ToString
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardWrite {
   private Long id;
   private String title;
