@@ -2,6 +2,7 @@ package com.project.api.repositories.read;
 
 import java.util.List;
 import org.springframework.stereotype.Repository;
+import com.project.api.common.utils.QueryDslUtil;
 import com.project.api.dtos.request.BoardFilter;
 import com.project.api.dtos.response.Board;
 import com.project.api.dtos.response.Board.BoardComment;
@@ -12,7 +13,6 @@ import com.project.api.entities.QAppBoardComment;
 import com.project.api.entities.QAppBoardFile;
 import com.project.api.entities.QAppBoardLike;
 import com.project.api.entities.QAppUser;
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.QBean;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +45,8 @@ public class ReadBoardRepository {
   }
 
   public List<Board> findBoardList(String boardTypeCode, List<Long> ids) {
-    final QBean<Board> colums = Projections.fields(Board.class, board.id, board.title,
-        board.writerId, user.userName.as("writerName"), board.createdAt, board.viewCount);
+    final QBean<Board> colums =
+        QueryDslUtil.generateFields(Board.class, board, user.userName.as("writerName"));
 
     return factory.select(colums)//
         .from(board)//
@@ -59,14 +59,11 @@ public class ReadBoardRepository {
   }
 
   public BoardDetail findBoardById(final long id) {
-    final QBean<BoardDetail> colums = Projections.fields(BoardDetail.class, board.id, board.title,
-        board.content, board.writerId, user.userName.as("writerName"), board.viewCount,
-        like.count().as("likeCount"), board.isDeleted, board.createdAt, board.updatedAt);
-    final QBean<BoardComment> commentColumns = Projections.fields(BoardComment.class, comment.id,
-        comment.parentId, comment.content, comment.writerId, comment.writerName, comment.createdAt);
-    final QBean<BoardFile> fileColumns =
-        Projections.fields(BoardFile.class, file.id, file.originalFileName, file.fileName,
-            file.fileUrl, file.fileType, file.fileSize, file.createdAt);
+    final QBean<BoardDetail> colums = QueryDslUtil.generateFields(BoardDetail.class, board,
+        user.userName.as("writerName"), like.count().as("likeCount"));
+    final QBean<BoardComment> commentColumns =
+        QueryDslUtil.generateFields(BoardComment.class, comment);
+    final QBean<BoardFile> fileColumns = QueryDslUtil.generateFields(BoardFile.class, file);
     final BoardDetail detail = factory.select(colums)//
         .from(board)//
         .leftJoin(user)//
