@@ -24,6 +24,13 @@ spring:
       hibernate:
         "[format_sql]": true
 
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+      multiline: true
+      logging: slf4j
+
 jasypt:
   encryptor:
     password: ${JASYPT_PASSWORD}
