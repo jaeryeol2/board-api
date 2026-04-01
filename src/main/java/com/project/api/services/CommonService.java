@@ -5,7 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.project.api.common.base.ResponseApi;
-import com.project.api.dtos.Menu;
+import com.project.api.dtos.response.Menu;
 import com.project.api.repositories.read.ReadMenuRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +18,6 @@ public class CommonService {
 
   @Async("appAsync")
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {
-    return ResponseApi.asyncOk(readMenuRepository::selectMenuList);
+    return ResponseApi.asyncOk(readMenuRepository::findMenuList);
   }
 }

@@ -10,11 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
@@ -22,8 +19,6 @@ import lombok.ToString;
 @Table(name = "app_board_file")
 @ToString(exclude = "board")
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AppBoardFile {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,14 +37,4 @@ public class AppBoardFile {
   @Column(updatable = false)
   private LocalDateTime createdAt;
 
-  public AppBoardFile(long boardId, String originalFileName, String fileName, String fileUrl,
-      String fileType, long fileSize) {
-    this.board = new AppBoard(boardId, null, null, null);
-    this.originalFileName = originalFileName;
-    this.fileName = fileName;
-    this.fileUrl = fileUrl;
-    this.fileType = fileType;
-    this.fileSize = fileSize;
-
-  }
 }

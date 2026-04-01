@@ -2,20 +2,18 @@ package com.project.api.repositories.read;
 
 import java.util.List;
 import org.springframework.stereotype.Repository;
-import com.project.api.dtos.Board;
-import com.project.api.dtos.Board.BoardComment;
-import com.project.api.dtos.Board.BoardDetail;
-import com.project.api.dtos.Board.BoardFile;
-import com.project.api.dtos.BoardFilter;
-import com.project.api.entities.AppBoardComment;
-import com.project.api.entities.AppBoardFile;
+import com.project.api.dtos.request.BoardFilter;
+import com.project.api.dtos.response.Board;
+import com.project.api.dtos.response.Board.BoardComment;
+import com.project.api.dtos.response.Board.BoardDetail;
+import com.project.api.dtos.response.Board.BoardFile;
 import com.project.api.entities.QAppBoard;
 import com.project.api.entities.QAppBoardComment;
 import com.project.api.entities.QAppBoardFile;
 import com.project.api.entities.QAppBoardLike;
 import com.project.api.entities.QAppUser;
-import com.querydsl.core.types.ConstructorExpression;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.QBean;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -30,51 +28,66 @@ public class ReadBoardRepository {
   private static final QAppBoardComment comment = QAppBoardComment.appBoardComment;
   private static final QAppBoardLike like = QAppBoardLike.appBoardLike;
 
-  public List<Board> findBoardListByFilter(BoardFilter filter) {
-    final ConstructorExpression<Board> colums = Projections.constructor(Board.class, board.id,
-        board.title, board.writerId, user.userName.as("writerName"), board.createdAt);
+  public long findBoardCountById(BoardFilter filter) {
+    return factory.select(board.id.count())//
+        .from(board)//
+        .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
+        .fetchOne();
+  }
+
+  public List<Long> findBoardById(BoardFilter filter) {
+    return factory.select(board.id)//
+        .from(board)//
+        .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
+        .limit(filter.getRowsPerPage())//
+        .offset((long) (filter.getPage() - 1) * filter.getRowsPerPage())
+        .orderBy(board.createdAt.desc(), board.id.desc()).fetch();
+  }
+
+  public List<Board> findBoardList(String boardTypeCode, List<Long> ids) {
+    final QBean<Board> colums = Projections.fields(Board.class, board.id, board.title,
+        board.writerId, user.userName.as("writerName"), board.createdAt, board.viewCount);
 
     return factory.select(colums)//
         .from(board)//
         .leftJoin(user)//
         .on(board.writerId.eq(user.userId))//
-        .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
+        .where(board.boardTypeCode.eq(boardTypeCode)//
+            .and(board.id.in(ids)))//
         .orderBy(board.createdAt.desc(), board.id.desc())//
         .fetch();
   }
 
   public BoardDetail findBoardById(final long id) {
-    final ConstructorExpression<BoardDetail> colums =
-        Projections.constructor(BoardDetail.class, board.id, board.title, board.content,
-            board.writerId, user.userName.as("writerName"), board.viewCount,
-            like.count().as("likeCount"), board.isDeleted, board.createdAt, board.updatedAt);
+    final QBean<BoardDetail> colums = Projections.fields(BoardDetail.class, board.id, board.title,
+        board.content, board.writerId, user.userName.as("writerName"), board.viewCount,
+        like.count().as("likeCount"), board.isDeleted, board.createdAt, board.updatedAt);
+    final QBean<BoardComment> commentColumns = Projections.fields(BoardComment.class, comment.id,
+        comment.parentId, comment.content, comment.writerId, comment.writerName, comment.createdAt);
+    final QBean<BoardFile> fileColumns =
+        Projections.fields(BoardFile.class, file.id, file.originalFileName, file.fileName,
+            file.fileUrl, file.fileType, file.fileSize, file.createdAt);
     final BoardDetail detail = factory.select(colums)//
         .from(board)//
         .leftJoin(user)//
         .on(board.writerId.eq(user.userId))//
-        .leftJoin(like).on(board.id.eq(like.id)).where(board.id.eq(id))//
-        .groupBy(board.id, user.userName).fetchOne();
-    final List<AppBoardComment> commentList = factory.selectFrom(comment)//
+        .leftJoin(like).on(board.id.eq(like.id))//
+        .where(board.id.eq(id))//
+        .groupBy(board.id, user.userName)//
+        .fetchOne();
+
+    final List<BoardComment> commentList = factory.select(commentColumns)//
+        .from(comment)//
         .where(comment.id.eq(id)//
             .and(comment.isDeleted.eq(false)))//
         .fetch();
-    final List<AppBoardFile> fileList = factory.selectFrom(file)//
-        .where(file.id.eq(id)).fetch();
+    final List<BoardFile> fileList = factory.select(fileColumns)//
+        .from(file)//
+        .where(file.board.id.eq(id)).fetch();
 
 
-    detail.setCommentList(commentList.stream()
-        .map(c -> BoardComment.builder().id(c.getId()).parentId(c.getParentId())
-            .content(c.getContent()).writerId(c.getWriterId()).writerName(c.getWriterName())
-            .isDeleted(c.isDeleted()).createdAt(c.getCreatedAt()).updatedAt(c.getUpdatedAt())
-            .build())
-
-        .toList());
-    detail.setFileList(fileList.stream()
-        .map(f -> BoardFile.builder().id(f.getId()).boardId(f.getBoard().getId())
-            .originalFileName(f.getOriginalFileName()).fileName(f.getFileName())
-            .fileUrl(f.getFileUrl()).fileType(f.getFileType()).fileSize(f.getFileSize())
-            .createdAt(f.getCreatedAt()).build())
-        .toList());
+    detail.setCommentList(commentList);
+    detail.setFileList(fileList);
 
     return detail;
 

@@ -1,6 +1,5 @@
 package com.project.api.controllers;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -8,11 +7,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
+import com.project.api.common.base.ResponseApi.ResponseList;
 import com.project.api.constants.BoardType;
-import com.project.api.dtos.Board;
-import com.project.api.dtos.Board.BoardDetail;
-import com.project.api.dtos.BoardFilter;
-import com.project.api.dtos.BoardWrite;
+import com.project.api.dtos.request.BoardFilter;
+import com.project.api.dtos.request.BoardWrite;
+import com.project.api.dtos.response.Board;
+import com.project.api.dtos.response.Board.BoardDetail;
 import com.project.api.services.BoardService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +28,11 @@ public class BoardController {
   private final BoardService boardService;
 
   @GetMapping("/{boardType}")
-  public CompletableFuture<ResponseApi<List<Board>>> getBoardList(@PathVariable BoardType boardType,
-      BoardFilter boardFilter) {
+  public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(
+      @PathVariable BoardType boardType, BoardFilter boardFilter) {
     log.info("board type name : {}, code : {}", boardType.name(), boardType.getCode());
+    log.info("board filter parameter : {}", boardFilter);
+
     return boardService.getBoardList(boardType, boardFilter);
   }
 

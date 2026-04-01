@@ -2,9 +2,10 @@ package com.project.api.repositories.read;
 
 import java.util.List;
 import org.springframework.stereotype.Repository;
-import com.project.api.dtos.Menu;
-import com.project.api.entities.AppMenu;
+import com.project.api.dtos.response.Menu;
 import com.project.api.entities.QAppMenu;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.QBean;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -14,9 +15,12 @@ public class ReadMenuRepository {
   private final JPAQueryFactory factory;
   private static final QAppMenu entity = QAppMenu.appMenu;
 
-  public List<Menu> selectMenuList() {
-    final List<AppMenu> list = factory.selectFrom(entity).where(entity.isActive.eq(true)).fetch();
-    return list.stream().map(item -> new Menu(item.getMenuName(), item.getHref(), item.isActive()))
-        .toList();
+  public List<Menu> findMenuList() {
+    final QBean<Menu> columns =
+        Projections.fields(Menu.class, entity.menuName, entity.href, entity.isActive);
+    return factory.select(columns)//
+        .from(entity)//
+        .where(entity.isActive.eq(true))//
+        .fetch();
   }
 }

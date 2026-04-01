@@ -2,6 +2,7 @@ package com.project.api.services;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -15,13 +16,14 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
+import com.project.api.common.base.ResponseApi.ResponseList;
+import com.project.api.common.condition.CaseGet;
 import com.project.api.constants.BoardType;
-import com.project.api.dtos.Board;
-import com.project.api.dtos.Board.BoardDetail;
-import com.project.api.dtos.Board.BoardFile;
-import com.project.api.dtos.BoardFilter;
-import com.project.api.dtos.BoardWrite;
-import com.project.api.dtos.User;
+import com.project.api.dtos.request.BoardFilter;
+import com.project.api.dtos.request.BoardWrite;
+import com.project.api.dtos.response.Board;
+import com.project.api.dtos.response.Board.BoardDetail;
+import com.project.api.dtos.response.User;
 import com.project.api.entities.AppBoard;
 import com.project.api.entities.AppBoardFile;
 import com.project.api.repositories.read.ReadBoardRepository;
@@ -44,12 +46,18 @@ public class BoardService {
   private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async("appAsync")
-  public CompletableFuture<ResponseApi<List<Board>>> getBoardList(final BoardType type,
+  public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(final BoardType type,
       final BoardFilter filter) {
-    final String boardCode = type.getCode();
-    filter.setBoardTypeCode(boardCode);
+    final String boardTypeCode = type.getCode();
+    filter.setBoardTypeCode(boardTypeCode);
+    final long count = readBoardRepository.findBoardCountById(filter);
 
-    return ResponseApi.asyncOk(() -> readBoardRepository.findBoardListByFilter(filter));
+    return ResponseApi.asyncOk(Math.toIntExact(count), () -> CaseGet.when(count > 0)//
+        .then(() -> {
+          final List<Long> ids = readBoardRepository.findBoardById(filter);
+          return readBoardRepository.findBoardList(boardTypeCode, ids);
+        }).other(Collections::emptyList)//
+        .get());
   }
 
   @Async("appAsync")
@@ -89,15 +97,12 @@ public class BoardService {
           final String fileType = "image";
           final long fileSize = file.getSize();
           s3Service.uploadImage(key, file.getInputStream());
-          final BoardFile boardFile = BoardFile.builder().boardId(appBoard.getId())
-              .originalFileName(originName).fileName(fileName).fileUrl(fileUrl).fileType(fileType)
-              .fileSize(fileSize).build();
           final AppBoardFile appBoardFile = writeBoardFileRepository.save(
               AppBoardFile.builder().board(appBoard).originalFileName(originName).fileName(fileName)
                   .fileUrl(fileUrl).fileType(fileType).fileSize(fileSize).build());
 
           if (appBoardFile.getId() <= 0) {
-            log.warn("file insert fail... file info : {}", boardFile);
+            log.warn("file insert fail... file info : {}", appBoardFile);
           }
         }
 

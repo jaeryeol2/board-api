@@ -1,16 +1,12 @@
 package com.project.api.entities;
 
 import java.time.LocalDateTime;
-import com.querydsl.core.annotations.QueryProjection;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
@@ -18,8 +14,6 @@ import lombok.ToString;
 @Table(name = "APP_USER")
 @ToString
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AppUser {
   @Id
   @Column(updatable = false)
@@ -35,18 +29,6 @@ public class AppUser {
   private LocalDateTime updatedAt;
   private LocalDateTime lastLoginAt;
 
-  @QueryProjection
-  public AppUser(String userId, String password) {
-    this.userId = userId;
-    this.password = password;
-  }
 
-  @QueryProjection
-  public AppUser(String userId, String userName, String userAddr, String email) {
-    this.userId = userId;
-    this.userName = userName;
-    this.userAddr = userAddr;
-    this.email = email;
-  }
 
 }

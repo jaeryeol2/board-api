@@ -1,10 +1,10 @@
 package com.project.api.repositories.read;
 
 import org.springframework.stereotype.Repository;
-import org.springframework.util.ObjectUtils;
-import com.project.api.dtos.User;
-import com.project.api.entities.AppUser;
+import com.project.api.dtos.response.User;
 import com.project.api.entities.QAppUser;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.QBean;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -15,32 +15,21 @@ public class ReadUserRepository {
   private static final QAppUser entity = QAppUser.appUser;
 
   public User findLoginInfoById(final String userId) {
-    final AppUser user = factory.select(QAppUser.create(entity.userId, entity.password))//
+    final QBean<User> columns = Projections.fields(User.class, entity.userId, entity.password);
+    return factory.select(columns)//
         .from(entity)//
         .where(entity.userId.eq(userId)//
             .and(entity.isActive.eq(true)))//
         .fetchOne();
-
-    return ObjectUtils.isEmpty(user) ? null
-        : User.builder()//
-            .userId(user.getUserId())//
-            .password(user.getPassword())//
-            .build();
   }
 
   public User findUserById(final String userId) {
-    final AppUser user = factory
-        .select(QAppUser.create(entity.userId, entity.userName, entity.userAddr, entity.email))//
+    final QBean<User> columns = Projections.fields(User.class, entity.userId, entity.userName,
+        entity.userRole, entity.userAddr);
+    return factory.select(columns)//
         .from(entity)//
         .where(entity.userId.eq(userId)//
             .and(entity.isActive.eq(true)))//
         .fetchOne();
-
-    return ObjectUtils.isEmpty(user) ? null
-        : User.builder().userId(user.getUserId())//
-            .userName(user.getUserName())//
-            .userAddr(user.getUserAddr())//
-            .email(user.getEmail())//
-            .build();
   }
 }
