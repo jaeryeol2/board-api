@@ -34,6 +34,15 @@ spring:
       lettuce:
         pool:
           max-active: 5
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
+
+logging:
+  level:
+    p6spy: error
 # logging:
 #   config: classpath:logback/logback-local.xml
 #   level:
