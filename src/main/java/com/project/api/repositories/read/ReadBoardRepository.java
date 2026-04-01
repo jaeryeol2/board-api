@@ -27,6 +27,7 @@ public class ReadBoardRepository {
   private static final QAppBoardFile file = QAppBoardFile.appBoardFile;
   private static final QAppBoardComment comment = QAppBoardComment.appBoardComment;
   private static final QAppBoardLike like = QAppBoardLike.appBoardLike;
+  private static final String WRITER_NAME = "writerName";
 
   public long findBoardCountById(BoardFilter filter) {
     return factory.select(board.id.count())//
@@ -46,7 +47,7 @@ public class ReadBoardRepository {
 
   public List<Board> findBoardList(String boardTypeCode, List<Long> ids) {
     final QBean<Board> colums =
-        QueryDslUtil.generateFields(Board.class, board, user.userName.as("writerName"));
+        QueryDslUtil.generateFields(Board.class, board, user.userName.as(WRITER_NAME));
 
     return factory.select(colums)//
         .from(board)//
@@ -60,9 +61,9 @@ public class ReadBoardRepository {
 
   public BoardDetail findBoardById(final long id) {
     final QBean<BoardDetail> colums = QueryDslUtil.generateFields(BoardDetail.class, board,
-        user.userName.as("writerName"), like.count().as("likeCount"));
+        user.userName.as(WRITER_NAME), like.count().as("likeCount"));
     final QBean<BoardComment> commentColumns =
-        QueryDslUtil.generateFields(BoardComment.class, comment);
+        QueryDslUtil.generateFields(BoardComment.class, comment, user.userName.as(WRITER_NAME));
     final QBean<BoardFile> fileColumns = QueryDslUtil.generateFields(BoardFile.class, file);
     final BoardDetail detail = factory.select(colums)//
         .from(board)//
@@ -75,6 +76,8 @@ public class ReadBoardRepository {
 
     final List<BoardComment> commentList = factory.select(commentColumns)//
         .from(comment)//
+        .leftJoin(user)//
+        .on(comment.writerId.eq(user.userId))//
         .where(comment.id.eq(id)//
             .and(comment.isDeleted.eq(false)))//
         .fetch();

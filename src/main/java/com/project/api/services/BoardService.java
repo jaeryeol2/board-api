@@ -4,14 +4,17 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.project.api.common.base.BusinessException;
@@ -41,11 +44,13 @@ public class BoardService {
   private String s3Url;
   private final S3Service s3Service;
   private final UserService userService;
+  private final TransactionTemplate transaction;
   private final ReadBoardRepository readBoardRepository;
   private final WriteBoardRepository writeBoardRepository;
   private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async("appAsync")
+  @Cacheable(cacheNames = "getBoardList")
   public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(final BoardType type,
       final BoardFilter filter) {
     final String boardTypeCode = type.getCode();
@@ -62,11 +67,21 @@ public class BoardService {
 
   @Async("appAsync")
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {
-    return ResponseApi.asyncOk(() -> readBoardRepository.findBoardById(id))
-        .exceptionallyAsync(e -> {
-          log.error("getBoardDetail error : ", e);
-          throw new BusinessException("존재하지 않는 게시물입니다.");
+    return ResponseApi.asyncOk(() -> {
+      Optional<BoardDetail> detail = Optional.ofNullable(readBoardRepository.findBoardById(id));
+
+      if (detail.isPresent()) {
+        transaction.execute(status -> {
+          writeBoardRepository.updateViewCount(id);
+          return status;
         });
+      }
+
+      return detail.get();
+    }).exceptionallyAsync(e -> {
+      log.error("getBoardDetail error : ", e);
+      throw new BusinessException("존재하지 않는 게시물입니다.");
+    });
   }
 
   @Transactional

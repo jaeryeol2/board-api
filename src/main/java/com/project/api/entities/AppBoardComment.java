@@ -30,7 +30,6 @@ public class AppBoardComment {
 
   private Long parentId;
   private String writerId;
-  private String writerName;
   private String content;
   @Builder.Default
   private boolean isDeleted = false;

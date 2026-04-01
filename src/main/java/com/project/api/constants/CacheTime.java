@@ -11,9 +11,11 @@ import lombok.Getter;
 @Getter
 public enum CacheTime {
   /** access token */
-  ACCESS_TOKEN("access_token", Duration.ofHours(1)),
+  ACCESS_TOKEN("access_token", Duration.ofHours(1L)),
   /** refresh token */
-  REFRESH_TOKEN("refresh_token", Duration.ofDays(30));
+  REFRESH_TOKEN("refresh_token", Duration.ofDays(30L)),
+  /** board list */
+  BOARD_LIST("getBoardList", Duration.ofSeconds(30L));
 
   private final String cacheName;
   private final Duration ttl;
