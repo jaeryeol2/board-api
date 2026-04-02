@@ -14,6 +14,10 @@ public enum CacheTime {
   ACCESS_TOKEN("access_token", Duration.ofHours(1L)),
   /** refresh token */
   REFRESH_TOKEN("refresh_token", Duration.ofDays(30L)),
+  /** user info */
+  GET_USER_INFO("getUserInfo", Duration.ofHours(1L)),
+  /** menu list */
+  GET_MENU_LIST("getMenuList", Duration.ofHours(1L)),
   /** board list */
   BOARD_LIST("getBoardList", Duration.ofSeconds(30L));
 

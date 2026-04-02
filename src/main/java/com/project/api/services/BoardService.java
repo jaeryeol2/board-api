@@ -50,7 +50,7 @@ public class BoardService {
   private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async("appAsync")
-  @Cacheable(cacheNames = "getBoardList", key = "#type.code + #filter.page")
+  @Cacheable(cacheNames = "getBoardList", key = "#type.code + '_' + #filter.page")
   public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(final BoardType type,
       final BoardFilter filter) {
     final String boardTypeCode = type.getCode();
@@ -59,7 +59,7 @@ public class BoardService {
 
     return ResponseApi.asyncOk(Math.toIntExact(count), () -> CaseGet.when(count > 0)//
         .then(() -> {
-          final List<Long> ids = readBoardRepository.findBoardById(filter);
+          final List<Long> ids = readBoardRepository.findBoardByIds(filter);
           return readBoardRepository.findBoardList(boardTypeCode, ids);
         }).other(Collections::emptyList)//
         .get());

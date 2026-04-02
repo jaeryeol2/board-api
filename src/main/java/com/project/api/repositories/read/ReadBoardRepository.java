@@ -36,7 +36,7 @@ public class ReadBoardRepository {
         .fetchOne();
   }
 
-  public List<Long> findBoardById(BoardFilter filter) {
+  public List<Long> findBoardByIds(BoardFilter filter) {
     return factory.select(board.id)//
         .from(board)//
         .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//

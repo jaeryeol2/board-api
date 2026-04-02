@@ -1,8 +1,6 @@
 package com.project.api.zconfig;
 
-import java.io.IOException;
 import java.time.Duration;
-import org.hibernate.type.SerializationException;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
@@ -17,11 +15,12 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheManager.RedisCacheManagerBuilder;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.project.api.constants.CacheTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +43,7 @@ public class RedisConfig implements CachingConfigurer {
         .serializeKeysWith(
             RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
         .serializeValuesWith(
-            RedisSerializationContext.SerializationPair.fromSerializer(new JsonRedisSerializer()))
+            RedisSerializationContext.SerializationPair.fromSerializer(springCacheJsonSerializer()))
         .entryTtl(Duration.ofMinutes(5L));
 
     builder.cacheDefaults(configuration);
@@ -56,31 +55,17 @@ public class RedisConfig implements CachingConfigurer {
     return builder.build();
   }
 
-  private class JsonRedisSerializer implements RedisSerializer<Object> {
-    private JsonRedisSerializer() {}
+  private GenericJackson2JsonRedisSerializer springCacheJsonSerializer() {
+    final ObjectMapper mapper = this.objectMapper.copy();
 
-    @Override
-    public byte[] serialize(Object object) {
-      try {
-        return objectMapper.writeValueAsBytes(object);
-      } catch (JsonProcessingException e) {
-        throw new SerializationException(e.getMessage(), e);
-      }
-    }
+    PolymorphicTypeValidator ptv =
+        BasicPolymorphicTypeValidator.builder().allowIfBaseType(Object.class).build();
+    mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
 
-    @Override
-    public Object deserialize(byte[] bytes) {
-      if (bytes == null) {
-        return null;
-      }
+    mapper.setTypeFactory(
+        mapper.getTypeFactory().withClassLoader(Thread.currentThread().getContextClassLoader()));
 
-      try {
-        return objectMapper.readValue(bytes, Object.class);
-      } catch (IOException e) {
-        throw new SerializationException(e.getMessage(), e);
-      }
-    }
-
+    return new GenericJackson2JsonRedisSerializer(mapper);
   }
 
   private static class RelaxedCacheErrorHandler extends SimpleCacheErrorHandler {
@@ -101,16 +86,15 @@ public class RedisConfig implements CachingConfigurer {
   RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
     final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
     final StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-    final JsonRedisSerializer jsonRedisSerializer = new JsonRedisSerializer();
 
     // 기존의 redisConnectionFactory() 메서드 호출 대신, 주입받은 객체를 세팅
     redisTemplate.setConnectionFactory(connectionFactory);
 
     redisTemplate.setKeySerializer(stringRedisSerializer);
-    redisTemplate.setValueSerializer(jsonRedisSerializer);
+    redisTemplate.setValueSerializer(springCacheJsonSerializer());
 
     redisTemplate.setHashKeySerializer(stringRedisSerializer);
-    redisTemplate.setHashValueSerializer(jsonRedisSerializer);
+    redisTemplate.setHashValueSerializer(springCacheJsonSerializer());
 
     return redisTemplate;
   }

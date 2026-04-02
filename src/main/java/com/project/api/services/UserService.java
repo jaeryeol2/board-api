@@ -40,6 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
+
+  private final CommonService commonService;
+
   private final TransactionTemplate transactionTemplate;
   private final WriteUserRepository writeUserRepository;
   private final ReadUserRepository readUserRepository;
@@ -137,7 +140,12 @@ public class UserService {
   @Async("appAsync")
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
     final String userId = tokenUtil.getTokenInfo(getAccessToken(request)).getSubject();
-    return ResponseApi.asyncOk(() -> readUserRepository.findUserById(userId));
+    return commonService.getUserInfo(userId);
+  }
+
+  @Async("appAsync")
+  public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
+    return commonService.getUserInfo(userId);
   }
 
   @Transactional

@@ -7,9 +7,12 @@ import org.springframework.http.HttpStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.jackson.Jacksonized;
 
 @Getter
+@Builder
 @ToString
+@Jacksonized
 public class ResponseApi<T> {
   private final int status;
   private final String code;
@@ -218,6 +221,7 @@ public class ResponseApi<T> {
   @Getter
   @Builder
   @ToString
+  @Jacksonized
   public static class ResponseList<L> {
     private int total;
     private List<L> list;
