@@ -1,11 +1,8 @@
 package com.project.api.services;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,6 +23,7 @@ import com.project.api.dtos.request.BoardFilter;
 import com.project.api.dtos.request.BoardWrite;
 import com.project.api.dtos.response.Board;
 import com.project.api.dtos.response.Board.BoardDetail;
+import com.project.api.dtos.response.ResponseS3;
 import com.project.api.dtos.response.User;
 import com.project.api.entities.AppBoard;
 import com.project.api.entities.AppBoardFile;
@@ -104,20 +102,17 @@ public class BoardService {
       if (appBoard.getId() > 0 && !ObjectUtils.isEmpty(write.getAttachments())
           && !write.getAttachments().isEmpty()) {
         final List<MultipartFile> fileList = write.getAttachments();
-        final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         for (MultipartFile file : fileList) {
-          final String uuid = UUID.randomUUID().toString();
-          final String key = now.concat("/").concat(uuid);
+          final ResponseS3 s3 = s3Service.uploadImage(file);
           final String originName = file.getOriginalFilename();
           final String extension = ".".concat(FilenameUtils.getExtension(originName));
-          final String fileName = uuid.concat(extension);
+          final String fileName = s3.getFileName().concat(extension);
           final String fileType = "image";
           final long fileSize = file.getSize();
-          final String fileUrl = s3Service.uploadImage(key, file.getInputStream());
           final AppBoardFile appBoardFile = writeBoardFileRepository.save(
               AppBoardFile.builder().board(appBoard).originalFileName(originName).fileName(fileName)
-                  .fileUrl(fileUrl).fileType(fileType).fileSize(fileSize).build());
+                  .fileUrl(s3.getUrl()).fileType(fileType).fileSize(fileSize).build());
 
           if (appBoardFile.getId() <= 0) {
             log.warn("file insert fail... file info : {}", appBoardFile);
