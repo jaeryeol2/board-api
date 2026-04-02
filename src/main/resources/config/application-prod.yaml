@@ -43,12 +43,3 @@ decorator:
 logging:
   level:
     p6spy: error
-# logging:
-#   config: classpath:logback/logback-local.xml
-#   level:
-#     org:
-#       hibernate:
-#         SQL: DEBUG
-#         type:
-#           descriptor:
-#             sql: trace

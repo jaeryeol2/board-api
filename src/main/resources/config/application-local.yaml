@@ -35,7 +35,6 @@ spring:
         secret-key: test
       region:
         static: ap-northeast-2
-
   data:
     redis:
       # url:
@@ -45,12 +44,3 @@ spring:
       lettuce:
         pool:
           max-active: 5
-# logging:
-#   config: classpath:logback/logback-local.xml
-#   level:
-#     org:
-#       hibernate:
-#         SQL: DEBUG
-#         type:
-#           descriptor:
-#             sql: trace
