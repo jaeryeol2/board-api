@@ -27,10 +27,10 @@ spring:
       maxRequestSize: 10MB
   data:
     redis:
-      url:
+      cluster:
+        nodes:
+          -
       password:
-      host: localhost
-      port: 6379
       lettuce:
         pool:
           max-active: 5
