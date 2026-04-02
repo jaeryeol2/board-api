@@ -3,7 +3,6 @@ package com.project.api.zconfig;
 import java.io.IOException;
 import java.time.Duration;
 import org.hibernate.type.SerializationException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
@@ -12,13 +11,11 @@ import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheManager.RedisCacheManagerBuilder;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -29,28 +26,19 @@ import com.project.api.constants.CacheTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Profile("!local")
 @Slf4j
 @Configuration
 @EnableCaching
 @RequiredArgsConstructor
 public class RedisConfig implements CachingConfigurer {
-  @Value("${spring.data.redis.host}")
-  private String host;
-  @Value("${spring.data.redis.port}")
-  private int port;
-
   private final ObjectMapper objectMapper;
 
   @Bean
-  RedisConnectionFactory redisConnectionFactory() {
-    return new LettuceConnectionFactory(host, port);
-  }
-
-  @Bean
-  CacheManager cacheManager(ResourceLoader resourceLoader, LettuceConnectionFactory factory) {
+  CacheManager cacheManager(ResourceLoader resourceLoader,
+      RedisConnectionFactory connectionFactory) {
     final RedisCacheManagerBuilder builder =
-        RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(factory);
+        RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(connectionFactory);
+
     final RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
         .disableCachingNullValues()
         .serializeKeysWith(
@@ -69,7 +57,6 @@ public class RedisConfig implements CachingConfigurer {
   }
 
   private class JsonRedisSerializer implements RedisSerializer<Object> {
-
     private JsonRedisSerializer() {}
 
     @Override
@@ -99,7 +86,6 @@ public class RedisConfig implements CachingConfigurer {
   private static class RelaxedCacheErrorHandler extends SimpleCacheErrorHandler {
     @Override
     public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
-
       if (log.isErrorEnabled()) {
         log.error("handleCacheGetError error : {}", exception.getMessage());
       }
@@ -112,12 +98,13 @@ public class RedisConfig implements CachingConfigurer {
   }
 
   @Bean
-  RedisTemplate<String, Object> redisTemplate() {
+  RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
     final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
     final StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
     final JsonRedisSerializer jsonRedisSerializer = new JsonRedisSerializer();
 
-    redisTemplate.setConnectionFactory(redisConnectionFactory());
+    // 기존의 redisConnectionFactory() 메서드 호출 대신, 주입받은 객체를 세팅
+    redisTemplate.setConnectionFactory(connectionFactory);
 
     redisTemplate.setKeySerializer(stringRedisSerializer);
     redisTemplate.setValueSerializer(jsonRedisSerializer);
