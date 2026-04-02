@@ -38,8 +38,7 @@ spring:
 
 decorator:
   datasource:
-    p6spy:
-      enable-logging: false
+    enabled: false
 
 logging:
   level:

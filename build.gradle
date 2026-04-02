@@ -44,9 +44,8 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 
     // add implementation
-    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:2.0.0'
+    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.1'
     implementation "com.querydsl:querydsl-jpa:5.1.0:jakarta"
-    implementation "com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.11.0"
     implementation "com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6"
     implementation "io.jsonwebtoken:jjwt-api:0.12.6"

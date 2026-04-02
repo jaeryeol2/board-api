@@ -22,7 +22,8 @@ spring:
         physical-strategy: com.project.api.zconfig.orm.JpaNamingStrategy
     properties:
       hibernate:
-        "[format_sql]": true
+        format_sql: true
+        highlight_sql: true
 
 decorator:
   datasource:
@@ -30,6 +31,10 @@ decorator:
       enable-logging: true
       multiline: true
       logging: slf4j
+    exclude-beans:
+      - writeHikariDataSource
+      - readHikariDataSource
+      - routingDataSource
 
 jasypt:
   encryptor:
