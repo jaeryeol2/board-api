@@ -50,7 +50,7 @@ public class BoardService {
   private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async("appAsync")
-  @Cacheable(cacheNames = "getBoardList")
+  @Cacheable(cacheNames = "getBoardList", key = "#type.code + #filter.page")
   public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(final BoardType type,
       final BoardFilter filter) {
     final String boardTypeCode = type.getCode();
@@ -68,16 +68,22 @@ public class BoardService {
   @Async("appAsync")
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {
     return ResponseApi.asyncOk(() -> {
-      Optional<BoardDetail> detail = Optional.ofNullable(readBoardRepository.findBoardById(id));
+      Optional<BoardDetail> optional = Optional.ofNullable(readBoardRepository.findBoardById(id));
+      BoardDetail detail = null;
 
-      if (detail.isPresent()) {
+      if (optional.isPresent()) {
+        detail = optional.get();
+
+        detail.setCommentList(readBoardRepository.findBoardCommentById(0));
+        detail.setFileList(readBoardRepository.findBoardFileById(id));
+
         transaction.execute(status -> {
           writeBoardRepository.updateViewCount(id);
           return status;
         });
       }
 
-      return detail.get();
+      return detail;
     }).exceptionallyAsync(e -> {
       log.error("getBoardDetail error : ", e);
       throw new BusinessException("존재하지 않는 게시물입니다.");

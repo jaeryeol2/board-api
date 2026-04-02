@@ -62,10 +62,8 @@ public class ReadBoardRepository {
   public BoardDetail findBoardById(final long id) {
     final QBean<BoardDetail> colums = QueryDslUtil.generateFields(BoardDetail.class, board,
         user.userName.as(WRITER_NAME), like.count().as("likeCount"));
-    final QBean<BoardComment> commentColumns =
-        QueryDslUtil.generateFields(BoardComment.class, comment, user.userName.as(WRITER_NAME));
-    final QBean<BoardFile> fileColumns = QueryDslUtil.generateFields(BoardFile.class, file);
-    final BoardDetail detail = factory.select(colums)//
+
+    return factory.select(colums)//
         .from(board)//
         .leftJoin(user)//
         .on(board.writerId.eq(user.userId))//
@@ -73,24 +71,26 @@ public class ReadBoardRepository {
         .where(board.id.eq(id))//
         .groupBy(board.id, user.userName)//
         .fetchOne();
+  }
 
-    final List<BoardComment> commentList = factory.select(commentColumns)//
+  public List<BoardComment> findBoardCommentById(final long id) {
+    final QBean<BoardComment> columns =
+        QueryDslUtil.generateFields(BoardComment.class, comment, user.userName.as(WRITER_NAME));
+    return factory.select(columns)//
         .from(comment)//
         .leftJoin(user)//
         .on(comment.writerId.eq(user.userId))//
         .where(comment.id.eq(id)//
             .and(comment.isDeleted.eq(false)))//
         .fetch();
-    final List<BoardFile> fileList = factory.select(fileColumns)//
+  }
+
+  public List<BoardFile> findBoardFileById(final long id) {
+    final QBean<BoardFile> fileColumns = QueryDslUtil.generateFields(BoardFile.class, file);
+
+    return factory.select(fileColumns)//
         .from(file)//
         .where(file.board.id.eq(id)).fetch();
-
-
-    detail.setCommentList(commentList);
-    detail.setFileList(fileList);
-
-    return detail;
-
   }
 
 }
