@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -40,8 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class BoardService {
-  @Value("${spring.cloud.aws.s3.endpoint}")
-  private String s3Url;
   private final S3Service s3Service;
   private final UserService userService;
   private final TransactionTemplate transaction;
@@ -91,6 +89,7 @@ public class BoardService {
   }
 
   @Transactional
+  @CacheEvict(cacheNames = "getBoardList", key = "#boardType.code + '_' + 1")
   public ResponseApi<Boolean> writeBoard(final BoardType boardType, final BoardWrite write,
       final HttpServletRequest request) {
     try {
@@ -108,17 +107,14 @@ public class BoardService {
         final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         for (MultipartFile file : fileList) {
-          final String key = UUID.randomUUID().toString();
+          final String uuid = UUID.randomUUID().toString();
+          final String key = now.concat("/").concat(uuid);
           final String originName = file.getOriginalFilename();
           final String extension = ".".concat(FilenameUtils.getExtension(originName));
-          final String fileName = key.concat(extension);
-          final String fileUrl = s3Url.concat("/board-image/")//
-              .concat(now.concat("/")//
-                  .concat(key))//
-              .concat(extension);
+          final String fileName = uuid.concat(extension);
           final String fileType = "image";
           final long fileSize = file.getSize();
-          s3Service.uploadImage(key, file.getInputStream());
+          final String fileUrl = s3Service.uploadImage(key, file.getInputStream());
           final AppBoardFile appBoardFile = writeBoardFileRepository.save(
               AppBoardFile.builder().board(appBoard).originalFileName(originName).fileName(fileName)
                   .fileUrl(fileUrl).fileType(fileType).fileSize(fileSize).build());
