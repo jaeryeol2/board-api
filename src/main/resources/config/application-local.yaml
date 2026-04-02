@@ -37,10 +37,8 @@ spring:
         static: ap-northeast-2
   data:
     redis:
-      cluster:
-        max-redirects: 3
-        nodes:
-          - http://localhost:6379
+      host: localhost
+      port: 6379
       lettuce:
         pool:
           max-active: 5
