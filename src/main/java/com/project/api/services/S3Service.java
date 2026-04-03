@@ -19,7 +19,7 @@ public class S3Service {
   private final S3Template s3Template;
   private static final String IMAGE_BUCKET = "board-image";
 
-  public ResponseS3 uploadImage(final MultipartFile file) throws IOException {
+  private ResponseS3 baseUploadImage(final MultipartFile file) throws IOException {
     final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     final String uuid = UUID.randomUUID().toString();
     final String key = now.concat("/").concat(uuid);
@@ -33,11 +33,24 @@ public class S3Service {
         .build();
   }
 
-  public ResponseS3 uploadImage(final MultipartFile file, final boolean notUseUUID)
-      throws IOException {
-    final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-    final String fileName = file.getOriginalFilename();
-    if (notUseUUID) {
+  public ResponseS3 uploadImage(final MultipartFile file) {
+    try {
+      return baseUploadImage(file);
+    } catch (Exception e) {
+      log.error("s3 upload error : ", e);
+    }
+
+    return null;
+  }
+
+  public ResponseS3 uploadImage(final MultipartFile file, final boolean useUUID) {
+    try {
+      if (useUUID) {
+        return baseUploadImage(file);
+      }
+
+      final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+      final String fileName = file.getOriginalFilename();
       final String key = now.concat("/").concat(fileName);
       final S3Resource resource = s3Template.upload(IMAGE_BUCKET, key, file.getInputStream());
 
@@ -47,10 +60,11 @@ public class S3Service {
           .url(resource.getURL().toString())//
           .location(resource.getLocation())//
           .build();
+    } catch (Exception e) {
+      log.error("s3 upload error : ", e);
     }
 
-
-    return uploadImage(file);
+    return null;
   }
 
   public S3Resource downloadImage(final String key) {

@@ -104,7 +104,10 @@ public class BoardService {
         final List<MultipartFile> fileList = write.getAttachments();
 
         for (MultipartFile file : fileList) {
-          final ResponseS3 s3 = s3Service.uploadImage(file);
+          final ResponseS3 s3 = Optional.ofNullable(s3Service.uploadImage(file))//
+              .orElseThrow(() -> {
+                throw new BusinessException("파일업로드에 실패했습니다.");
+              });
           final String originName = file.getOriginalFilename();
           final String extension = ".".concat(FilenameUtils.getExtension(originName));
           final String fileName = s3.getFileName().concat(extension);
@@ -122,6 +125,11 @@ public class BoardService {
       }
     } catch (Exception e) {
       log.error("writeBoard error : ", e);
+
+      if (e instanceof BusinessException) {
+        throw new BusinessException(e.getMessage());
+      }
+
       throw new BusinessException("게시글 저장에 실패했습니다.");
     }
 
