@@ -15,6 +15,7 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.project.api.constants.BoardType;
 import com.project.api.zconfig.entrypoint.AuthEntryPoint;
 import com.project.api.zconfig.filters.AuthFilter;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,8 @@ public class SecurityConfig {
         .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers(ignorePathArray).permitAll();
-          auth.requestMatchers(HttpMethod.GET, "/board/{boardType}", "/board/BOARD_FREE/{id}")
-              .permitAll();
+          auth.requestMatchers(HttpMethod.GET, "/board/{boardType}",
+              "/board/".concat(BoardType.BOARD_FREE.name()).concat("/{id}")).permitAll();
 
           if (!"prod".equalsIgnoreCase(active)) {
             auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")

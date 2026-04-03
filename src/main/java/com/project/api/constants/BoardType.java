@@ -12,11 +12,21 @@ public enum BoardType {
   /** 자유게시판 */
   BOARD_FREE("0001"),
   /** 스포츠게시판 */
-  BOARD_SPORT("0002"),
+  BOARD_SPORTS("0002"),
   /** 연예게시판 */
   BOARD_ENTERTAIN("0003"),
   /** 음식게시판 */
   BOARD_FOOD("0004"),
+  /** 유머게시판 */
+  BOARD_HUMOR("0005"),
+  /** 정보/팁게시판 */
+  BOARD_INFO("0006"),
+  /** 중고장터 */
+  BOARD_MARKET("0007"),
+  /** 질문/답변게시판 */
+  BOARD_QNA("0008"),
+  /** 건의사항 */
+  BOARD_SUGGEST("0009"),
   /** 익명게시판 */
   BOARD_ANONY("9999");
 
