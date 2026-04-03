@@ -3,10 +3,12 @@ package com.project.api.controllers;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
+import com.project.api.constants.BoardType;
 import com.project.api.dtos.request.Join;
 import com.project.api.dtos.request.Login;
 import com.project.api.dtos.response.Menu;
@@ -65,6 +67,14 @@ public class IndexController {
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {
     return commonService.getMenuList();
   }
+
+  @GetMapping("/menus/{boardType}")
+  public CompletableFuture<ResponseApi<Menu>> getMethodName(@PathVariable String boardType) {
+    System.out.println(
+        ":::::::::::::::::::::::::::::::::::::::::: " + BoardType.find(boardType).getCode());
+    return commonService.getMenuInfo(BoardType.find(boardType).getCode());
+  }
+
 
 
 }

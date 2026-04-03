@@ -31,4 +31,9 @@ public class CommonService {
   public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
     return ResponseApi.asyncOk(() -> readUserRepository.findUserById(userId));
   }
+
+  @Async("appAsync")
+  public CompletableFuture<ResponseApi<Menu>> getMenuInfo(String boardTypeCode) {
+    return ResponseApi.asyncOk(() -> readMenuRepository.findMenuByCode(boardTypeCode));
+  }
 }

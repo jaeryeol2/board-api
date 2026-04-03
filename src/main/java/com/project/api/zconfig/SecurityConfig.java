@@ -31,7 +31,7 @@ public class SecurityConfig {
 
   @Bean
   SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    final String[] ignorePathArray = {"/status", "/login", "/logout", "/signup"};
+    final String[] ignorePathArray = {"/status", "/login", "/logout", "/signup", "/menus/**"};
 
     http.httpBasic(basic -> basic.disable()).csrf(csrf -> csrf.disable())
         .formLogin(login -> login.disable()).logout(logout -> logout.disable())

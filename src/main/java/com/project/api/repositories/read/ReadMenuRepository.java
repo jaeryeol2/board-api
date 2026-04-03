@@ -2,6 +2,7 @@ package com.project.api.repositories.read;
 
 import java.util.List;
 import org.springframework.stereotype.Repository;
+import com.project.api.common.utils.QueryDslUtil;
 import com.project.api.dtos.response.Menu;
 import com.project.api.entities.QAppMenu;
 import com.querydsl.core.types.Projections;
@@ -16,11 +17,22 @@ public class ReadMenuRepository {
   private static final QAppMenu entity = QAppMenu.appMenu;
 
   public List<Menu> findMenuList() {
-    final QBean<Menu> columns =
-        Projections.fields(Menu.class, entity.menuName, entity.href, entity.isActive);
+    final QBean<Menu> columns = Projections.fields(Menu.class, entity.id, entity.parentId,
+        entity.menuType, entity.menuName, entity.href, entity.isActive);
     return factory.select(columns)//
         .from(entity)//
         .where(entity.isActive.eq(true))//
+        .orderBy(entity.sortOrder.asc())//
         .fetch();
+  }
+
+  public Menu findMenuByCode(String boardTypeCode) {
+    final QBean<Menu> columns = QueryDslUtil.generateFields(Menu.class, entity);
+
+    return factory.select(columns)//
+        .from(entity)//
+        .where(entity.boardCode.eq(boardTypeCode)//
+            .and(entity.parentId.isNull()))//
+        .fetchOne();
   }
 }
