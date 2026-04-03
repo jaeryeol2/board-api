@@ -45,6 +45,9 @@ public class SecurityConfig {
         .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers(ignorePathArray).permitAll();
+          auth.requestMatchers(HttpMethod.GET, "/board/{boardType}", "/board/BOARD_FREE/{id}")
+              .permitAll();
+
           if (!"prod".equalsIgnoreCase(active)) {
             auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")
                 .permitAll();
