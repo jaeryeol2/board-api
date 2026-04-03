@@ -70,8 +70,6 @@ public class IndexController {
 
   @GetMapping("/menus/{boardType}")
   public CompletableFuture<ResponseApi<Menu>> getMethodName(@PathVariable String boardType) {
-    System.out.println(
-        ":::::::::::::::::::::::::::::::::::::::::: " + BoardType.find(boardType).getCode());
     return commonService.getMenuInfo(BoardType.find(boardType).getCode());
   }
 

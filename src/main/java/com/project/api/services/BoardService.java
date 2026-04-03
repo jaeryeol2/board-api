@@ -57,9 +57,26 @@ public class BoardService {
         .then(() -> {
           final List<Long> ids = readBoardRepository.findBoardByIds(filter);
           return readBoardRepository.findBoardList(boardTypeCode, ids);
-        }).other(Collections::emptyList)//
+        })//
+        .other(Collections::emptyList)//
         .get());
   }
+
+  @Async("appAsync")
+  @Cacheable(cacheNames = "getBoardList", key = "'board-popular' + '_' + #filter.page")
+  public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardPopularList(
+      final BoardFilter filter) {
+    final long count = readBoardRepository.findBoardPopularCount();
+
+    return ResponseApi.asyncOk(Math.toIntExact(count), () -> CaseGet.when(count > 0)//
+        .then(() -> {
+          final List<Long> ids = readBoardRepository.findBoardPopularByIds(filter);
+          return readBoardRepository.findBoardPopularList(ids);
+        })//
+        .other(Collections::emptyList)//
+        .get());
+  }
+
 
   @Async("appAsync")
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {

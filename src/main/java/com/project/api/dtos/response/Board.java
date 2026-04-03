@@ -2,6 +2,7 @@ package com.project.api.dtos.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.project.api.constants.BoardType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,10 +12,19 @@ import lombok.ToString;
 public class Board {
   private long id;
   private String title;
+  private String boardTypeCode;
   private String writerId;
   private String writerName;
   private LocalDateTime createdAt;
   private int viewCount;
+
+  public String getWriterName() {
+    if (BoardType.BOARD_ANONY.getCode().equals(boardTypeCode)) {
+      return null;
+    }
+
+    return this.writerName;
+  }
 
   @Getter
   @ToString
@@ -22,6 +32,7 @@ public class Board {
     private long id;
     private String title;
     private String content;
+    private String boardTypeCode;
     private String writerId;
     private String writerName;
     private int viewCount;
@@ -33,6 +44,14 @@ public class Board {
     private List<BoardComment> commentList;
     @Setter
     private List<BoardFile> fileList;
+
+    public String getWriterName() {
+      if (BoardType.BOARD_ANONY.getCode().equals(boardTypeCode)) {
+        return null;
+      }
+
+      return this.writerName;
+    }
 
   }
 

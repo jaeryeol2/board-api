@@ -27,6 +27,8 @@ public enum BoardType {
   BOARD_QNA("0008"),
   /** 건의사항 */
   BOARD_SUGGEST("0009"),
+  /** 인기 */
+  BOARD_POPULAR("0010"),
   /** 익명게시판 */
   BOARD_ANONY("9999");
 

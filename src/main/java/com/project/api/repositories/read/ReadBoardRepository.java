@@ -20,77 +20,106 @@ import lombok.RequiredArgsConstructor;
 @Repository
 @RequiredArgsConstructor
 public class ReadBoardRepository {
-  private final JPAQueryFactory factory;
+	private final JPAQueryFactory factory;
 
-  private static final QAppUser user = QAppUser.appUser;
-  private static final QAppBoard board = QAppBoard.appBoard;
-  private static final QAppBoardFile file = QAppBoardFile.appBoardFile;
-  private static final QAppBoardComment comment = QAppBoardComment.appBoardComment;
-  private static final QAppBoardLike like = QAppBoardLike.appBoardLike;
-  private static final String WRITER_NAME = "writerName";
+	private static final QAppUser user = QAppUser.appUser;
+	private static final QAppBoard board = QAppBoard.appBoard;
+	private static final QAppBoardFile file = QAppBoardFile.appBoardFile;
+	private static final QAppBoardComment comment = QAppBoardComment.appBoardComment;
+	private static final QAppBoardLike like = QAppBoardLike.appBoardLike;
+	private static final String WRITER_NAME = "writerName";
 
-  public long findBoardCountById(BoardFilter filter) {
-    return factory.select(board.id.count())//
-        .from(board)//
-        .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
-        .fetchOne();
-  }
+	public long findBoardCountById(BoardFilter filter) {
+		return factory.select(board.id.count())//
+				.from(board)//
+				.where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
+				.fetchOne();
+	}
 
-  public List<Long> findBoardByIds(BoardFilter filter) {
-    return factory.select(board.id)//
-        .from(board)//
-        .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
-        .limit(filter.getRowsPerPage())//
-        .offset((long) (filter.getPage() - 1) * filter.getRowsPerPage())
-        .orderBy(board.createdAt.desc(), board.id.desc()).fetch();
-  }
+	public List<Long> findBoardByIds(BoardFilter filter) {
+		return factory.select(board.id)//
+				.from(board)//
+				.where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
+				.limit(filter.getRowsPerPage())//
+				.offset((long) (filter.getPage() - 1) * filter.getRowsPerPage())
+				.orderBy(board.createdAt.desc(), board.id.desc()).fetch();
+	}
 
-  public List<Board> findBoardList(String boardTypeCode, List<Long> ids) {
-    final QBean<Board> colums =
-        QueryDslUtil.generateFields(Board.class, board, user.userName.as(WRITER_NAME));
+	public List<Board> findBoardList(String boardTypeCode, List<Long> ids) {
+		final QBean<Board> colums =
+				QueryDslUtil.generateFields(Board.class, board, user.userName.as(WRITER_NAME));
 
-    return factory.select(colums)//
-        .from(board)//
-        .leftJoin(user)//
-        .on(board.writerId.eq(user.userId))//
-        .where(board.boardTypeCode.eq(boardTypeCode)//
-            .and(board.id.in(ids)))//
-        .orderBy(board.createdAt.desc(), board.id.desc())//
-        .fetch();
-  }
+		return factory.select(colums)//
+				.from(board)//
+				.leftJoin(user)//
+				.on(board.writerId.eq(user.userId))//
+				.where(board.boardTypeCode.eq(boardTypeCode)//
+						.and(board.id.in(ids)))//
+				.orderBy(board.createdAt.desc(), board.id.desc())//
+				.fetch();
+	}
 
-  public BoardDetail findBoardById(final long id) {
-    final QBean<BoardDetail> colums = QueryDslUtil.generateFields(BoardDetail.class, board,
-        user.userName.as(WRITER_NAME), like.count().as("likeCount"));
+	public BoardDetail findBoardById(final long id) {
+		final QBean<BoardDetail> colums = QueryDslUtil.generateFields(BoardDetail.class, board,
+				user.userName.as(WRITER_NAME), like.count().as("likeCount"));
 
-    return factory.select(colums)//
-        .from(board)//
-        .leftJoin(user)//
-        .on(board.writerId.eq(user.userId))//
-        .leftJoin(like).on(board.id.eq(like.id))//
-        .where(board.id.eq(id))//
-        .groupBy(board.id, user.userName)//
-        .fetchOne();
-  }
+		return factory.select(colums)//
+				.from(board)//
+				.leftJoin(user)//
+				.on(board.writerId.eq(user.userId))//
+				.leftJoin(like).on(board.id.eq(like.id))//
+				.where(board.id.eq(id))//
+				.groupBy(board.id, user.userName)//
+				.fetchOne();
+	}
 
-  public List<BoardComment> findBoardCommentById(final long id) {
-    final QBean<BoardComment> columns =
-        QueryDslUtil.generateFields(BoardComment.class, comment, user.userName.as(WRITER_NAME));
-    return factory.select(columns)//
-        .from(comment)//
-        .leftJoin(user)//
-        .on(comment.writerId.eq(user.userId))//
-        .where(comment.id.eq(id)//
-            .and(comment.isDeleted.eq(false)))//
-        .fetch();
-  }
+	public List<BoardComment> findBoardCommentById(final long id) {
+		final QBean<BoardComment> columns =
+				QueryDslUtil.generateFields(BoardComment.class, comment, user.userName.as(WRITER_NAME));
+		return factory.select(columns)//
+				.from(comment)//
+				.leftJoin(user)//
+				.on(comment.writerId.eq(user.userId))//
+				.where(comment.id.eq(id)//
+						.and(comment.isDeleted.eq(false)))//
+				.fetch();
+	}
 
-  public List<BoardFile> findBoardFileById(final long id) {
-    final QBean<BoardFile> fileColumns = QueryDslUtil.generateFields(BoardFile.class, file);
+	public List<BoardFile> findBoardFileById(final long id) {
+		final QBean<BoardFile> fileColumns = QueryDslUtil.generateFields(BoardFile.class, file);
 
-    return factory.select(fileColumns)//
-        .from(file)//
-        .where(file.board.id.eq(id)).fetch();
-  }
+		return factory.select(fileColumns)//
+				.from(file)//
+				.where(file.board.id.eq(id)).fetch();
+	}
+
+	public long findBoardPopularCount() {
+		return factory.select(board.id.count())//
+				.from(board)//
+				.where(board.viewCount.goe(30))//
+				.fetchOne();
+	}
+
+	public List<Long> findBoardPopularByIds(BoardFilter filter) {
+		return factory.select(board.id)//
+				.from(board)//
+				.where(board.viewCount.goe(30))//
+				.limit(filter.getRowsPerPage())//
+				.offset((long) (filter.getPage() - 1) * filter.getRowsPerPage())
+				.orderBy(board.createdAt.desc(), board.id.desc()).fetch();
+	}
+
+	public List<Board> findBoardPopularList(List<Long> ids) {
+		final QBean<Board> colums =
+				QueryDslUtil.generateFields(Board.class, board, user.userName.as(WRITER_NAME));
+
+		return factory.select(colums)//
+				.from(board)//
+				.leftJoin(user)//
+				.on(board.writerId.eq(user.userId))//
+				.where(board.id.in(ids))//
+				.orderBy(board.createdAt.desc(), board.id.desc())//
+				.fetch();
+	}
 
 }

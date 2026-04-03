@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.common.base.ResponseApi.ResponseList;
+import com.project.api.common.condition.CaseGet;
 import com.project.api.constants.BoardType;
 import com.project.api.dtos.request.BoardFilter;
 import com.project.api.dtos.request.BoardWrite;
@@ -33,7 +34,11 @@ public class BoardController {
     log.info("board type name : {}, code : {}", boardType.name(), boardType.getCode());
     log.info("board filter parameter : {}", boardFilter);
 
-    return boardService.getBoardList(boardType, boardFilter);
+    return CaseGet.when(() -> BoardType.BOARD_POPULAR == boardType)//
+        .then(() -> boardService.getBoardPopularList(boardFilter))//
+        .other(() -> boardService.getBoardList(boardType, boardFilter))//
+        .get();
+
   }
 
   @GetMapping("/{boardType}/{id}")
