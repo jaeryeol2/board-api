@@ -1,9 +1,11 @@
 package com.project.api.controllers;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
@@ -12,7 +14,9 @@ import com.project.api.common.condition.CaseGet;
 import com.project.api.constants.BoardType;
 import com.project.api.dtos.request.BoardFilter;
 import com.project.api.dtos.request.BoardWrite;
+import com.project.api.dtos.request.CommentWrite;
 import com.project.api.dtos.response.Board;
+import com.project.api.dtos.response.Board.BoardComment;
 import com.project.api.dtos.response.Board.BoardDetail;
 import com.project.api.services.BoardService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,6 +56,18 @@ public class BoardController {
       HttpServletRequest request) {
 
     return boardService.writeBoard(boardType, write, request);
+  }
+
+  @GetMapping("/comment/{boardId}")
+  public CompletableFuture<ResponseApi<List<BoardComment>>> getCommentList(
+      @PathVariable long boardId) {
+    return boardService.getCommentList(boardId);
+  }
+
+  @PostMapping("/comment/{boardId}")
+  public ResponseApi<Boolean> writeComment(@PathVariable long boardId,
+      @RequestBody CommentWrite write, HttpServletRequest request) {
+    return boardService.writeComment(boardId, write, request);
   }
 
 

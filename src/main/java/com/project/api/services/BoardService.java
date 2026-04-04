@@ -21,15 +21,19 @@ import com.project.api.common.condition.CaseGet;
 import com.project.api.constants.BoardType;
 import com.project.api.dtos.request.BoardFilter;
 import com.project.api.dtos.request.BoardWrite;
+import com.project.api.dtos.request.CommentWrite;
 import com.project.api.dtos.response.Board;
+import com.project.api.dtos.response.Board.BoardComment;
 import com.project.api.dtos.response.Board.BoardDetail;
 import com.project.api.dtos.response.ResponseS3;
 import com.project.api.dtos.response.User;
 import com.project.api.entities.AppBoard;
+import com.project.api.entities.AppBoardComment;
 import com.project.api.entities.AppBoardFile;
 import com.project.api.repositories.read.ReadBoardRepository;
 import com.project.api.repositories.write.WriteBoardFileRepository;
 import com.project.api.repositories.write.WriteBoardRepository;
+import com.project.api.repositories.write.WriteCommentRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +48,7 @@ public class BoardService {
   private final ReadBoardRepository readBoardRepository;
   private final WriteBoardRepository writeBoardRepository;
   private final WriteBoardFileRepository writeBoardFileRepository;
+  private final WriteCommentRepository writeCommentRepository;
 
   @Async("appAsync")
   @Cacheable(cacheNames = "getBoardList", key = "#type.code + '_' + #filter.page")
@@ -87,8 +92,8 @@ public class BoardService {
       if (optional.isPresent()) {
         detail = optional.get();
 
-        detail.setCommentList(readBoardRepository.findBoardCommentById(0));
-        detail.setFileList(readBoardRepository.findBoardFileById(id));
+        detail.setCommentList(readBoardRepository.findBoardCommentByBoardId(id));
+        detail.setFileList(readBoardRepository.findBoardFileByBoardId(id));
 
         transaction.execute(status -> {
           writeBoardRepository.updateViewCount(id);
@@ -152,5 +157,27 @@ public class BoardService {
 
     return ResponseApi.ok(HttpStatus.CREATED, "created", true);
 
+  }
+
+  @Async("appAsync")
+  public CompletableFuture<ResponseApi<List<BoardComment>>> getCommentList(long boardId) {
+    return ResponseApi.asyncOk(() -> readBoardRepository.findBoardCommentByBoardId(boardId));
+  }
+
+  @Transactional
+  public ResponseApi<Boolean> writeComment(long boardId, CommentWrite write,
+      HttpServletRequest request) {
+    AppBoardComment comment = writeCommentRepository.save(AppBoardComment.builder()//
+        .board(AppBoard.builder()//
+            .id(boardId)//
+            .build())//
+        .content(write.getContent())//
+        .parentId(write.getParentId())//
+        .writerId(userService.getUserId(request)//
+            .join()//
+            .getData())//
+        .build());
+
+    return ResponseApi.ok(HttpStatus.CREATED, "created", comment.getId() > 0L);
   }
 }

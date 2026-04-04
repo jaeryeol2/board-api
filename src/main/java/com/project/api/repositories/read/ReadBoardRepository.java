@@ -73,24 +73,26 @@ public class ReadBoardRepository {
 				.fetchOne();
 	}
 
-	public List<BoardComment> findBoardCommentById(final long id) {
+	public List<BoardComment> findBoardCommentByBoardId(final long boardId) {
 		final QBean<BoardComment> columns =
 				QueryDslUtil.generateFields(BoardComment.class, comment, user.userName.as(WRITER_NAME));
 		return factory.select(columns)//
 				.from(comment)//
 				.leftJoin(user)//
 				.on(comment.writerId.eq(user.userId))//
-				.where(comment.id.eq(id)//
+				.where(comment.board.id.eq(boardId)//
 						.and(comment.isDeleted.eq(false)))//
+				.orderBy(comment.createdAt.asc())//
 				.fetch();
 	}
 
-	public List<BoardFile> findBoardFileById(final long id) {
+	public List<BoardFile> findBoardFileByBoardId(final long boardId) {
 		final QBean<BoardFile> fileColumns = QueryDslUtil.generateFields(BoardFile.class, file);
 
 		return factory.select(fileColumns)//
 				.from(file)//
-				.where(file.board.id.eq(id)).fetch();
+				.where(file.board.id.eq(boardId))//
+				.fetch();
 	}
 
 	public long findBoardPopularCount() {

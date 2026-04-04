@@ -1,6 +1,7 @@
 package com.project.api.entities;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -34,6 +35,7 @@ public class AppBoardComment {
   @Builder.Default
   private boolean isDeleted = false;
 
+  @CreationTimestamp
   @Column(updatable = false)
   private LocalDateTime createdAt;
 

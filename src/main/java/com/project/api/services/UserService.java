@@ -135,6 +135,13 @@ public class UserService {
     response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
     return ResponseApi.completedOk(true);
+
+  }
+
+  @Async("appAsync")
+  public CompletableFuture<ResponseApi<String>> getUserId(HttpServletRequest request) {
+    final String token = this.getAccessToken(request);
+    return ResponseApi.completedOk(tokenUtil.getTokenInfo(token).getSubject());
   }
 
   @Async("appAsync")
