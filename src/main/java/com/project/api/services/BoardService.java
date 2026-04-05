@@ -50,6 +50,12 @@ public class BoardService {
   private final WriteBoardFileRepository writeBoardFileRepository;
   private final WriteCommentRepository writeCommentRepository;
 
+
+  @Async("appAsync")
+  public CompletableFuture<ResponseApi<List<?>>> getHomRenderData() {
+    return ResponseApi.asyncOk(() -> null);
+  }
+
   @Async("appAsync")
   @Cacheable(cacheNames = "getBoardList", key = "#type.code + '_' + #filter.page")
   public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(final BoardType type,

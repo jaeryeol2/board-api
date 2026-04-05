@@ -12,6 +12,7 @@ import com.project.api.constants.BoardType;
 import com.project.api.dtos.request.Join;
 import com.project.api.dtos.request.Login;
 import com.project.api.dtos.response.Menu;
+import com.project.api.services.BoardService;
 import com.project.api.services.CommonService;
 import com.project.api.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class IndexController {
   private final CommonService commonService;
   private final UserService userService;
+  private final BoardService boardService;
 
   @GetMapping("/status")
   public ResponseApi<String> status() {
@@ -71,6 +73,11 @@ public class IndexController {
   @GetMapping("/menus/{boardType}")
   public CompletableFuture<ResponseApi<Menu>> getMethodName(@PathVariable String boardType) {
     return commonService.getMenuInfo(BoardType.find(boardType).getCode());
+  }
+
+  @GetMapping("/home")
+  public CompletableFuture<ResponseApi<List<?>>> getHomeRenderData() {
+    return boardService.getHomRenderData();
   }
 
 
