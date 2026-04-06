@@ -45,14 +45,6 @@ public class Board {
     @Setter
     private List<BoardFile> fileList;
 
-    public String getWriterName() {
-      if (BoardType.BOARD_ANONY.getCode().equals(boardTypeCode)) {
-        return null;
-      }
-
-      return this.writerName;
-    }
-
   }
 
   @Getter
