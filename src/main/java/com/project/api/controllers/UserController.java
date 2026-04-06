@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.dtos.response.User;
-import com.project.api.services.UserService;
+import com.project.api.services.read.ReadUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @RequestMapping("/user")
 public class UserController {
-  private final UserService userService;
+  private final ReadUserService readUserService;
 
   @GetMapping("")
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
-    return userService.getUserInfo(request);
+    return readUserService.getUserInfo(request);
   }
 
 }

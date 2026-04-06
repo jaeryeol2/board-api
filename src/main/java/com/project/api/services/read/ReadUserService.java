@@ -1,4 +1,4 @@
-package com.project.api.services;
+package com.project.api.services.read;
 
 import static com.project.api.constants.GlobalConstant.ACCESS_TOKEN;
 import static com.project.api.constants.GlobalConstant.REFRESH_TOKEN;
@@ -7,27 +7,19 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.util.ObjectUtils;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
-import com.project.api.common.condition.Case;
 import com.project.api.common.utils.TokenUtil;
-import com.project.api.constants.UserRole;
-import com.project.api.dtos.request.Join;
 import com.project.api.dtos.request.Login;
 import com.project.api.dtos.response.User;
-import com.project.api.entities.AppUser;
 import com.project.api.repositories.read.ReadUserRepository;
-import com.project.api.repositories.write.WriteUserRepository;
+import com.project.api.services.LookupService;
+import com.project.api.services.write.WriteUserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,14 +29,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class ReadUserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
 
-  private final CommonService commonService;
+  private final LookupService lookupService;
+  private final WriteUserService writeUserService;
 
-  private final TransactionTemplate transactionTemplate;
-  private final WriteUserRepository writeUserRepository;
   private final ReadUserRepository readUserRepository;
 
 
@@ -97,10 +88,18 @@ public class UserService {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        transactionTemplate.execute(status -> {
-          writeUserRepository.updateLastLoginDate(login.getUserId());
-          return status;
-        });
+        try {
+          ResponseApi<Boolean> loginUpdate =
+              writeUserService.updateLastLoginDate(login.getUserId());
+
+          if (Boolean.FALSE.equals(loginUpdate.getData())) {
+            throw new BusinessException("last login date update fail.");
+          }
+
+        } catch (Exception e) {
+          log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
+              LocalDateTime.now());
+        }
 
         return true;
       }
@@ -147,47 +146,14 @@ public class UserService {
   @Async("appAsync")
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
     final String userId = tokenUtil.getTokenInfo(getAccessToken(request)).getSubject();
-    return commonService.getUserInfo(userId);
+    return lookupService.getUserInfo(userId);
   }
 
   @Async("appAsync")
   public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
-    return commonService.getUserInfo(userId);
+    return lookupService.getUserInfo(userId);
   }
 
-  @Transactional
-  public ResponseApi<Boolean> join(Join join) {
-    try {
-      final AppUser appUser = writeUserRepository.save(AppUser.builder()//
-          .userId(join.getUserId())//
-          .password(join.getPassword())//
-          .userName(join.getUserName())//
-          .email(join.getEmail())//
-          .userRole(UserRole.USER_GENERAL.getCode())//
-          .build());
 
-      return Optional.of(!ObjectUtils.isEmpty(appUser))//
-          .filter(bool -> bool)//
-          .map(bool -> ResponseApi.ok(HttpStatus.CREATED, "success", bool))//
-          .orElse(ResponseApi.fail("fail", false));
-    } catch (Exception e) {
-      log.error("join error : ", e);
-      final int firstIndex = 0;
-      final String message = e.getMessage();
-      final boolean isDuplicate = e instanceof DataIntegrityViolationException;
-      final String[] resMessage = new String[] {"회원가입에 실패 했습니다."};
-
-      Case.when(isDuplicate && message.contains("user_id"))//
-          .then(() -> resMessage[firstIndex] = "이미 존재하는 아이디입니다.")//
-          .when(isDuplicate && message.contains("email"))//
-          .then(() -> resMessage[firstIndex] = "이미 존재하는 이메일입니다.")//
-          .when(isDuplicate)//
-          .then(() -> resMessage[firstIndex] = "중복되는 데이터가 있습니다.")//
-          .execute();
-
-      throw new BusinessException(resMessage[firstIndex]);
-    }
-
-  }
 
 }

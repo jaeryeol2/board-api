@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CommonService {
+public class LookupService {
   private final ReadMenuRepository readMenuRepository;
   private final ReadUserRepository readUserRepository;
 

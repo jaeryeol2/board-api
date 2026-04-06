@@ -12,5 +12,5 @@ public interface WriteUserRepository extends JpaRepository<AppUser, String> {
 
   @Modifying
   @Query("UPDATE AppUser u SET u.lastLoginAt = CURRENT_TIMESTAMP WHERE u.userId = :userId")
-  public void updateLastLoginDate(@Param("userId") String userId);
+  public int updateLastLoginDate(@Param("userId") String userId);
 }
