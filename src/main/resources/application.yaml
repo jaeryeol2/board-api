@@ -19,7 +19,7 @@ spring:
     hibernate:
       ddl-auto: none
       naming:
-        physical-strategy: com.project.api.zconfig.orm.JpaNamingStrategy
+        physical-strategy: com.board.api.zconfig.orm.JpaNamingStrategy
     properties:
       hibernate:
         format_sql: true
@@ -31,10 +31,7 @@ decorator:
       enable-logging: true
       multiline: true
       logging: slf4j
-    exclude-beans:
-      - writeHikariDataSource
-      - readHikariDataSource
-      - routingDataSource
+    exclude-beans: writeHikariDataSource, readHikariDataSource, routingDataSource
 
 jasypt:
   encryptor:

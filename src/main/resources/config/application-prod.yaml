@@ -8,7 +8,7 @@ datasource:
       connection-test-query: SELECT 1
       maximum-pool-size: 5
       minimum-idle: 3
-      transaction-pointcut: execution(* com.project.api.services.*..*Service.*(..))
+      transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
   write:
     hikari:
       driver-class-name: org.postgresql.Driver
@@ -18,7 +18,7 @@ datasource:
       connection-test-query: SELECT 1
       maximum-pool-size: 5
       minimum-idle: 3
-      transaction-pointcut: execution(* com.project.api.services.*..*Service.*(..))
+      transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
 
 spring:
   servlet:
