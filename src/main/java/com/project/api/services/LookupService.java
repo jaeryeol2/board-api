@@ -33,6 +33,7 @@ public class LookupService {
   }
 
   @Async
+  @Cacheable(cacheNames = "getMenuInfo", key = "#boardTypeCode")
   public CompletableFuture<ResponseApi<Menu>> getMenuInfo(String boardTypeCode) {
     return ResponseApi.asyncOk(() -> readMenuRepository.findMenuByCode(boardTypeCode));
   }

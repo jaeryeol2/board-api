@@ -18,6 +18,8 @@ public enum CacheTime {
   GET_USER_INFO("getUserInfo", Duration.ofHours(1L)),
   /** menu list */
   GET_MENU_LIST("getMenuList", Duration.ofHours(1L)),
+  /** menu info */
+  GET_MENU_INFO("getMenuInfo", Duration.ofHours(1L)),
   /** board list */
   BOARD_LIST("getBoardList", Duration.ofSeconds(30L));
 
