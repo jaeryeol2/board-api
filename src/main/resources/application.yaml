@@ -10,10 +10,7 @@ spring:
     additional-location: classpath:/config/
   profiles:
     active: local
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
+
   jpa:
     show-sql: false
     hibernate:
