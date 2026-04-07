@@ -39,7 +39,7 @@ public class ReadUserService {
   private final ReadUserRepository readUserRepository;
 
 
-  private String getAccessToken(HttpServletRequest request) {
+  public String getAccessToken(HttpServletRequest request) {
     Optional<String> optional = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION));
 
     if (optional.isPresent()) {
@@ -49,7 +49,7 @@ public class ReadUserService {
     return null;
   }
 
-  private String getRefreshToken(HttpServletRequest request) {
+  public String getRefreshToken(HttpServletRequest request) {
     final Cookie[] cookies = Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]);
     return Arrays.asList(cookies).stream()
         .filter(
