@@ -10,6 +10,8 @@ import org.springframework.core.task.VirtualThreadTaskExecutor;
 import org.springframework.core.task.support.TaskExecutorAdapter;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,7 +34,8 @@ public class AsyncConfig {
       // [실행 시점: 메인 톰캣 스레드]
       // 비동기 호출을 지시한 톰캣 스레드에서 기존 로깅 컨텍스트(TraceId 등)를 캡처합니다.
       log.info("Preparing async task on caller thread: {}", Thread.currentThread());
-      Map<String, String> contextMap = MDC.getCopyOfContextMap();
+      final Map<String, String> contextMap = MDC.getCopyOfContextMap();
+      final RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
 
       return () -> {
         // [실행 시점: 가상 스레드]
@@ -42,11 +45,16 @@ public class AsyncConfig {
           if (contextMap != null) {
             MDC.setContextMap(contextMap);
           }
+          // 메인 스레드의 RequestContext를 가상 스레드에 주입
+          if (requestAttributes != null) {
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+          }
 
           runnable.run(); // 실제 @Async 비즈니스 로직 실행
         } finally {
           // 스레드 종료 시점 정리 (메모리 릭 방지)
           MDC.clear();
+          RequestContextHolder.resetRequestAttributes();
         }
       };
     });
