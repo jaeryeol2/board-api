@@ -32,6 +32,7 @@ public class AuthFilter extends OncePerRequestFilter {
     boolean isLogin = readUserService.authCheck(request, response).join().getData();
 
     log.info("api path : {}", path);
+    log.info("client ip : {}", request.getHeader("X-Forwarded-For"));
 
     if (isLogin) {
       final String token = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))
