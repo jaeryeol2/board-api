@@ -4,6 +4,7 @@ import java.util.Map;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.core.task.VirtualThreadTaskExecutor;
 import org.springframework.core.task.support.TaskExecutorAdapter;
@@ -18,7 +19,8 @@ public class AsyncConfig {
 
   private static final String VIRTUAL_THREAD_NAME = "app-virtual-thread-";
 
-  @Bean(name = "appAsync")
+  @Bean
+  @Primary
   public TaskExecutor appAsync() {
     // 1. 가상 스레드 기반 Executor 생성
     final TaskExecutorAdapter executor =

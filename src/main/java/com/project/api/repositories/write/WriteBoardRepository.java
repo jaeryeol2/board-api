@@ -12,5 +12,5 @@ public interface WriteBoardRepository extends JpaRepository<AppBoard, Long> {
 
   @Modifying
   @Query("UPDATE AppBoard b SET b.viewCount = b.viewCount + 1 WHERE b.id = :boardId")
-  public void updateViewCount(@Param("boardId") long boardId);
+  public int updateViewCount(@Param("boardId") long boardId);
 }

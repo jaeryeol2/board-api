@@ -106,4 +106,9 @@ public class WriteBoardService {
 
     return ResponseApi.ok(HttpStatus.CREATED, "created", comment.getId() > 0L);
   }
+
+  @Transactional
+  public ResponseApi<Boolean> updateViewCount(long boardId) {
+    return ResponseApi.ok(writeBoardRepository.updateViewCount(boardId) > 0);
+  }
 }

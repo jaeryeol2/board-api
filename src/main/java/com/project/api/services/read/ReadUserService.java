@@ -57,14 +57,14 @@ public class ReadUserService {
         .findFirst().orElseGet(() -> new Cookie(REFRESH_TOKEN.getValue(), null)).getValue();
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
       HttpServletResponse response) {
     final Optional<String> refreshToken = Optional.ofNullable(getRefreshToken(request));
     return ResponseApi.completedOk(refreshToken.isPresent());
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<Boolean>> login(final Login login,
       HttpServletRequest request, HttpServletResponse response) {
     return ResponseApi.asyncOk(() -> {
@@ -108,7 +108,7 @@ public class ReadUserService {
     });
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletResponse response) {
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
         .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
@@ -121,7 +121,7 @@ public class ReadUserService {
     return ResponseApi.completedOk(true);
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
     final Cookie refreshToken = Arrays.asList(request.getCookies()).stream()
@@ -137,19 +137,19 @@ public class ReadUserService {
 
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<String>> getUserId(HttpServletRequest request) {
     final String token = this.getAccessToken(request);
     return ResponseApi.completedOk(tokenUtil.getTokenInfo(token).getSubject());
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
     final String userId = tokenUtil.getTokenInfo(getAccessToken(request)).getSubject();
     return lookupService.getUserInfo(userId);
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
     return lookupService.getUserInfo(userId);
   }

@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 import com.project.api.common.base.BusinessException;
 import com.project.api.common.base.ResponseApi;
 import com.project.api.common.base.ResponseApi.ResponseList;
@@ -18,7 +17,7 @@ import com.project.api.dtos.response.Board;
 import com.project.api.dtos.response.Board.BoardComment;
 import com.project.api.dtos.response.Board.BoardDetail;
 import com.project.api.repositories.read.ReadBoardRepository;
-import com.project.api.repositories.write.WriteBoardRepository;
+import com.project.api.services.write.WriteBoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,16 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class ReadBoardService {
-  private final TransactionTemplate transaction;
+  private final WriteBoardService writeBoardService;
   private final ReadBoardRepository readBoardRepository;
-  private final WriteBoardRepository writeBoardRepository;
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<List<?>>> getHomRenderData() {
     return ResponseApi.asyncOk(() -> null);
   }
 
-  @Async("appAsync")
+  @Async
   @Cacheable(cacheNames = "getBoardList", key = "#type.code + '_' + #filter.page")
   public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(final BoardType type,
       final BoardFilter filter) {
@@ -52,7 +50,7 @@ public class ReadBoardService {
         .get());
   }
 
-  @Async("appAsync")
+  @Async
   @Cacheable(cacheNames = "getBoardList", key = "'board-popular' + '_' + #filter.page")
   public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardPopularList(
       final BoardFilter filter) {
@@ -68,7 +66,7 @@ public class ReadBoardService {
   }
 
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {
     return ResponseApi.asyncOk(() -> {
       Optional<BoardDetail> optional = Optional.ofNullable(readBoardRepository.findBoardById(id));
@@ -80,10 +78,11 @@ public class ReadBoardService {
         detail.setCommentList(readBoardRepository.findBoardCommentByBoardId(id));
         detail.setFileList(readBoardRepository.findBoardFileByBoardId(id));
 
-        transaction.execute(status -> {
-          writeBoardRepository.updateViewCount(id);
-          return status;
-        });
+        try {
+          writeBoardService.updateViewCount(id);
+        } catch (Exception e) {
+          log.warn("view count fail. : ", e);
+        }
       }
 
       return detail;
@@ -93,9 +92,7 @@ public class ReadBoardService {
     });
   }
 
-
-
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<List<BoardComment>>> getCommentList(long boardId) {
     return ResponseApi.asyncOk(() -> readBoardRepository.findBoardCommentByBoardId(boardId));
   }

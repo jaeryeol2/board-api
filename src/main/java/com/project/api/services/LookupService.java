@@ -20,19 +20,19 @@ public class LookupService {
   private final ReadMenuRepository readMenuRepository;
   private final ReadUserRepository readUserRepository;
 
-  @Async("appAsync")
+  @Async
   @Cacheable(cacheNames = "getMenuList")
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {
     return ResponseApi.asyncOk(readMenuRepository::findMenuList);
   }
 
-  @Async("appAsync")
+  @Async
   @Cacheable(cacheNames = "getUserInfo", key = "#userId")
   public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
     return ResponseApi.asyncOk(() -> readUserRepository.findUserById(userId));
   }
 
-  @Async("appAsync")
+  @Async
   public CompletableFuture<ResponseApi<Menu>> getMenuInfo(String boardTypeCode) {
     return ResponseApi.asyncOk(() -> readMenuRepository.findMenuByCode(boardTypeCode));
   }
