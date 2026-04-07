@@ -10,6 +10,9 @@ spring:
     additional-location: classpath:/config/
   profiles:
     active: local
+  threads:
+    virtual:
+      enabled: false
 
   jpa:
     show-sql: false
