@@ -18,6 +18,7 @@ import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadUserRepository;
+import com.board.api.services.InternalService;
 import com.board.api.services.LookupService;
 import com.board.api.services.write.WriteUserService;
 import jakarta.servlet.http.Cookie;
@@ -33,36 +34,11 @@ public class ReadUserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
 
+  private final InternalService internalService;
   private final LookupService lookupService;
   private final WriteUserService writeUserService;
 
   private final ReadUserRepository readUserRepository;
-
-
-  public String getAccessToken(HttpServletRequest request) {
-    Optional<String> optional = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION));
-
-    if (optional.isPresent()) {
-      return optional.get().replaceAll("^(?i)Bearer\\s+", "");
-    }
-
-    return null;
-  }
-
-  public String getRefreshToken(HttpServletRequest request) {
-    final Cookie[] cookies = Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]);
-    return Arrays.asList(cookies).stream()
-        .filter(
-            cookie -> cookie != null && REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))
-        .findFirst().orElseGet(() -> new Cookie(REFRESH_TOKEN.getValue(), null)).getValue();
-  }
-
-  @Async
-  public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
-      HttpServletResponse response) {
-    final Optional<String> refreshToken = Optional.ofNullable(getRefreshToken(request));
-    return ResponseApi.completedOk(refreshToken.isPresent());
-  }
 
   @Async
   public CompletableFuture<ResponseApi<Boolean>> login(final Login login,
@@ -139,13 +115,14 @@ public class ReadUserService {
 
   @Async
   public CompletableFuture<ResponseApi<String>> getUserId(HttpServletRequest request) {
-    final String token = this.getAccessToken(request);
+    final String token = internalService.getAccessToken(request);
     return ResponseApi.completedOk(tokenUtil.getTokenInfo(token).getSubject());
   }
 
   @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
-    final String userId = tokenUtil.getTokenInfo(getAccessToken(request)).getSubject();
+    final String userId =
+        tokenUtil.getTokenInfo(internalService.getAccessToken(request)).getSubject();
     return lookupService.getUserInfo(userId);
   }
 

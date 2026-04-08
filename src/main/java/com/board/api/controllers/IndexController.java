@@ -32,17 +32,6 @@ public class IndexController {
   private final ReadBoardService readBoardService;
   private final WriteUserService writeUserService;
 
-  @GetMapping("/status")
-  public ResponseApi<String> status() {
-    return ResponseApi.ok("OK");
-  }
-
-  @GetMapping("/auth")
-  public CompletableFuture<ResponseApi<Boolean>> auth(HttpServletRequest request,
-      HttpServletResponse response) {
-    return readUserService.authCheck(request, response);
-  }
-
   @PostMapping("/auth/access")
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {

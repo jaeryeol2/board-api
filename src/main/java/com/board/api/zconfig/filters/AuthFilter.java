@@ -3,15 +3,19 @@ package com.board.api.zconfig.filters;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.board.api.services.read.ReadUserService;
+import com.board.api.common.utils.TokenUtil;
+import com.board.api.dtos.response.User;
+import com.board.api.services.InternalService;
 import com.board.api.zconfig.authority.DefaultAuthority;
+import com.board.api.zconfig.entrypoint.AuthEntryPoint;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,29 +27,41 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
-  private final ReadUserService readUserService;
+  private final TokenUtil tokenUtil;
+  private final InternalService internalService;
+  private final AuthEntryPoint authEntryPoint;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     final String path = request.getRequestURI();
-    boolean isLogin = readUserService.authCheck(request, response).join().getData();
+    final String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For"))
+        .filter(item -> !item.isBlank() && !"unknown".equals(item))
+        .map(item -> item.split(",")[0].trim())//
+        .orElse(request.getRemoteAddr());
+    final String token = Optional.ofNullable(internalService.getAccessToken(request))//
+        .orElse(internalService.getRefreshToken(request));
 
-    log.info("api path : {}", path);
-    log.info("client ip : {}", request.getHeader("X-Forwarded-For"));
+    try {
+      if (StringUtils.hasText(token)) {
+        final String userId = tokenUtil.getTokenInfo(token).getSubject();
+        final User user = internalService.getUserInfo(userId).getData();
+        final GrantedAuthority authority = new SimpleGrantedAuthority(user.getUserRole());
+        final List<GrantedAuthority> authorities = List.of(authority);
+        final DefaultAuthority authentication = new DefaultAuthority(user, token, authorities);
 
-    if (isLogin) {
-      final String token = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))
-          .orElseGet(() -> "").replaceAll("^(?i)Bearer\\s+", "");
-      GrantedAuthority authority = new SimpleGrantedAuthority("USER");
-      List<GrantedAuthority> authorities = List.of(authority);
-      DefaultAuthority authentication = new DefaultAuthority("user", token, authorities);
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+      }
+    } catch (Exception e) {
+      log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());
+      SecurityContextHolder.clearContext();
+      authEntryPoint.commence(request, response, new AuthenticationException("인증에 실패했습니다.", e) {});
 
-      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-      SecurityContextHolder.getContext().setAuthentication(authentication);
+      return;
     }
 
-    log.info("isLogin : {}", isLogin);
+    log.info("api path : {}, client ip : {}", path, ip);
 
     filterChain.doFilter(request, response);
   }

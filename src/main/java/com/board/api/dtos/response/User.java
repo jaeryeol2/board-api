@@ -10,6 +10,7 @@ public class User {
   private String userId;
   @JsonIgnore
   private String password;
+  private String userRole;
   private String userName;
   private String userAddr;
   private String email;

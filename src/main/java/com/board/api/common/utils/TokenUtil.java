@@ -43,4 +43,14 @@ public class TokenUtil {
     }
   }
 
+  public boolean isTokenExpired(final String token) {
+    try {
+      Jws<Claims> jws = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+      return jws.getPayload().getExpiration().before(new Date());
+    } catch (Exception e) {
+      return true;
+    }
+  }
+
+
 }
