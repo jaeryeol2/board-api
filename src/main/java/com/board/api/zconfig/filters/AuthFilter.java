@@ -43,15 +43,20 @@ public class AuthFilter extends OncePerRequestFilter {
         .orElse(internalService.getRefreshToken(request));
 
     try {
-      if (StringUtils.hasText(token)) {
+      if (StringUtils.hasText(token) && !tokenUtil.isTokenExpired(token)) {
         final String userId = tokenUtil.getTokenInfo(token).getSubject();
-        final User user = internalService.getUserInfo(userId).getData();
-        final GrantedAuthority authority = new SimpleGrantedAuthority(user.getUserRole());
-        final List<GrantedAuthority> authorities = List.of(authority);
-        final DefaultAuthority authentication = new DefaultAuthority(user, token, authorities);
+        final Optional<User> user =
+            Optional.ofNullable(internalService.getUserInfo(userId).getData());
 
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (user.isPresent()) {
+          final GrantedAuthority authority = new SimpleGrantedAuthority(user.get().getUserRole());
+          final List<GrantedAuthority> authorities = List.of(authority);
+          final DefaultAuthority authentication =
+              new DefaultAuthority(user.get(), token, authorities);
+
+          authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+          SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
       }
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());

@@ -28,11 +28,11 @@ public class SecurityConfig {
   private String active;
   private final AuthFilter authFilter;
   private final AuthEntryPoint authEntryPoint;
+  private static final String[] IGNORE_PATH_ARRAY =
+      {"/actuator/health", "/login", "/logout", "/signup", "/menus/**"};
 
   @Bean
   SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    final String[] ignorePathArray =
-        {"/actuator/health", "/login", "/logout", "/signup", "/menus/**"};
 
     http.httpBasic(basic -> basic.disable()).csrf(csrf -> csrf.disable())
         .formLogin(login -> login.disable()).logout(logout -> logout.disable())
@@ -46,7 +46,7 @@ public class SecurityConfig {
             .securityContextRepository(new RequestAttributeSecurityContextRepository()))
         .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> {
-          auth.requestMatchers(ignorePathArray).permitAll();
+          auth.requestMatchers(IGNORE_PATH_ARRAY).permitAll();
           auth.requestMatchers(HttpMethod.GET, "/board/{boardType}",
               "/board/".concat(BoardType.BOARD_FREE.name()).concat("/{id}")).permitAll();
 

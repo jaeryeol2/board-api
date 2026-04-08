@@ -12,6 +12,7 @@ import com.board.api.constants.BoardType;
 import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.response.Menu;
+import com.board.api.services.InternalService;
 import com.board.api.services.LookupService;
 import com.board.api.services.read.ReadBoardService;
 import com.board.api.services.read.ReadUserService;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 public class IndexController {
+  private final InternalService internalService;
   private final LookupService lookupService;
   private final ReadUserService readUserService;
   private final ReadBoardService readBoardService;
@@ -46,8 +48,10 @@ public class IndexController {
   }
 
   @PostMapping("/logout")
-  public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletResponse response) {
-    return readUserService.logout(response);
+  public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
+      HttpServletResponse response) {
+    String userId = internalService.getUserId(request).getData();
+    return writeUserService.logout(userId, response);
   }
 
   @PostMapping("/signup")
