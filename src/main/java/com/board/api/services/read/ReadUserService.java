@@ -16,6 +16,7 @@ import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.request.Login;
+import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadUserRepository;
 import com.board.api.services.InternalService;
@@ -129,6 +130,15 @@ public class ReadUserService {
   @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
     return lookupService.getUserInfo(userId);
+  }
+
+  @Async
+  public CompletableFuture<ResponseApi<PersonalUser>> getPersonalUserInfo(
+      HttpServletRequest request) {
+    final String userId =
+        tokenUtil.getTokenInfo(internalService.getAccessToken(request)).getSubject();
+    log.info(userId);
+    return ResponseApi.asyncOk(() -> null);
   }
 
 
