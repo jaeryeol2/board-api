@@ -5,53 +5,45 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-public class CaseGet {
-  private CaseGet() {}
+public interface CaseGet<T> {
 
-  // --- s : initial when ---
-  public static InitialWhenBuilder when(BooleanSupplier condition) {
+  // --- 값을 반환하는 실행 메서드 ---
+  T get();
+
+  // --- 진입점 (static 메서드로 선언하여 인스턴스에서 호출 불가) ---
+  static InitialWhenBuilder when(BooleanSupplier condition) {
     return new InitialWhenBuilder(condition);
   }
 
-  public static InitialWhenBuilder when(boolean condition) {
+  static InitialWhenBuilder when(boolean condition) {
     return new InitialWhenBuilder(() -> condition);
   }
-  // --- e : initial when ---
 
-  public static class InitialWhenBuilder {
+  // --- Builders (인터페이스 내부의 class는 자동으로 public static) ---
+  class InitialWhenBuilder {
     private final BooleanSupplier currentCondition;
 
-    private InitialWhenBuilder(BooleanSupplier currentCondition) {
+    // 접근 제어자 생략 (package-private)
+    InitialWhenBuilder(BooleanSupplier currentCondition) {
       this.currentCondition = currentCondition;
     }
 
-    // 반환(Value) 전용 체인으로 진입 (Supplier<T>)
+    // 이 시점에 제네릭 타입 T가 결정됩니다.
     public <T> ValueThenBuilder<T> then(Supplier<T> action) {
       List<ValueRule<T>> rules = new ArrayList<>();
       rules.add(new ValueRule<>(this.currentCondition, action));
       return new ValueThenBuilder<>(rules);
     }
 
-    // 값을 직접 넣을 때
     public <T> ValueThenBuilder<T> then(T value) {
       return then(() -> value);
     }
   }
 
-  private static class ValueRule<T> {
-    private final BooleanSupplier condition;
-    private final Supplier<T> action;
-
-    private ValueRule(BooleanSupplier condition, Supplier<T> action) {
-      this.condition = condition;
-      this.action = action;
-    }
-  }
-
-  public static class ValueThenBuilder<T> {
+  class ValueThenBuilder<T> {
     private final List<ValueRule<T>> rules;
 
-    private ValueThenBuilder(List<ValueRule<T>> rules) {
+    ValueThenBuilder(List<ValueRule<T>> rules) {
       this.rules = rules;
     }
 
@@ -72,22 +64,22 @@ public class CaseGet {
       return other(() -> value);
     }
 
-    public T get() {
-      for (ValueRule<T> rule : rules) {
-        if (rule.condition.getAsBoolean()) {
-          return rule.action.get();
-        }
-      }
+    // 지연 평가를 위한 build() 추가
+    public CaseGet<T> build() {
+      return new DefaultCaseGet<>(this.rules);
+    }
 
-      return null;
+    // 즉시 평가를 원할 경우를 위해 유지
+    public T get() {
+      return build().get();
     }
   }
 
-  public static class ValueWhenBuilder<T> {
+  class ValueWhenBuilder<T> {
     private final List<ValueRule<T>> rules;
     private final BooleanSupplier currentCondition;
 
-    private ValueWhenBuilder(List<ValueRule<T>> rules, BooleanSupplier currentCondition) {
+    ValueWhenBuilder(List<ValueRule<T>> rules, BooleanSupplier currentCondition) {
       this.rules = rules;
       this.currentCondition = currentCondition;
     }
@@ -102,15 +94,55 @@ public class CaseGet {
     }
   }
 
-  public static class ValueOtherBuilder<T> {
+  class ValueOtherBuilder<T> {
     private final List<ValueRule<T>> rules;
 
-    private ValueOtherBuilder(List<ValueRule<T>> rules) {
+    ValueOtherBuilder(List<ValueRule<T>> rules) {
       this.rules = rules;
     }
 
+    // 지연 평가를 위한 build() 추가
+    public CaseGet<T> build() {
+      return new DefaultCaseGet<>(this.rules);
+    }
+
+    // 즉시 평가
     public T get() {
-      return new ValueThenBuilder<>(this.rules).get();
+      return build().get();
     }
   }
 }
+
+
+// s : package-private class : 파일 내부에서만 접근가능한 클래스(다른파일에서 접근 못함.)
+class DefaultCaseGet<T> implements CaseGet<T> {
+  private final List<ValueRule<T>> rules;
+
+  DefaultCaseGet(List<ValueRule<T>> rules) {
+    // 방어적 복사 적용: 생성 후 외부에서 조건 추가/변경 방지
+    this.rules = new ArrayList<>(rules);
+  }
+
+  @Override
+  public T get() {
+    for (ValueRule<T> rule : rules) {
+      if (rule.condition.getAsBoolean()) {
+        return rule.action.get();
+      }
+    }
+
+    return null; // 매칭되는 조건이 없을 경우 null 반환 (기존 로직 유지)
+  }
+}
+
+
+class ValueRule<T> {
+  final BooleanSupplier condition;
+  final Supplier<T> action;
+
+  ValueRule(BooleanSupplier condition, Supplier<T> action) {
+    this.condition = condition;
+    this.action = action;
+  }
+}
+// e : package-private class : 파일 내부에서만 접근가능한 클래스(다른파일에서 접근 못함.)

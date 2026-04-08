@@ -5,30 +5,9 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import com.board.api.common.base.BusinessException;
 
-public class Validator {
-  private Validator() {}
+public interface Validator {
 
-  private static class ValidatorType {
-    private final BooleanSupplier condition;
-    private final String message;
-
-    private ValidatorType(BooleanSupplier condition, String message) {
-      this.condition = condition;
-      this.message = message;
-    }
-
-    private boolean validate() {
-      if (condition.getAsBoolean()) {
-        if (message != null && !message.isBlank()) {
-          throw new BusinessException(message);
-        }
-
-        return false;
-      }
-
-      return true;
-    }
-  }
+  boolean validate();
 
   public static ValidatorBuilder verification(BooleanSupplier condition, String message) {
     List<ValidatorType> validatorTypes = new ArrayList<>();
@@ -49,7 +28,8 @@ public class Validator {
     return verification(() -> condition);
   }
 
-  public static class ValidatorBuilder {
+  // s : ValidatorBuilder
+  class ValidatorBuilder {
     private List<ValidatorType> validators;
 
     private ValidatorBuilder(List<ValidatorType> list) {
@@ -73,8 +53,52 @@ public class Validator {
       return verification(() -> condition);
     }
 
+    public Validator build() {
+      return new DefaultValidator(validators);
+    }
+
     public boolean validate() {
       return this.validators.stream().allMatch(ValidatorType::validate);
     }
   }
+  // e : ValidatorBuilder
 }
+
+
+// s : package-private class : 파일 내부에서만 접근가능한 클래스(다른파일에서 접근 못함.)
+class DefaultValidator implements Validator {
+  private List<ValidatorType> validators;
+
+  DefaultValidator(List<ValidatorType> validators) {
+    this.validators = List.copyOf(validators);
+  }
+
+  @Override
+  public boolean validate() {
+    return this.validators.stream().allMatch(ValidatorType::validate);
+  }
+}
+
+
+class ValidatorType {
+  private final BooleanSupplier condition;
+  private final String message;
+
+  ValidatorType(BooleanSupplier condition, String message) {
+    this.condition = condition;
+    this.message = message;
+  }
+
+  boolean validate() {
+    if (condition.getAsBoolean()) {
+      if (message != null && !message.isBlank()) {
+        throw new BusinessException(message);
+      }
+
+      return false;
+    }
+
+    return true;
+  }
+}
+// e : package-private class : 파일 내부에서만 접근가능한 클래스(다른파일에서 접근 못함.)

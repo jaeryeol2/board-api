@@ -4,49 +4,40 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
-public class Case {
-  private Case() {}
+public interface Case {
 
-  // --- s : initial when ---
-  public static InitialWhenBuilder when(BooleanSupplier condition) {
+  // --- 실행 메서드 ---
+  void execute();
+
+  // --- 진입점 (static 메서드로 선언하여 인스턴스에서 호출 불가) ---
+  static InitialWhenBuilder when(BooleanSupplier condition) {
     return new InitialWhenBuilder(condition);
   }
 
-  public static InitialWhenBuilder when(boolean condition) {
+  static InitialWhenBuilder when(boolean condition) {
     return new InitialWhenBuilder(() -> condition);
   }
-  // --- e : initial when ---
 
-  public static class InitialWhenBuilder {
+  // --- Builders (인터페이스 내부의 class는 자동으로 public static이 됩니다) ---
+  class InitialWhenBuilder {
     private final BooleanSupplier currentCondition;
 
-    private InitialWhenBuilder(BooleanSupplier currentCondition) {
+    // 외부에서 new로 생성하지 못하도록 접근 제어자 생략 (package-private)
+    InitialWhenBuilder(BooleanSupplier currentCondition) {
       this.currentCondition = currentCondition;
     }
 
-    // 실행(Action) 전용 체인으로 진입 (Runnable)
     public ActionThenBuilder then(Runnable action) {
       List<ActionRule> rules = new ArrayList<>();
       rules.add(new ActionRule(this.currentCondition, action));
       return new ActionThenBuilder(rules);
     }
-
   }
 
-  private static class ActionRule {
-    private final BooleanSupplier condition;
-    private final Runnable action;
-
-    private ActionRule(BooleanSupplier condition, Runnable action) {
-      this.condition = condition;
-      this.action = action;
-    }
-  }
-
-  public static class ActionThenBuilder {
+  class ActionThenBuilder {
     private final List<ActionRule> rules;
 
-    private ActionThenBuilder(List<ActionRule> rules) {
+    ActionThenBuilder(List<ActionRule> rules) {
       this.rules = rules;
     }
 
@@ -63,21 +54,20 @@ public class Case {
       return new ActionOtherBuilder(this.rules);
     }
 
+    public Case build() {
+      return new DefaultCase(this.rules);
+    }
+
     public void execute() {
-      for (ActionRule rule : rules) {
-        if (rule.condition.getAsBoolean()) {
-          rule.action.run();
-          break;
-        }
-      }
+      build().execute();
     }
   }
 
-  public static class ActionWhenBuilder {
+  class ActionWhenBuilder {
     private final List<ActionRule> rules;
     private final BooleanSupplier currentCondition;
 
-    private ActionWhenBuilder(List<ActionRule> rules, BooleanSupplier currentCondition) {
+    ActionWhenBuilder(List<ActionRule> rules, BooleanSupplier currentCondition) {
       this.rules = rules;
       this.currentCondition = currentCondition;
     }
@@ -88,16 +78,51 @@ public class Case {
     }
   }
 
-  public static class ActionOtherBuilder {
+  class ActionOtherBuilder {
     private final List<ActionRule> rules;
 
-    private ActionOtherBuilder(List<ActionRule> rules) {
+    ActionOtherBuilder(List<ActionRule> rules) {
       this.rules = rules;
+    }
+
+    public Case build() {
+      return new DefaultCase(this.rules);
     }
 
     public void execute() {
       new ActionThenBuilder(this.rules).execute();
     }
   }
-
 }
+
+
+// s : package-private class : 파일 내부에서만 접근가능한 클래스(다른파일에서 접근 못함.)
+class DefaultCase implements Case {
+  private final List<ActionRule> rules;
+
+  DefaultCase(List<ActionRule> rules) {
+    this.rules = List.copyOf(rules);
+  }
+
+  @Override
+  public void execute() {
+    for (ActionRule rule : rules) {
+      if (rule.condition.getAsBoolean()) {
+        rule.action.run();
+        break;
+      }
+    }
+  }
+}
+
+
+class ActionRule {
+  final BooleanSupplier condition;
+  final Runnable action;
+
+  ActionRule(BooleanSupplier condition, Runnable action) {
+    this.condition = condition;
+    this.action = action;
+  }
+}
+// e : package-private class : 파일 내부에서만 접근가능한 클래스(다른파일에서 접근 못함.)
