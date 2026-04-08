@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.board.api.entities.AppUser;
 
 @Repository
-public interface WriteUserRepository extends JpaRepository<AppUser, String> {
+public interface WriteUserRepository extends JpaRepository<AppUser, Long> {
 
   @Modifying
   @Query("UPDATE AppUser u SET u.lastLoginAt = CURRENT_TIMESTAMP WHERE u.userId = :userId")

@@ -3,6 +3,7 @@ package com.board.api.services.write;
 import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class WriteUserService {
+  private final PasswordEncoder passwordEncoder;
   private final WriteUserRepository writeUserRepository;
 
   @Transactional
@@ -27,7 +29,7 @@ public class WriteUserService {
     try {
       final AppUser appUser = writeUserRepository.save(AppUser.builder()//
           .userId(join.getUserId())//
-          .password(join.getPassword())//
+          .password(passwordEncoder.encode(join.getPassword()))//
           .userName(join.getUserName())//
           .email(join.getEmail())//
           .userRole(UserRole.USER_GENERAL.getCode())//

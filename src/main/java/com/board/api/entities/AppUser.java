@@ -1,8 +1,11 @@
 package com.board.api.entities;
 
+
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Builder;
@@ -11,12 +14,14 @@ import lombok.ToString;
 
 @Getter
 @Entity
-@Table(name = "APP_USER")
+@Table(name = "app_user")
 @ToString
 @Builder
 public class AppUser {
   @Id
-  @Column(updatable = false)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+  @Column(unique = true, nullable = false)
   private String userId;
   private String password;
   private String userName;
@@ -28,7 +33,5 @@ public class AppUser {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private LocalDateTime lastLoginAt;
-
-
 
 }

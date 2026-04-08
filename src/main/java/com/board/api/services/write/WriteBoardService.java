@@ -48,9 +48,12 @@ public class WriteBoardService {
       write.setBoardTypeCode(boardType.getCode());
       write.setWriterId(user.getUserId());
 
-      final AppBoard appBoard = writeBoardRepository
-          .save(AppBoard.builder().boardTypeCode(write.getBoardTypeCode()).title(write.getTitle())
-              .content(write.getContent()).writerId(write.getWriterId()).build());
+      final AppBoard appBoard = writeBoardRepository.save(AppBoard.builder()//
+          .boardTypeCode(write.getBoardTypeCode())//
+          .title(write.getTitle())//
+          .content(write.getContent())//
+          .writerId(write.getWriterId())//
+          .build());
 
       if (appBoard.getId() > 0 && !ObjectUtils.isEmpty(write.getAttachments())
           && !write.getAttachments().isEmpty()) {
