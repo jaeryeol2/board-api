@@ -35,6 +35,11 @@ spring:
       lettuce:
         pool:
           max-active: 5
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+      roles: "9999"
 
 decorator:
   datasource:
