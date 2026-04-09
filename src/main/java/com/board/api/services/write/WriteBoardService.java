@@ -6,6 +6,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -110,7 +111,7 @@ public class WriteBoardService {
     return ResponseApi.ok(HttpStatus.CREATED, "created", comment.getId() > 0L);
   }
 
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public ResponseApi<Boolean> updateViewCount(long boardId) {
     return ResponseApi.ok(writeBoardRepository.updateViewCount(boardId) > 0);
   }
