@@ -12,7 +12,6 @@ import com.board.api.constants.BoardType;
 import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.response.Menu;
-import com.board.api.services.internal.InUserService;
 import com.board.api.services.read.CommonService;
 import com.board.api.services.read.ReadBoardService;
 import com.board.api.services.read.ReadUserService;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 public class IndexController {
-  private final InUserService inUserService;
   private final CommonService commonService;
   private final ReadUserService readUserService;
   private final ReadBoardService readBoardService;
@@ -36,8 +34,9 @@ public class IndexController {
 
 
   @GetMapping("/auth/check")
-  public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request) {
-    return ResponseApi.completedOk(inUserService.checkToken(request));
+  public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
+      HttpServletResponse response) {
+    return readUserService.authCheck(request, response);
   }
 
   @PostMapping("/auth/access")
@@ -55,8 +54,7 @@ public class IndexController {
   @PostMapping({"/logout", "/token-expire"})
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
-    String userId = inUserService.getUserId(request);
-    return writeUserService.logout(userId, response);
+    return writeUserService.logout(request, response);
   }
 
   @PostMapping("/signup")
