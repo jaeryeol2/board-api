@@ -2,6 +2,7 @@ package com.board.api.common.base;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
 import lombok.Builder;
@@ -14,6 +15,8 @@ import lombok.extern.jackson.Jacksonized;
 @ToString
 @Jacksonized
 public class ResponseApi<T> {
+  private static Executor customeExecutor;
+
   private final int status;
   private final String code;
   private final String message;
@@ -24,6 +27,10 @@ public class ResponseApi<T> {
     this.code = code;
     this.message = message;
     this.data = data;
+  }
+
+  static void setExecutor(Executor executor) {
+    customeExecutor = executor;
   }
 
   /**
@@ -101,19 +108,23 @@ public class ResponseApi<T> {
 
   /**
    * DB 쿼리 실행, 외부 API 호출 등 메인(호출) 스레드를 멈추게(Blocking) 할 수 있는 무거운 작업을 처리할 때 사용. 전달받은 로직(Supplier)을
-   * 백그라운드 스레드(ForkJoinPool 등)에서 비동기적으로 실행하고, 작업이 완료되면 그 결과를 공통 응답 포맷으로 래핑하여 반환.
+   * 백그라운드 스레드(ForkJoinPool 등)에서 비동기적으로 실행하고, 작업이 완료되면 그 결과를 공통 응답 포맷으로 래핑하여 반환.<br/>
+   * <br/>
+   * ※ 해당 함수는 사용하려는 함수에 @Async 어노테이션이 없을때 사용해야 합니다.
    *
    * @param <T> 데이터의 타입
    * @param supplier 백그라운드 스레드에서 비동기로 실행할 무거운 작업 로직
    * @return 비동기 실행 완료 후 ResponseApi를 담게 될 CompletableFuture
    */
   public static <T> CompletableFuture<ResponseApi<T>> asyncOk(final Supplier<T> supplier) {
-    return CompletableFuture.supplyAsync(() -> ok(supplier.get()));
+    return CompletableFuture.supplyAsync(() -> ok(supplier.get()), customeExecutor);
   }
 
   /**
    * DB 쿼리 실행, 외부 API 호출 등 메인(호출) 스레드를 멈추게(Blocking) 할 수 있는 무거운 작업을 처리할 때 사용. 전달받은 로직(Supplier)을
-   * 백그라운드 스레드(ForkJoinPool 등)에서 비동기적으로 실행하고, 작업이 완료되면 그 결과를 공통 응답 포맷으로 래핑하여 반환.
+   * 백그라운드 스레드(ForkJoinPool 등)에서 비동기적으로 실행하고, 작업이 완료되면 그 결과를 공통 응답 포맷으로 래핑하여 반환.<br/>
+   * <br/>
+   * ※ 해당 함수는 사용하려는 함수에 @Async 어노테이션이 없을때 사용해야 합니다.
    *
    * @param status http 응답 상태
    * @param message 메시지
@@ -123,7 +134,8 @@ public class ResponseApi<T> {
    */
   public static <T> CompletableFuture<ResponseApi<T>> asyncOk(final HttpStatus status,
       final String message, final Supplier<T> supplier) {
-    return CompletableFuture.supplyAsync(() -> ok(status, message, supplier.get()));
+    return CompletableFuture.supplyAsync(() -> ok(status, message, supplier.get()),
+        customeExecutor);
   }
 
   /**
@@ -157,7 +169,9 @@ public class ResponseApi<T> {
 
   /**
    * DB 쿼리 실행, 외부 API 호출 등 메인(호출) 스레드를 멈추게(Blocking) 할 수 있는 무거운 작업을 처리할 때 사용. 전달받은 로직(Supplier)을
-   * 백그라운드 스레드(ForkJoinPool 등)에서 비동기적으로 실행하고, 작업이 완료되면 그 결과를 공통 응답 포맷으로 래핑하여 반환.
+   * 백그라운드 스레드(ForkJoinPool 등)에서 비동기적으로 실행하고, 작업이 완료되면 그 결과를 공통 응답 포맷으로 래핑하여 반환.<br/>
+   * <br/>
+   * ※ 해당 함수는 사용하려는 함수에 @Async 어노테이션이 없을때 사용해야 합니다.
    * 
    * @param <T> 데이터의 타입
    * @param total 총 갯수
