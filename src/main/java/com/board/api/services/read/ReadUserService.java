@@ -1,9 +1,7 @@
 package com.board.api.services.read;
 
 import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
-import static com.board.api.constants.GlobalConstant.REFRESH_TOKEN;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.http.HttpHeaders;
@@ -18,10 +16,8 @@ import com.board.api.dtos.request.Login;
 import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadUserRepository;
-import com.board.api.services.InternalService;
-import com.board.api.services.LookupService;
+import com.board.api.services.internal.InUserService;
 import com.board.api.services.write.WriteUserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +30,26 @@ public class ReadUserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
 
-  private final InternalService internalService;
-  private final LookupService lookupService;
+  private final InUserService inUserService;
   private final WriteUserService writeUserService;
 
   private final ReadUserRepository readUserRepository;
 
+
+  @Async
+  public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
+      HttpServletResponse response) {
+    return ResponseApi.asyncOk(() -> {
+      String userId = inUserService.getUserId(request);
+      Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
+
+      if (user.isEmpty()) {
+        writeUserService.expireToken(response);
+      }
+
+      return true;
+    });
+  }
 
   @Async
   public CompletableFuture<ResponseApi<Boolean>> login(final Login login,
@@ -74,16 +84,12 @@ public class ReadUserService {
     });
   }
 
-
-
   @Async
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
     return ResponseApi.asyncOk(() -> {
-      final Cookie refreshToken = Arrays.asList(request.getCookies()).stream()
-          .filter(cookie -> REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName())).findFirst()
-          .orElseGet(() -> new Cookie(REFRESH_TOKEN.getValue(), ""));
-      final String userId = tokenUtil.getTokenInfo(refreshToken.getValue()).getSubject();
+      final String refreshToken = inUserService.getRefreshToken(request);
+      final String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();
       final Optional<User> user = Optional.ofNullable(readUserRepository.findLoginInfoById(userId));
       boolean result = true;
 
@@ -94,7 +100,7 @@ public class ReadUserService {
                 .secure(true).sameSite("Lax").maxAge(3600).build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
       } else {
-        writeUserService.expiredToken(response);
+        writeUserService.expireToken(response);
         result = false;
       }
 
@@ -104,29 +110,29 @@ public class ReadUserService {
 
   @Async
   public CompletableFuture<ResponseApi<String>> getUserId(HttpServletRequest request) {
-    final String token = internalService.getAccessToken(request);
+    final String token = inUserService.getAccessToken(request);
     return ResponseApi.completedOk(tokenUtil.getTokenInfo(token).getSubject());
   }
 
   @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
-    final String userId =
-        tokenUtil.getTokenInfo(internalService.getAccessToken(request)).getSubject();
-    return lookupService.getUserInfo(userId);
+    final String userId = inUserService.getUserId(request);
+    return ResponseApi.asyncOk(() -> inUserService.getUserInfo(userId));
   }
 
   @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
-    return lookupService.getUserInfo(userId);
+    return ResponseApi.asyncOk(() -> inUserService.getUserInfo(userId));
   }
 
   @Async
   public CompletableFuture<ResponseApi<PersonalUser>> getPersonalUserInfo(
       HttpServletRequest request) {
-    final String userId =
-        tokenUtil.getTokenInfo(internalService.getAccessToken(request)).getSubject();
-    log.info(userId);
-    return ResponseApi.asyncOk(() -> null);
+    return ResponseApi.asyncOk(() -> {
+      final String userId = inUserService.getUserId(request);
+      log.info(userId);
+      return null;
+    });
   }
 
 

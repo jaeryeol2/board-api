@@ -1,4 +1,4 @@
-package com.board.api.services;
+package com.board.api.services.read;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -7,29 +7,20 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.dtos.response.Menu;
-import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadMenuRepository;
-import com.board.api.repositories.read.ReadUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LookupService {
+public class CommonService {
   private final ReadMenuRepository readMenuRepository;
-  private final ReadUserRepository readUserRepository;
 
   @Async
   @Cacheable(cacheNames = "getMenuList")
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {
     return ResponseApi.asyncOk(readMenuRepository::findMenuList);
-  }
-
-  @Async
-  @Cacheable(cacheNames = "getUserInfo", key = "#userId")
-  public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
-    return ResponseApi.asyncOk(() -> readUserRepository.findUserById(userId));
   }
 
   @Async

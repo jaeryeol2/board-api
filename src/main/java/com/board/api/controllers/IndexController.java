@@ -12,8 +12,8 @@ import com.board.api.constants.BoardType;
 import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.response.Menu;
-import com.board.api.services.InternalService;
-import com.board.api.services.LookupService;
+import com.board.api.services.internal.InUserService;
+import com.board.api.services.read.CommonService;
 import com.board.api.services.read.ReadBoardService;
 import com.board.api.services.read.ReadUserService;
 import com.board.api.services.write.WriteUserService;
@@ -28,11 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 public class IndexController {
-  private final InternalService internalService;
-  private final LookupService lookupService;
+  private final InUserService inUserService;
+  private final CommonService commonService;
   private final ReadUserService readUserService;
   private final ReadBoardService readBoardService;
   private final WriteUserService writeUserService;
+
+
+  @GetMapping("/auth/check")
+  public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request) {
+    return ResponseApi.completedOk(inUserService.checkToken(request));
+  }
 
   @PostMapping("/auth/access")
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
@@ -40,17 +46,16 @@ public class IndexController {
     return readUserService.getNewAccessToken(request, response);
   }
 
-
   @PostMapping("/login")
   public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody Login login,
       HttpServletRequest request, HttpServletResponse response) {
     return readUserService.login(login, request, response);
   }
 
-  @PostMapping("/logout")
+  @PostMapping({"/logout", "/token-expire"})
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
-    String userId = internalService.getUserId(request).getData();
+    String userId = inUserService.getUserId(request);
     return writeUserService.logout(userId, response);
   }
 
@@ -62,12 +67,12 @@ public class IndexController {
 
   @GetMapping("/menus")
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {
-    return lookupService.getMenuList();
+    return commonService.getMenuList();
   }
 
   @GetMapping("/menus/{boardType}")
   public CompletableFuture<ResponseApi<Menu>> getMethodName(@PathVariable String boardType) {
-    return lookupService.getMenuInfo(BoardType.find(boardType).getCode());
+    return commonService.getMenuInfo(BoardType.find(boardType).getCode());
   }
 
   @GetMapping("/home")

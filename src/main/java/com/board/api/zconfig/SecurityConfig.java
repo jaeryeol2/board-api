@@ -29,7 +29,7 @@ public class SecurityConfig {
   private final AuthFilter authFilter;
   private final AuthEntryPoint authEntryPoint;
   private static final String[] IGNORE_PATH_ARRAY =
-      {"/actuator/health", "/login", "/logout", "/signup", "/menus/**"};
+      {"/actuator/health", "/login", "/logout", "/token-expire", "/signup", "/menus/**"};
 
   @Bean
   SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

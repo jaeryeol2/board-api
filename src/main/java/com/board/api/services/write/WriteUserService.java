@@ -80,7 +80,7 @@ public class WriteUserService {
   @CacheEvict(cacheNames = "getUserInfo", key = "#userId")
   public CompletableFuture<ResponseApi<Boolean>> logout(String userId,
       HttpServletResponse response) {
-    this.expiredToken(response);
+    this.expireToken(response);
     return ResponseApi.completedOk(true);
   }
 
@@ -98,7 +98,7 @@ public class WriteUserService {
     response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
   }
 
-  public void expiredToken(HttpServletResponse response) {
+  public void expireToken(HttpServletResponse response) {
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
         .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
     final ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN.getValue(), "").path("/")

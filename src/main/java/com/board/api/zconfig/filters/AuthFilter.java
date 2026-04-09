@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.response.User;
-import com.board.api.services.InternalService;
+import com.board.api.services.internal.InUserService;
 import com.board.api.zconfig.authority.DefaultAuthority;
 import com.board.api.zconfig.entrypoint.AuthEntryPoint;
 import jakarta.servlet.FilterChain;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
   private final TokenUtil tokenUtil;
-  private final InternalService internalService;
+  private final InUserService inUserService;
   private final AuthEntryPoint authEntryPoint;
 
   @Override
@@ -39,14 +39,13 @@ public class AuthFilter extends OncePerRequestFilter {
         .filter(item -> !item.isBlank() && !"unknown".equals(item))
         .map(item -> item.split(",")[0].trim())//
         .orElse(request.getRemoteAddr());
-    final String token = Optional.ofNullable(internalService.getAccessToken(request))//
-        .orElse(internalService.getRefreshToken(request));
+    final String token = Optional.ofNullable(inUserService.getAccessToken(request))//
+        .orElse(inUserService.getRefreshToken(request));
 
     try {
       if (StringUtils.hasText(token) && !tokenUtil.isTokenExpired(token)) {
         final String userId = tokenUtil.getTokenInfo(token).getSubject();
-        final Optional<User> user =
-            Optional.ofNullable(internalService.getUserInfo(userId).getData());
+        final Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
 
         if (user.isPresent()) {
           final GrantedAuthority authority = new SimpleGrantedAuthority(user.get().getUserRole());
@@ -61,7 +60,8 @@ public class AuthFilter extends OncePerRequestFilter {
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());
       SecurityContextHolder.clearContext();
-      authEntryPoint.commence(request, response, new AuthenticationException("인증에 실패했습니다.", e) {});
+      authEntryPoint.commence(request, response,
+          new AuthenticationException(e.getMessage(), e.getCause()) {});
 
       return;
     }
