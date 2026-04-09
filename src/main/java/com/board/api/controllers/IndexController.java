@@ -12,10 +12,9 @@ import com.board.api.constants.BoardType;
 import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.response.Menu;
-import com.board.api.services.read.CommonService;
-import com.board.api.services.read.ReadBoardService;
-import com.board.api.services.read.ReadUserService;
-import com.board.api.services.write.WriteUserService;
+import com.board.api.services.BoardService;
+import com.board.api.services.CommonService;
+import com.board.api.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,38 +27,37 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class IndexController {
   private final CommonService commonService;
-  private final ReadUserService readUserService;
-  private final ReadBoardService readBoardService;
-  private final WriteUserService writeUserService;
+  private final UserService userService;
+  private final BoardService boardService;
 
 
   @GetMapping("/auth/check")
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
       HttpServletResponse response) {
-    return readUserService.authCheck(request, response);
+    return userService.authCheck(request, response);
   }
 
   @PostMapping("/auth/access")
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
-    return readUserService.getNewAccessToken(request, response);
+    return userService.getNewAccessToken(request, response);
   }
 
   @PostMapping("/login")
   public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody Login login,
       HttpServletRequest request, HttpServletResponse response) {
-    return readUserService.login(login, request, response);
+    return userService.getLoginCheck(login, request, response);
   }
 
   @PostMapping({"/logout", "/token-expire"})
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
-    return writeUserService.logout(request, response);
+    return userService.logout(request, response);
   }
 
   @PostMapping("/signup")
   public ResponseApi<Boolean> signup(@RequestBody Join join) {
-    return writeUserService.join(join);
+    return userService.join(join);
   }
 
 
@@ -75,7 +73,7 @@ public class IndexController {
 
   @GetMapping("/home")
   public CompletableFuture<ResponseApi<List<?>>> getHomeRenderData() {
-    return readBoardService.getHomRenderData();
+    return boardService.getHomRenderData();
   }
 
 

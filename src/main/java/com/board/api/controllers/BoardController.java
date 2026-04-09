@@ -18,8 +18,7 @@ import com.board.api.dtos.request.CommentWrite;
 import com.board.api.dtos.response.Board;
 import com.board.api.dtos.response.Board.BoardComment;
 import com.board.api.dtos.response.Board.BoardDetail;
-import com.board.api.services.read.ReadBoardService;
-import com.board.api.services.write.WriteBoardService;
+import com.board.api.services.BoardService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/board")
 @RequiredArgsConstructor
 public class BoardController {
-  private final WriteBoardService writeBoardService;
-  private final ReadBoardService readBoardService;
+  private final BoardService boardService;
 
   @GetMapping("/{boardType}")
   public CompletableFuture<ResponseApi<ResponseList<Board>>> getBoardList(
@@ -41,8 +39,8 @@ public class BoardController {
     log.info("board filter parameter : {}", boardFilter);
 
     return CaseGet.when(() -> BoardType.BOARD_POPULAR == boardType)//
-        .then(() -> readBoardService.getBoardPopularList(boardFilter))//
-        .other(() -> readBoardService.getBoardList(boardType, boardFilter))//
+        .then(() -> boardService.getBoardPopularList(boardFilter))//
+        .other(() -> boardService.getBoardList(boardType, boardFilter))//
         .get();
 
   }
@@ -50,26 +48,26 @@ public class BoardController {
   @GetMapping("/{boardType}/{id}")
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(
       @PathVariable BoardType boardType, @PathVariable long id) {
-    return readBoardService.getBoardDetail(id);
+    return boardService.getBoardDetail(id);
   }
 
   @PostMapping("/{boardType}")
   public ResponseApi<Boolean> writeBoard(@PathVariable BoardType boardType, BoardWrite write,
       HttpServletRequest request) {
 
-    return writeBoardService.writeBoard(boardType, write, request);
+    return boardService.writeBoard(boardType, write, request);
   }
 
   @GetMapping("/comment/{boardId}")
   public CompletableFuture<ResponseApi<List<BoardComment>>> getCommentList(
       @PathVariable long boardId) {
-    return readBoardService.getCommentList(boardId);
+    return boardService.getCommentList(boardId);
   }
 
   @PostMapping("/comment/{boardId}")
   public ResponseApi<Boolean> writeComment(@PathVariable long boardId,
       @RequestBody CommentWrite write, HttpServletRequest request) {
-    return writeBoardService.writeComment(boardId, write, request);
+    return boardService.writeComment(boardId, write, request);
   }
 
 

@@ -15,6 +15,7 @@ import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 import org.springframework.transaction.interceptor.NameMatchTransactionAttributeSource;
 import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
+import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.zaxxer.hikari.HikariDataSource;
@@ -24,10 +25,16 @@ public class DataSourceConfig {
   private static final String AOP_POINTCUT_EXPRESSION =
       "execution(* com.board.api.services..*Service.*(..))";
 
+  private enum TRANSACTION_TYPE {
+    READ, WRITE,
+  }
+
   public static class RoutingDataSource extends AbstractRoutingDataSource {
     @Override
     protected Object determineCurrentLookupKey() {
-      return TransactionSynchronizationManager.isCurrentTransactionReadOnly() ? "read" : "write";
+      return TransactionSynchronizationManager.isCurrentTransactionReadOnly()
+          ? TRANSACTION_TYPE.READ
+          : TRANSACTION_TYPE.WRITE;
     }
 
   }
@@ -52,8 +59,8 @@ public class DataSourceConfig {
     RoutingDataSource routingDataSource = new RoutingDataSource();
 
     Map<Object, Object> dataSourceMap = new HashMap<>();
-    dataSourceMap.put("write", writeHikariDataSource);
-    dataSourceMap.put("read", readHikariDataSource);
+    dataSourceMap.put(TRANSACTION_TYPE.WRITE, writeHikariDataSource);
+    dataSourceMap.put(TRANSACTION_TYPE.READ, readHikariDataSource);
 
     routingDataSource.setTargetDataSources(dataSourceMap);
     routingDataSource.setDefaultTargetDataSource(writeHikariDataSource);
@@ -79,8 +86,7 @@ public class DataSourceConfig {
     RuleBasedTransactionAttribute writeRule = new RuleBasedTransactionAttribute();
     writeRule.setReadOnly(false);
 
-    Map<String, org.springframework.transaction.interceptor.TransactionAttribute> txMethods =
-        new HashMap<>();
+    Map<String, TransactionAttribute> txMethods = new HashMap<>();
     // 읽기 전용 메서드 패턴
     txMethods.put("get*", readOnlyRule);
     txMethods.put("find*", readOnlyRule);

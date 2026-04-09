@@ -1,4 +1,4 @@
-package com.board.api.services.read;
+package com.board.api.services;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
