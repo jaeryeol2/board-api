@@ -1,7 +1,6 @@
 package com.board.api.zconfig.entrypoint;
 
 import java.io.IOException;
-import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -37,9 +36,7 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
     // 3. 응답으로 내보낼 JSON 데이터 생성
-    ResponseApi<Boolean> fail =
-        ResponseApi.fail(HttpStatus.UNAUTHORIZED, Optional.ofNullable(e.getMessage())//
-            .orElse("인증에 실패하였습니다."));
+    ResponseApi<Boolean> fail = ResponseApi.fail(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 
     // 4. 응답 Body에 직접 JSON 문자열 쓰기
     response.getWriter().print(this.objectMapper.writeValueAsString(fail));
