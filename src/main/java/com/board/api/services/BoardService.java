@@ -90,6 +90,7 @@ public class BoardService {
 
 
   @Async
+  @Cacheable(cacheNames = "getBoardDetail", key = "'board-id-' + #id")
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {
     Optional<BoardDetail> optional = Optional.ofNullable(readBoardRepository.findBoardById(id));
     BoardDetail detail = null;

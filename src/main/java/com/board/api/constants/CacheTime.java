@@ -21,7 +21,9 @@ public enum CacheTime {
   /** menu info */
   GET_MENU_INFO("getMenuInfo", Duration.ofHours(1L)),
   /** board list */
-  BOARD_LIST("getBoardList", Duration.ofSeconds(30L));
+  BOARD_LIST("getBoardList", Duration.ofSeconds(30L)),
+  /** board detail */
+  BAORD_DETAIL("getBoardDetail", Duration.ofMinutes(5L));
 
   private final String cacheName;
   private final Duration ttl;
