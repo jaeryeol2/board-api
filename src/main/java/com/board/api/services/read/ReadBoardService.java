@@ -30,7 +30,7 @@ public class ReadBoardService {
 
   @Async
   public CompletableFuture<ResponseApi<List<?>>> getHomRenderData() {
-    return ResponseApi.asyncOk(() -> null);
+    return ResponseApi.completedOk(null);
   }
 
   @Async
@@ -41,7 +41,7 @@ public class ReadBoardService {
     filter.setBoardTypeCode(boardTypeCode);
     final long count = readBoardRepository.findBoardCountById(filter);
 
-    return ResponseApi.asyncOk(Math.toIntExact(count), () -> CaseGet.when(count > 0)//
+    return ResponseApi.completedOk(Math.toIntExact(count), CaseGet.when(count > 0)//
         .then(() -> {
           final List<Long> ids = readBoardRepository.findBoardByIds(filter);
           return readBoardRepository.findBoardList(boardTypeCode, ids);
@@ -56,7 +56,7 @@ public class ReadBoardService {
       final BoardFilter filter) {
     final long count = readBoardRepository.findBoardPopularCount();
 
-    return ResponseApi.asyncOk(Math.toIntExact(count), () -> CaseGet.when(count > 0)//
+    return ResponseApi.completedOk(Math.toIntExact(count), CaseGet.when(count > 0)//
         .then(() -> {
           final List<Long> ids = readBoardRepository.findBoardPopularByIds(filter);
           return readBoardRepository.findBoardPopularList(ids);
@@ -68,33 +68,30 @@ public class ReadBoardService {
 
   @Async
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {
-    return ResponseApi.asyncOk(() -> {
-      Optional<BoardDetail> optional = Optional.ofNullable(readBoardRepository.findBoardById(id));
-      BoardDetail detail = null;
+    Optional<BoardDetail> optional = Optional.ofNullable(readBoardRepository.findBoardById(id));
+    BoardDetail detail = null;
 
-      if (optional.isPresent()) {
-        detail = optional.get();
+    if (optional.isPresent()) {
+      detail = optional.get();
 
-        detail.setCommentList(readBoardRepository.findBoardCommentByBoardId(id));
-        detail.setFileList(readBoardRepository.findBoardFileByBoardId(id));
+      detail.setCommentList(readBoardRepository.findBoardCommentByBoardId(id));
+      detail.setFileList(readBoardRepository.findBoardFileByBoardId(id));
 
-        try {
-          writeBoardService.updateViewCount(id);
-        } catch (Exception e) {
-          log.warn("view count fail. : ", e);
-        }
+      try {
+        writeBoardService.updateViewCount(id);
+      } catch (Exception e) {
+        log.warn("view count fail. : ", e);
       }
-
-      return detail;
-    }).exceptionallyAsync(e -> {
-      log.error("getBoardDetail error : ", e);
+    } else {
       throw new BusinessException("존재하지 않는 게시물입니다.");
-    });
+    }
+
+    return ResponseApi.completedOk(detail);
   }
 
   @Async
   public CompletableFuture<ResponseApi<List<BoardComment>>> getCommentList(long boardId) {
-    return ResponseApi.asyncOk(() -> readBoardRepository.findBoardCommentByBoardId(boardId));
+    return ResponseApi.completedOk(readBoardRepository.findBoardCommentByBoardId(boardId));
   }
 
 

@@ -20,12 +20,12 @@ public class CommonService {
   @Async
   @Cacheable(cacheNames = "getMenuList")
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {
-    return ResponseApi.asyncOk(readMenuRepository::findMenuList);
+    return ResponseApi.completedOk(readMenuRepository.findMenuList());
   }
 
   @Async
   @Cacheable(cacheNames = "getMenuInfo", key = "#boardTypeCode")
   public CompletableFuture<ResponseApi<Menu>> getMenuInfo(String boardTypeCode) {
-    return ResponseApi.asyncOk(() -> readMenuRepository.findMenuByCode(boardTypeCode));
+    return ResponseApi.completedOk(readMenuRepository.findMenuByCode(boardTypeCode));
   }
 }

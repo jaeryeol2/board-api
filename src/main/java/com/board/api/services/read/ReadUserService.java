@@ -39,73 +39,68 @@ public class ReadUserService {
   @Async
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
       HttpServletResponse response) {
-    return ResponseApi.asyncOk(() -> {
-      String userId = inUserService.getUserId(request);
-      Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
+    String userId = inUserService.getUserId(request);
+    Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
 
-      if (user.isEmpty()) {
-        writeUserService.expireToken(response);
-      }
+    if (user.isEmpty()) {
+      writeUserService.expireToken(userId, response);
+    }
 
-      return true;
-    });
+    return ResponseApi.completedOk(user.isPresent());
   }
 
   @Async
   public CompletableFuture<ResponseApi<Boolean>> login(final Login login,
       HttpServletRequest request, HttpServletResponse response) {
-    return ResponseApi.asyncOk(() -> {
-      final Optional<User> checker =
-          Optional.ofNullable(readUserRepository.findLoginInfoById(login.getUserId()));
-      if (!checker.isPresent()) {
-        throw new BusinessException("존재하지 않는 사용자입니다.");
-      }
+    final Optional<User> checker =
+        Optional.ofNullable(readUserRepository.findLoginInfoById(login.getUserId()));
 
-      if (passwordEncoder.matches(login.getPassword(), checker.get().getPassword())) {
-        writeUserService.makeToken(login.getUserId(), response);
+    if (!checker.isPresent()) {
+      throw new BusinessException("존재하지 않는 사용자입니다.");
+    }
 
-        try {
-          ResponseApi<Boolean> loginUpdate =
-              writeUserService.updateLastLoginDate(login.getUserId());
+    final boolean matched =
+        passwordEncoder.matches(login.getPassword(), checker.get().getPassword());
 
-          if (Boolean.FALSE.equals(loginUpdate.getData())) {
-            throw new BusinessException("last login date update fail.");
-          }
-
-        } catch (Exception e) {
-          log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
-              LocalDateTime.now());
-        }
-
-        return true;
-      }
-
+    if (!matched) {
       throw new BusinessException("비밀번호가 일치하지 않습니다.");
-    });
+    }
+
+    try {
+      writeUserService.makeToken(login.getUserId(), response);
+      ResponseApi<Boolean> loginUpdate = writeUserService.updateLastLoginDate(login.getUserId());
+
+      if (Boolean.FALSE.equals(loginUpdate.getData())) {
+        throw new BusinessException("last login date update fail.");
+      }
+
+    } catch (Exception e) {
+      log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
+          LocalDateTime.now());
+    }
+
+    return ResponseApi.completedOk(true);
   }
 
   @Async
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
-    return ResponseApi.asyncOk(() -> {
-      final String refreshToken = inUserService.getRefreshToken(request);
-      final String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();
-      final Optional<User> user = Optional.ofNullable(readUserRepository.findLoginInfoById(userId));
-      boolean result = true;
+    final String refreshToken = inUserService.getRefreshToken(request);
+    final String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();
+    final Optional<User> user = Optional.ofNullable(readUserRepository.findLoginInfoById(userId));
+    boolean result = true;
 
-      if (user.isPresent()) {
-        final String accessToken = tokenUtil.createToken(userId, 1L);
-        final ResponseCookie accessCookie =
-            ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken).path("/").httpOnly(true)
-                .secure(true).sameSite("Lax").maxAge(3600).build();
-        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-      } else {
-        writeUserService.expireToken(response);
-        result = false;
-      }
+    if (user.isPresent()) {
+      final String accessToken = tokenUtil.createToken(userId, 1L);
+      final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
+          .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
+      response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+    } else {
+      writeUserService.expireToken(userId, response);
+      result = false;
+    }
 
-      return result;
-    });
+    return ResponseApi.completedOk(result);
   }
 
   @Async
@@ -117,22 +112,21 @@ public class ReadUserService {
   @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
     final String userId = inUserService.getUserId(request);
-    return ResponseApi.asyncOk(() -> inUserService.getUserInfo(userId));
+    return ResponseApi.completedOk(inUserService.getUserInfo(userId));
   }
 
   @Async
   public CompletableFuture<ResponseApi<User>> getUserInfo(String userId) {
-    return ResponseApi.asyncOk(() -> inUserService.getUserInfo(userId));
+    return ResponseApi.completedOk(inUserService.getUserInfo(userId));
   }
 
   @Async
   public CompletableFuture<ResponseApi<PersonalUser>> getPersonalUserInfo(
       HttpServletRequest request) {
-    return ResponseApi.asyncOk(() -> {
-      final String userId = inUserService.getUserId(request);
-      log.info(userId);
-      return null;
-    });
+    final String userId = inUserService.getUserId(request);
+    log.info(userId);
+
+    return ResponseApi.completedOk(null);
   }
 
 

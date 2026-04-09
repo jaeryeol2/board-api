@@ -24,6 +24,8 @@ import com.board.api.constants.UserRole;
 import com.board.api.dtos.request.Join;
 import com.board.api.entities.AppUser;
 import com.board.api.repositories.write.WriteUserRepository;
+import com.board.api.services.internal.InUserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WriteUserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
+  private final InUserService inUserService;
   private final WriteUserRepository writeUserRepository;
 
   @Transactional
@@ -77,10 +80,10 @@ public class WriteUserService {
   }
 
   @Async
-  @CacheEvict(cacheNames = "getUserInfo", key = "#userId")
-  public CompletableFuture<ResponseApi<Boolean>> logout(String userId,
+  public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
-    this.expireToken(response);
+    String userId = inUserService.getUserId(request);
+    this.expireToken(userId, response);
     return ResponseApi.completedOk(true);
   }
 
@@ -98,7 +101,8 @@ public class WriteUserService {
     response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
   }
 
-  public void expireToken(HttpServletResponse response) {
+  @CacheEvict(cacheNames = "getUserInfo", key = "#userId")
+  public void expireToken(String userId, HttpServletResponse response) {
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
         .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
     final ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN.getValue(), "").path("/")
