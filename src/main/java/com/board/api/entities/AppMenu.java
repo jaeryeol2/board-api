@@ -1,7 +1,10 @@
 package com.board.api.entities;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import com.board.api.constants.MenuType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -31,6 +34,9 @@ public class AppMenu {
   private String href;
   private Integer sortOrder;
   private boolean isActive;
+  @CreationTimestamp
+  @Column(updatable = false)
   private LocalDateTime createdAt;
+  @UpdateTimestamp
   private LocalDateTime updatedAt;
 }

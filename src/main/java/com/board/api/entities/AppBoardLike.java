@@ -1,6 +1,7 @@
 package com.board.api.entities;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -28,6 +29,7 @@ public class AppBoardLike {
   private AppBoard board;
 
   private String userId;
+  @CreationTimestamp
   @Column(updatable = false)
   private LocalDateTime createdAt;
 }

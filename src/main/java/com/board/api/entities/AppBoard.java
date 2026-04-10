@@ -2,6 +2,7 @@ package com.board.api.entities;
 
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -42,7 +43,7 @@ public class AppBoard {
   @CreationTimestamp
   @Column(updatable = false)
   private LocalDateTime createdAt;
-
+  @UpdateTimestamp
   private LocalDateTime updatedAt;
 
 
