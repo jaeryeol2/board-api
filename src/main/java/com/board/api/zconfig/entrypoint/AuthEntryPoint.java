@@ -28,6 +28,7 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
 
   private void setResponse(HttpServletResponse response, AuthenticationException e)
       throws IOException {
+    log.warn("security exception : {}", e.getMessage());
     // 1. Content-Type 및 인코딩 설정 (한글 깨짐 방지)
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
