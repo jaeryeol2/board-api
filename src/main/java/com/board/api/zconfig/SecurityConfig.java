@@ -1,5 +1,6 @@
 package com.board.api.zconfig;
 
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,8 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
   @Value("${spring.profiles.active}")
   private String active;
+  @Value("${front.url}")
+  private String frontURL;
   private final AuthFilter authFilter;
   private final AuthEntryPoint authEntryPoint;
   private static final String[] IGNORE_PATH_ARRAY =
@@ -48,7 +51,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers(IGNORE_PATH_ARRAY).permitAll();
           auth.requestMatchers(HttpMethod.GET, "/board/{boardType}",
-              "/board/".concat(BoardType.BOARD_FREE.name()).concat("/{id}")).permitAll();
+              "/board/".concat(BoardType.BOARD_FREE.name()).concat("/{id}"))//
+              .permitAll();
 
           if (!"prod".equalsIgnoreCase(active)) {
             auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")
@@ -72,7 +76,7 @@ public class SecurityConfig {
 
     config.setAllowCredentials(true);
     config.setMaxAge(3600L);
-    config.setAllowedOrigins(List.of("http://localhost:3000"));
+    config.setAllowedOrigins(Arrays.asList(frontURL.split(",")));
     config.setAllowedHeaders(List.of(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION));
     config.setAllowedMethods(List.of(HttpMethod.GET.name(), HttpMethod.POST.name()));
 

@@ -48,3 +48,6 @@ decorator:
 logging:
   level:
     p6spy: error
+
+front:
+  url: ${FRONT_URL}
