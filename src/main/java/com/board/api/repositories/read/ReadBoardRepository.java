@@ -1,5 +1,6 @@
 package com.board.api.repositories.read;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 import com.board.api.common.utils.QueryDslUtil;
@@ -140,11 +141,15 @@ public class ReadBoardRepository {
   public List<Board> findPopularBoardListByBoardTypeCode(String boardTypeCode) {
     final QBean<Board> columns = Projections.fields(Board.class, board.id, board.boardTypeCode,
         board.title, board.viewCount);
+    final LocalDateTime from = LocalDateTime.now().minusDays(1L);
+    final LocalDateTime now = LocalDateTime.now();
 
     return factory.select(columns)//
         .from(board)//
         .where(board.boardTypeCode.eq(boardTypeCode)//
-            .and(board.isDeleted.eq(false)))//
+            .and(board.isDeleted.eq(false))//
+            .and(board.createdAt.between(from, now))//
+            .and(board.viewCount.goe(0L)))//
         .orderBy(board.viewCount.desc())//
         .limit(10L)//
         .fetch();
