@@ -148,7 +148,8 @@ public class ReadBoardRepository {
         .from(board)//
         .where(board.boardTypeCode.eq(boardTypeCode)//
             .and(board.isDeleted.eq(false))//
-            .and(board.createdAt.between(from, now))//
+            .and(board.createdAt.between(from, now)//
+                .or(board.updatedAt.between(from, now)))//
             .and(board.viewCount.goe(0L)))//
         .orderBy(board.viewCount.desc())//
         .limit(10L)//
