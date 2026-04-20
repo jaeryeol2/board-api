@@ -73,8 +73,8 @@ public class IndexController {
   }
 
   @GetMapping("/home")
-  public CompletableFuture<ResponseApi<List<Home>>> getHomeRenderData() {
-    return boardService.getHomRenderData();
+  public CompletableFuture<ResponseApi<List<Home>>> getHomeBoardData() {
+    return boardService.getHomeBoardData();
   }
 
 }

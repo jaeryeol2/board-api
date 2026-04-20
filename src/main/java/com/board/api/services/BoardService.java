@@ -60,7 +60,8 @@ public class BoardService {
   private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async
-  public CompletableFuture<ResponseApi<List<Home>>> getHomRenderData() {
+  @Cacheable(cacheNames = "getHomeBoardData")
+  public CompletableFuture<ResponseApi<List<Home>>> getHomeBoardData() {
     final List<Home> homes = new ArrayList<>();
     List<Menu> menuList =
         Optional.ofNullable(inCommonService.getMenuList()).orElse(new ArrayList<>());
