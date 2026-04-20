@@ -1,9 +1,13 @@
 package com.board.api.services;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,6 +29,8 @@ import com.board.api.dtos.request.CommentWrite;
 import com.board.api.dtos.response.Board;
 import com.board.api.dtos.response.Board.BoardComment;
 import com.board.api.dtos.response.Board.BoardDetail;
+import com.board.api.dtos.response.Home;
+import com.board.api.dtos.response.Menu;
 import com.board.api.dtos.response.ResponseS3;
 import com.board.api.dtos.response.User;
 import com.board.api.entities.AppBoard;
@@ -34,6 +40,7 @@ import com.board.api.repositories.read.ReadBoardRepository;
 import com.board.api.repositories.write.WriteBoardFileRepository;
 import com.board.api.repositories.write.WriteBoardRepository;
 import com.board.api.repositories.write.WriteCommentRepository;
+import com.board.api.services.internal.InCommonService;
 import com.board.api.services.internal.InUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class BoardService {
   private final S3Service s3Service;
+  private final InCommonService inCommonService;
   private final InUserService inUserService;
   private final TransactionTemplate writeTransaction;
   private final ReadBoardRepository readBoardRepository;
@@ -52,8 +60,35 @@ public class BoardService {
   private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async
-  public CompletableFuture<ResponseApi<List<?>>> getHomRenderData() {
-    return ResponseApi.completedOk(null);
+  public CompletableFuture<ResponseApi<List<Home>>> getHomRenderData() {
+    final List<Home> homes = new ArrayList<>();
+    List<Menu> menuList =
+        Optional.ofNullable(inCommonService.getMenuList()).orElse(new ArrayList<>());
+    List<String> boardTypeCodeList = menuList.stream().map(Menu::getBoardCode).toList();
+    Map<String, Menu> menuMap =
+        menuList.stream().collect(Collectors.toMap(Menu::getBoardCode, Function.identity()));
+
+
+    for (String boardTypeCode : boardTypeCodeList) {
+      final Home home = new Home();
+      final List<Board> boards = Optional
+          .ofNullable(readBoardRepository.findPopularBoardListByBoardTypeCode(boardTypeCode))//
+          .orElse(new ArrayList<>());
+      final Optional<Menu> menu = Optional.ofNullable(menuMap.get(boardTypeCode));
+
+      if (menu.isPresent() && !boards.isEmpty()) {
+        home.setMenuName(menu.get().getMenuName());
+        System.out.println(":::::::::::::::::::::::::: " + boardTypeCode);
+        System.out.println(":::::::::::::::::::::::::: " + BoardType.findByCode(boardTypeCode));
+        home.setBasePath(BoardType.findByCode(boardTypeCode));
+        home.setHref(menu.get().getHref());
+        home.setBoards(boards);
+
+        homes.add(home);
+      }
+    }
+
+    return ResponseApi.completedOk(homes);
   }
 
   @Async

@@ -38,14 +38,24 @@ public enum BoardType {
     this.code = code;
   }
 
-  private static final Map<String, BoardType> boardTypeMap = Collections.unmodifiableMap(
+  private static final Map<String, BoardType> boardTypeMapByName = Collections.unmodifiableMap(
       Stream.of(values()).collect(Collectors.toMap(BoardType::name, Function.identity())));
+  private static final Map<String, BoardType> boardTypeMapByCode = Collections.unmodifiableMap(
+      Stream.of(values()).collect(Collectors.toMap(BoardType::getCode, Function.identity())));
 
-  public static BoardType find(String name) {
+  public static BoardType findByName(String name) {
     if (name == null) {
       return null;
     }
 
-    return boardTypeMap.get(name.toUpperCase());
+    return boardTypeMapByName.get(name.toUpperCase());
+  }
+
+  public static BoardType findByCode(String code) {
+    if (code == null) {
+      return null;
+    }
+
+    return boardTypeMapByCode.get(code);
   }
 }

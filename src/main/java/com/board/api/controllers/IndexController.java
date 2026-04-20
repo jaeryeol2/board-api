@@ -11,6 +11,7 @@ import com.board.api.common.base.ResponseApi;
 import com.board.api.constants.BoardType;
 import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
+import com.board.api.dtos.response.Home;
 import com.board.api.dtos.response.Menu;
 import com.board.api.services.BoardService;
 import com.board.api.services.CommonService;
@@ -67,15 +68,13 @@ public class IndexController {
   }
 
   @GetMapping("/menus/{boardType}")
-  public CompletableFuture<ResponseApi<Menu>> getMethodName(@PathVariable String boardType) {
-    return commonService.getMenuInfo(BoardType.find(boardType).getCode());
+  public CompletableFuture<ResponseApi<Menu>> getMenu(@PathVariable String boardType) {
+    return commonService.getMenuInfo(BoardType.findByName(boardType).getCode());
   }
 
   @GetMapping("/home")
-  public CompletableFuture<ResponseApi<List<?>>> getHomeRenderData() {
+  public CompletableFuture<ResponseApi<List<Home>>> getHomeRenderData() {
     return boardService.getHomRenderData();
   }
-
-
 
 }

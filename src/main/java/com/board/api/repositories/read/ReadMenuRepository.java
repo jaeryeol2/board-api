@@ -18,7 +18,7 @@ public class ReadMenuRepository {
 
   public List<Menu> findMenuList() {
     final QBean<Menu> columns = Projections.fields(Menu.class, entity.id, entity.parentId,
-        entity.menuType, entity.menuName, entity.href, entity.isActive);
+        entity.menuType, entity.boardCode, entity.menuName, entity.href, entity.isActive);
     return factory.select(columns)//
         .from(entity)//
         .where(entity.isActive.eq(true))//
