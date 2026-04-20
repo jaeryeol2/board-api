@@ -25,7 +25,7 @@ public enum CacheTime {
   /** board detail */
   BAORD_DETAIL("getBoardDetail", Duration.ofMinutes(5L)),
   /** home board list */
-  HOME_BOARD_LIST("getHomeBaordData", Duration.ofDays(1L));
+  HOME_BOARD_LIST("getHomeBaordData", Duration.ofHours(1L));
 
   private final String cacheName;
   private final Duration ttl;
