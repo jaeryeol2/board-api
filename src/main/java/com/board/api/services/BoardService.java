@@ -78,8 +78,6 @@ public class BoardService {
 
       if (menu.isPresent() && !boards.isEmpty()) {
         home.setMenuName(menu.get().getMenuName());
-        System.out.println(":::::::::::::::::::::::::: " + boardTypeCode);
-        System.out.println(":::::::::::::::::::::::::: " + BoardType.findByCode(boardTypeCode));
         home.setBasePath(BoardType.findByCode(boardTypeCode));
         home.setHref(menu.get().getHref());
         home.setBoards(boards);
