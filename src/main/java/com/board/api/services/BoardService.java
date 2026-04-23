@@ -60,7 +60,8 @@ public class BoardService {
   private final WriteBoardFileRepository writeBoardFileRepository;
 
   @Async
-  @Cacheable(cacheNames = "getHomeBoardData")
+  @Cacheable(cacheNames = "getHomeBoardData",
+      unless = "#result.getData() == null || #result.getData().size() <= 0")
   public CompletableFuture<ResponseApi<List<Home>>> getHomeBoardData() {
     final List<Home> homes = new ArrayList<>();
     List<Menu> menuList =
