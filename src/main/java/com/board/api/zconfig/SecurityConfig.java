@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.board.api.constants.BoardType;
+import com.board.api.zconfig.entrypoint.AuthAccessDeniedHandler;
 import com.board.api.zconfig.entrypoint.AuthEntryPoint;
 import com.board.api.zconfig.filters.AuthFilter;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,8 @@ public class SecurityConfig {
   private String frontURL;
   private final AuthFilter authFilter;
   private final AuthEntryPoint authEntryPoint;
+  private final AuthAccessDeniedHandler authAccessDeniedHandler;
+
   private static final String[] IGNORE_PATH_ARRAY =
       {"/actuator/health", "/home", "/login", "/logout", "/token-expire", "/signup", "/menus/**"};
 
@@ -41,10 +44,9 @@ public class SecurityConfig {
         .formLogin(login -> login.disable()).logout(logout -> logout.disable())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .exceptionHandling(handling -> handling.authenticationEntryPoint(authEntryPoint))
+        .exceptionHandling(handling -> handling.authenticationEntryPoint(authEntryPoint)
+            .accessDeniedHandler(authAccessDeniedHandler)) // 403 핸들러 추가
         .cors(cors -> cors.configurationSource(configurationSource()))
-        // Spring MVC의 비동기 처리(@Async 컨트롤러)에서 SecurityContext를 유지하기 위한 설정.
-        // 요청(Request) 객체 자체에 SecurityContext를 저장하여, 요청의 전체 생명주기 동안 인증 정보를 보존.
         .securityContext(context -> context
             .securityContextRepository(new RequestAttributeSecurityContextRepository()))
         .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
@@ -78,7 +80,11 @@ public class SecurityConfig {
     config.setMaxAge(3600L);
     config.setAllowedOrigins(Arrays.asList(frontURL.split(",")));
     config.setAllowedHeaders(List.of(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION));
-    config.setAllowedMethods(List.of(HttpMethod.GET.name(), HttpMethod.POST.name()));
+
+    // 보완: 모든 REST Method 허용 (PUT, PATCH, DELETE, OPTIONS 추가)
+    config.setAllowedMethods(
+        List.of(HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
+            HttpMethod.PATCH.name(), HttpMethod.DELETE.name(), HttpMethod.OPTIONS.name()));
 
     source.registerCorsConfiguration("/**", config);
 
