@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.board.api.common.base.ResponseApi;
+import com.board.api.common.base.ResponseApi.ResponseList;
 import com.board.api.common.condition.CaseGet;
 import com.board.api.dtos.request.NoticeFilter;
 import com.board.api.dtos.response.Notice;
@@ -21,7 +22,7 @@ public class NoticeService {
   private final ReadNoticeRepository readNoticeRepository;
 
   @Async
-  public CompletableFuture<ResponseApi<List<Notice>>> getNoticeList(NoticeFilter filter) {
+  public CompletableFuture<ResponseApi<ResponseList<Notice>>> getNoticeList(NoticeFilter filter) {
     final long count = readNoticeRepository.findNoticeCount();
 
     List<Notice> notices = CaseGet.when(count > 0)//
@@ -30,6 +31,6 @@ public class NoticeService {
             .orElseGet(ArrayList::new))//
         .get();
 
-    return ResponseApi.completedOk(notices);
+    return ResponseApi.completedOk(((int) count), notices);
   }
 }

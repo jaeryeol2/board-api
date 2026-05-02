@@ -17,7 +17,7 @@ public class ReadNoticeRepository {
     private final JPAQueryFactory factory;
     private static final QAppNotice notice = QAppNotice.appNotice;
     private static final QAppUser user = QAppUser.appUser;
-    private static final String CREATED_BY = "createdBy";
+    private static final String WRITER_NAME = "writerName";
 
 
     public long findNoticeCount() {
@@ -26,11 +26,14 @@ public class ReadNoticeRepository {
 
     public List<Notice> findNotices(NoticeFilter filter) {
         final QBean<Notice> columns =
-                QueryDslUtil.generateFields(Notice.class, notice, user.userName.as(CREATED_BY));
+                QueryDslUtil.generateFields(Notice.class, notice, user.userName.as(WRITER_NAME));
 
-        return factory.select(columns).from(notice).leftJoin(user)
-                .on(notice.writerId.eq(user.userId)).orderBy(notice.createdAt.desc())
-                .limit(filter.getRowsPerPage())
-                .offset((long) (filter.getPage() - 1) * filter.getRowsPerPage()).fetch();
+        return factory.select(columns)//
+                .from(notice)//
+                .leftJoin(user).on(notice.writerId.eq(user.userId))//
+                .orderBy(notice.createdAt.desc())//
+                .limit(filter.getRowsPerPage())//
+                .offset((long) (filter.getPage() - 1) * filter.getRowsPerPage())//
+                .fetch();
     }
 }
