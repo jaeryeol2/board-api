@@ -1,7 +1,6 @@
 package com.board.api.services;
 
 import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
-import static com.board.api.constants.GlobalConstant.REFRESH_TOKEN;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -56,7 +55,7 @@ public class UserService {
     Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
 
     if (user.isEmpty()) {
-      this.expireToken(response);
+      inUserService.expireToken(userId, response);
     }
 
     return ResponseApi.completedOk(user.isPresent());
@@ -81,7 +80,7 @@ public class UserService {
     }
 
     try {
-      this.makeToken(login.getUserId(), response);
+      inUserService.makeToken(login.getUserId(), response);
       boolean isLoginUpdate = writeTransaction
           .execute(status -> writeUserRepository.updateLastLoginDate(login.getUserId()) > 0);
 
@@ -115,7 +114,7 @@ public class UserService {
           .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
       response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     } else {
-      this.expireToken(response);
+      inUserService.expireToken(userId, response);
       result = false;
     }
 
@@ -184,43 +183,16 @@ public class UserService {
   }
 
   @Async
-  @CacheEvict(cacheNames = "getUserInfo", key = "#userId",
-      condition = "#userId != null && !#userId.equals('')")
-  public CompletableFuture<ResponseApi<Boolean>> logout(String userId, HttpServletRequest request,
+  public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
     try {
-      this.expireToken(response);
+      String userId = inUserService.getUserId(request);
+      inUserService.expireToken(userId, response);
     } catch (Exception e) {
       log.warn("expire token error : ", e);
     }
 
     return ResponseApi.completedOk(true);
   }
-
-  public void makeToken(String userId, HttpServletResponse response) {
-    final String accessToken = tokenUtil.createToken(userId, 1L);
-    final String refreshToken = tokenUtil.createToken(userId, 8760L);
-    final LocalDateTime now = LocalDateTime.now();
-    final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
-        .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
-    final ResponseCookie refreshCookie =
-        ResponseCookie.from(REFRESH_TOKEN.getValue(), refreshToken).path("/").httpOnly(true)
-            .secure(true).sameSite("Lax").maxAge(Duration.between(now, now.plusYears(1L))).build();
-
-    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-    response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-  }
-
-  public void expireToken(HttpServletResponse response) {
-    final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
-        .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
-    final ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN.getValue(), "").path("/")
-        .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
-
-    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-    response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-  }
-
-
 
 }

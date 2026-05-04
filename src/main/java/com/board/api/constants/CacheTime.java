@@ -17,7 +17,7 @@ public enum CacheTime {
   /** guest id */
   GET_GUEST_ID("getGuestId", Duration.ofMinutes(5L)),
   /** user info */
-  GET_USER_INFO("getUserInfo", Duration.ofHours(1L)),
+  GET_USER_INFO("getUserInfo", Duration.ofMinutes(5L)),
   /** menu list */
   GET_MENU_LIST("getMenuList", Duration.ofHours(1L)),
   /** menu info */

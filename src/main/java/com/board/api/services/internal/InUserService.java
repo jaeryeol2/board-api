@@ -1,9 +1,12 @@
 package com.board.api.services.internal;
 
+import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import static com.board.api.constants.GlobalConstant.REFRESH_TOKEN;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -82,6 +85,32 @@ public class InUserService {
     response.addHeader(HttpHeaders.SET_COOKIE, newGuestCookie.toString());
 
     return ResponseApi.ok(true);
+  }
+
+  @CacheEvict(cacheNames = "getUserInfo", key = "#userId",
+      condition = "#userId != null && !#userId.equals('')")
+  public void expireToken(String userId, HttpServletResponse response) {
+    final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
+        .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
+    final ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN.getValue(), "").path("/")
+        .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
+
+    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+    response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+  }
+
+  public void makeToken(String userId, HttpServletResponse response) {
+    final String accessToken = tokenUtil.createToken(userId, 1L);
+    final String refreshToken = tokenUtil.createToken(userId, 8760L);
+    final LocalDateTime now = LocalDateTime.now();
+    final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
+        .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
+    final ResponseCookie refreshCookie =
+        ResponseCookie.from(REFRESH_TOKEN.getValue(), refreshToken).path("/").httpOnly(true)
+            .secure(true).sameSite("Lax").maxAge(Duration.between(now, now.plusYears(1L))).build();
+
+    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+    response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
   }
 
 }
