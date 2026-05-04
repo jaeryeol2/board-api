@@ -2,6 +2,7 @@ package com.board.api.services;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
@@ -37,32 +38,30 @@ public class CommonService {
 
   @Async
   public CompletableFuture<ResponseApi<Long>> getUserCount() {
-    Long total = 0L;
-    final String[] cacheNames =
-        {CacheTime.GET_GUEST_ID.getCacheName(), CacheTime.GET_USER_INFO.getCacheName()};
+    final Long total =
+        Stream.of(CacheTime.GET_GUEST_ID.getCacheName(), CacheTime.GET_USER_INFO.getCacheName())
+            .mapToLong(cacheName -> {
+              String pattern = cacheName.concat("::*");
+              ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
 
-    for (String cacheName : cacheNames) {
-      String pattern = cacheName.concat("::*");
-      ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
+              return redisTemplate.execute((RedisCallback<Long>) conn -> {
+                Long count = 0L;
 
-      total += redisTemplate.execute((RedisCallback<Long>) conn -> {
-        Long count = 0L;
+                try (Cursor<byte[]> cursor = conn.keyCommands().scan(options)) {
+                  while (cursor.hasNext()) {
+                    cursor.next();
+                    count++;
+                  }
+                } catch (Exception e) {
+                  log.error("getTraficCount error : {}", e.getMessage());
 
-        try (Cursor<byte[]> cursor = conn.keyCommands().scan(options)) {
-          while (cursor.hasNext()) {
-            cursor.next();
-            count++;
-          }
-        } catch (Exception e) {
-          log.error("getTraficCount error : {}", e.getMessage());
+                  return 0L;
+                }
 
-          return 0L;
-        }
+                return count;
+              });
+            }).sum();
 
-        return count;
-      });
-    }
-
-    return ResponseApi.completedOk(total != null ? total : 0L);
+    return ResponseApi.completedOk(total);
   }
 }
