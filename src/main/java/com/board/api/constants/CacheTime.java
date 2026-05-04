@@ -14,6 +14,8 @@ public enum CacheTime {
   ACCESS_TOKEN("access_token", Duration.ofHours(1L)),
   /** refresh token */
   REFRESH_TOKEN("refresh_token", Duration.ofDays(30L)),
+  /** guest id */
+  GET_GUEST_ID("getGuestId", Duration.ofMinutes(5L)),
   /** user info */
   GET_USER_INFO("getUserInfo", Duration.ofHours(1L)),
   /** menu list */
@@ -25,7 +27,7 @@ public enum CacheTime {
   /** board detail */
   BAORD_DETAIL("getBoardDetail", Duration.ofMinutes(5L)),
   /** home board list */
-  HOME_BOARD_LIST("getHomeBaordData", Duration.ofHours(1L));
+  HOME_BOARD_LIST("getHomeBoardData", Duration.ofHours(1L));
 
   private final String cacheName;
   private final Duration ttl;

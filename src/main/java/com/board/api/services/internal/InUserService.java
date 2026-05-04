@@ -29,7 +29,7 @@ public class InUserService {
   public String getUserId(HttpServletRequest request) {
     final String token = Optional.ofNullable(this.getAccessToken(request))//
         .orElse(this.getRefreshToken(request));
-    return tokenUtil.getTokenInfo(token).getSubject();
+    return Optional.ofNullable(token).map(t -> tokenUtil.getTokenInfo(t).getSubject()).orElse(null);
   }
 
   public boolean checkToken(HttpServletRequest request) {
@@ -55,7 +55,12 @@ public class InUserService {
     final String token = Arrays.asList(cookies).stream()
         .filter(
             cookie -> cookie != null && REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))
-        .findFirst().orElse(new Cookie(REFRESH_TOKEN.getValue(), null)).getValue();
+        .findFirst().orElseGet(() -> {
+          final Cookie cookie = new Cookie(REFRESH_TOKEN.getValue(), null);
+          cookie.setSecure(true);
+
+          return cookie;
+        }).getValue();
 
     return !tokenUtil.isTokenExpired(token) ? token : null;
   }

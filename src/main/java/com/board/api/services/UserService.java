@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -88,6 +89,10 @@ public class UserService {
         throw new BusinessException("last login date update fail.");
       }
 
+      ResponseCookie exppireGuestId = ResponseCookie.from("guest_tracking_id", "").path("/")
+          .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
+
+      response.addHeader(HttpHeaders.SET_COOKIE, exppireGuestId.toString());
     } catch (Exception e) {
       log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
           LocalDateTime.now());
@@ -143,6 +148,23 @@ public class UserService {
     return ResponseApi.completedOk(null);
   }
 
+  @Async
+  @Cacheable(cacheNames = "getGuestId", key = "#newGuestId")
+  public CompletableFuture<ResponseApi<Boolean>> getGuestId(final String newGuestId,
+      HttpServletResponse response) {
+    final ResponseCookie newGuestCookie = ResponseCookie.from("guest_tracking_id", newGuestId)//
+        .path("/")//
+        .httpOnly(true)//
+        .secure(true)//
+        .sameSite("Lax")//
+        .maxAge(Duration.ofHours(1L))//
+        .build();
+
+    response.addHeader(HttpHeaders.SET_COOKIE, newGuestCookie.toString());
+
+    return ResponseApi.completedOk(true);
+  }
+
   @Transactional
   public ResponseApi<Boolean> join(Join join) {
     try {
@@ -181,8 +203,13 @@ public class UserService {
   @Async
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
-    String userId = inUserService.getUserId(request);
-    this.expireToken(userId, response);
+    try {
+      String userId = inUserService.getUserId(request);
+      this.expireToken(userId, response);
+    } catch (Exception e) {
+      log.warn("expire token error : ", e);
+    }
+
     return ResponseApi.completedOk(true);
   }
 

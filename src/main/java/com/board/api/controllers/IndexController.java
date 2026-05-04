@@ -1,6 +1,7 @@
 package com.board.api.controllers;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +44,13 @@ public class IndexController {
       HttpServletResponse response) {
     return userService.getNewAccessToken(request, response);
   }
+
+  @PostMapping("/auth/guest")
+  public CompletableFuture<ResponseApi<Boolean>> getGuestId(HttpServletResponse response) {
+    final String newGuestId = UUID.randomUUID().toString();
+    return userService.getGuestId(newGuestId, response);
+  }
+
 
   @PostMapping("/login")
   public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody Login login,

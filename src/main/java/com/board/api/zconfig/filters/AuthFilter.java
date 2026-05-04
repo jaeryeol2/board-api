@@ -59,6 +59,7 @@ public class AuthFilter extends OncePerRequestFilter {
       }
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());
+
       SecurityContextHolder.clearContext();
       authEntryPoint.commence(request, response,
           new AuthenticationException(e.getMessage(), e.getCause()) {});
