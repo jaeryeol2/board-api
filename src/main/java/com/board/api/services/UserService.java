@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -57,14 +56,15 @@ public class UserService {
     Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
 
     if (user.isEmpty()) {
-      this.expireToken(userId, response);
+      this.expireToken(response);
     }
 
     return ResponseApi.completedOk(user.isPresent());
   }
 
   @Async
-  public CompletableFuture<ResponseApi<Boolean>> getLoginCheck(final Login login,
+  @CacheEvict(cacheNames = "getGuestId", key = "#guestId")
+  public CompletableFuture<ResponseApi<Boolean>> login(String guestId, Login login,
       HttpServletRequest request, HttpServletResponse response) {
     final Optional<User> checker =
         Optional.ofNullable(readUserRepository.findLoginInfoById(login.getUserId()));
@@ -115,7 +115,7 @@ public class UserService {
           .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
       response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     } else {
-      this.expireToken(userId, response);
+      this.expireToken(response);
       result = false;
     }
 
@@ -146,23 +146,6 @@ public class UserService {
     log.info(userId);
 
     return ResponseApi.completedOk(null);
-  }
-
-  @Async
-  @Cacheable(cacheNames = "getGuestId", key = "#newGuestId")
-  public CompletableFuture<ResponseApi<Boolean>> getGuestId(final String newGuestId,
-      HttpServletResponse response) {
-    final ResponseCookie newGuestCookie = ResponseCookie.from("guest_tracking_id", newGuestId)//
-        .path("/")//
-        .httpOnly(true)//
-        .secure(true)//
-        .sameSite("Lax")//
-        .maxAge(Duration.ofHours(1L))//
-        .build();
-
-    response.addHeader(HttpHeaders.SET_COOKIE, newGuestCookie.toString());
-
-    return ResponseApi.completedOk(true);
   }
 
   @Transactional
@@ -201,11 +184,12 @@ public class UserService {
   }
 
   @Async
-  public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
+  @CacheEvict(cacheNames = "getUserInfo", key = "#userId",
+      condition = "#userId != null && !#userId.equals('')")
+  public CompletableFuture<ResponseApi<Boolean>> logout(String userId, HttpServletRequest request,
       HttpServletResponse response) {
     try {
-      String userId = inUserService.getUserId(request);
-      this.expireToken(userId, response);
+      this.expireToken(response);
     } catch (Exception e) {
       log.warn("expire token error : ", e);
     }
@@ -227,8 +211,7 @@ public class UserService {
     response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
   }
 
-  @CacheEvict(cacheNames = "getUserInfo", key = "#userId")
-  public void expireToken(String userId, HttpServletResponse response) {
+  public void expireToken(HttpServletResponse response) {
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
         .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
     final ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN.getValue(), "").path("/")

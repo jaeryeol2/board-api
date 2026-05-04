@@ -35,7 +35,7 @@ public class SecurityConfig {
   private final AuthAccessDeniedHandler authAccessDeniedHandler;
 
   private static final String[] IGNORE_PATH_ARRAY = {"/actuator/health", "/home", "/login",
-      "/logout", "/token-expire", "/auth/guest", "/signup", "/menus/**"};
+      "/logout", "/token-expire", "/auth/guest", "/user/user-count", "/signup", "/menus/**"};
 
   @Bean
   SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

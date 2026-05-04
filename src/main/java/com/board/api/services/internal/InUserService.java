@@ -1,16 +1,20 @@
 package com.board.api.services.internal;
 
 import static com.board.api.constants.GlobalConstant.REFRESH_TOKEN;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
+import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadUserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,6 +67,21 @@ public class InUserService {
         }).getValue();
 
     return !tokenUtil.isTokenExpired(token) ? token : null;
+  }
+
+  @Cacheable(cacheNames = "getGuestId", key = "#newGuestId")
+  public ResponseApi<Boolean> setGuest(final String newGuestId, HttpServletResponse response) {
+    final ResponseCookie newGuestCookie = ResponseCookie.from("guest_tracking_id", newGuestId)//
+        .path("/")//
+        .httpOnly(true)//
+        .secure(true)//
+        .sameSite("Lax")//
+        .maxAge(Duration.ofMinutes(5L))//
+        .build();
+
+    response.addHeader(HttpHeaders.SET_COOKIE, newGuestCookie.toString());
+
+    return ResponseApi.ok(true);
   }
 
 }

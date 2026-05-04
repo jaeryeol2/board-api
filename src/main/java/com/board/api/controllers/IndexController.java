@@ -1,7 +1,6 @@
 package com.board.api.controllers;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +16,7 @@ import com.board.api.dtos.response.Menu;
 import com.board.api.services.BoardService;
 import com.board.api.services.CommonService;
 import com.board.api.services.UserService;
+import com.board.api.services.internal.InUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 public class IndexController {
+  private final InUserService inUserService;
   private final CommonService commonService;
   private final UserService userService;
   private final BoardService boardService;
@@ -45,23 +46,18 @@ public class IndexController {
     return userService.getNewAccessToken(request, response);
   }
 
-  @PostMapping("/auth/guest")
-  public CompletableFuture<ResponseApi<Boolean>> getGuestId(HttpServletResponse response) {
-    final String newGuestId = UUID.randomUUID().toString();
-    return userService.getGuestId(newGuestId, response);
-  }
-
-
   @PostMapping("/login")
   public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody Login login,
       HttpServletRequest request, HttpServletResponse response) {
-    return userService.getLoginCheck(login, request, response);
+    String guestId = request.getHeader("X-Guest-Id");
+    return userService.login(guestId, login, request, response);
   }
 
   @PostMapping({"/logout", "/token-expire"})
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
-    return userService.logout(request, response);
+    String userId = inUserService.getUserId(request);
+    return userService.logout(userId, request, response);
   }
 
   @PostMapping("/signup")

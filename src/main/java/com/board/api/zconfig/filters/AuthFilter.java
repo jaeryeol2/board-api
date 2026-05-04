@@ -1,8 +1,11 @@
 package com.board.api.zconfig.filters;
 
+import static com.board.api.constants.GlobalConstant.X_FORWARDED_FOR;
+import static com.board.api.constants.GlobalConstant.X_GUEST_ID;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,7 +38,7 @@ public class AuthFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     final String path = request.getRequestURI();
-    final String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For"))
+    final String ip = Optional.ofNullable(request.getHeader(X_FORWARDED_FOR.getValue()))
         .filter(item -> !item.isBlank() && !"unknown".equals(item))
         .map(item -> item.split(",")[0].trim())//
         .orElse(request.getRemoteAddr());
@@ -56,7 +59,13 @@ public class AuthFilter extends OncePerRequestFilter {
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+      } else {
+        if (!StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
+          String newGuestId = UUID.randomUUID().toString();
+          inUserService.setGuest(newGuestId, response);
+        }
       }
+
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());
 

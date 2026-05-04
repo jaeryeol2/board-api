@@ -10,7 +10,9 @@ import lombok.Getter;
 @Getter
 public enum GlobalConstant {
   ACCESS_TOKEN("access_token"), //
-  REFRESH_TOKEN("auth_token");
+  REFRESH_TOKEN("auth_token"), //
+  X_FORWARDED_FOR("X-Forwarded-For"), //
+  X_GUEST_ID("X-Guest-Id");
 
   private String value;
 
