@@ -104,13 +104,25 @@ public class InUserService {
     final String refreshToken = tokenUtil.createToken(userId, 8760L);
     final LocalDateTime now = LocalDateTime.now();
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
-        .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
+        .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofHours(1L)).build();
     final ResponseCookie refreshCookie =
         ResponseCookie.from(REFRESH_TOKEN.getValue(), refreshToken).path("/").httpOnly(true)
             .secure(true).sameSite("Lax").maxAge(Duration.between(now, now.plusYears(1L))).build();
 
     response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+  }
+
+  public String makeNewAccessToken(HttpServletRequest request) {
+    final String refreshToken = this.getRefreshToken(request);
+    final String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();
+    final Optional<User> user = Optional.ofNullable(readUserRepository.findLoginInfoById(userId));
+
+    if (user.isPresent()) {
+      return tokenUtil.createToken(userId, 1L);
+    }
+
+    return null;
   }
 
 }

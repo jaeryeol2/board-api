@@ -103,22 +103,17 @@ public class UserService {
   @Async
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
-    final String refreshToken = inUserService.getRefreshToken(request);
-    final String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();
-    final Optional<User> user = Optional.ofNullable(readUserRepository.findLoginInfoById(userId));
-    boolean result = true;
+    final Optional<String> optional =
+        Optional.ofNullable(inUserService.makeNewAccessToken(request));
 
-    if (user.isPresent()) {
-      final String accessToken = tokenUtil.createToken(userId, 1L);
-      final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
-          .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(3600).build();
+    if (optional.isPresent()) {
+      final ResponseCookie accessCookie =
+          ResponseCookie.from(ACCESS_TOKEN.getValue(), optional.get()).path("/").httpOnly(true)
+              .secure(true).sameSite("Lax").maxAge(Duration.ofHours(1L)).build();
       response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-    } else {
-      inUserService.expireToken(userId, response);
-      result = false;
     }
 
-    return ResponseApi.completedOk(result);
+    return ResponseApi.completedOk(optional.isPresent());
   }
 
   @Async

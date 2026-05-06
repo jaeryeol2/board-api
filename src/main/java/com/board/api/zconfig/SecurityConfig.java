@@ -1,5 +1,6 @@
 package com.board.api.zconfig;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,7 +78,7 @@ public class SecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
     config.setAllowCredentials(true);
-    config.setMaxAge(3600L);
+    config.setMaxAge(Duration.ofHours(1L));
     config.setAllowedOrigins(Arrays.asList(frontURL.split(",")));
     config.setAllowedHeaders(List.of(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION));
 

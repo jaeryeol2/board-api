@@ -42,30 +42,33 @@ public class AuthFilter extends OncePerRequestFilter {
         .filter(item -> !item.isBlank() && !"unknown".equals(item))
         .map(item -> item.split(",")[0].trim())//
         .orElse(request.getRemoteAddr());
-    final String token = Optional.ofNullable(inUserService.getAccessToken(request))//
-        .orElse(inUserService.getRefreshToken(request));
+    final String accessToken = Optional.ofNullable(inUserService.getAccessToken(request))//
+        .map(token -> token.isBlank() ? token : inUserService.makeNewAccessToken(request))//
+        .orElse(null);
+    boolean isGuest = true;
 
     try {
-      if (StringUtils.hasText(token) && !tokenUtil.isTokenExpired(token)) {
-        final String userId = tokenUtil.getTokenInfo(token).getSubject();
+      if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
+        final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
         final Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
 
         if (user.isPresent()) {
           final GrantedAuthority authority = new SimpleGrantedAuthority(user.get().getUserRole());
           final List<GrantedAuthority> authorities = List.of(authority);
           final DefaultAuthority authentication =
-              new DefaultAuthority(user.get(), token, authorities);
+              new DefaultAuthority(user.get(), accessToken, authorities);
 
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
-      } else {
-        if (!StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
-          String newGuestId = UUID.randomUUID().toString();
-          inUserService.setGuest(newGuestId, response);
+
+          isGuest = false;
         }
       }
 
+      if (isGuest && !StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
+        String newGuestId = UUID.randomUUID().toString();
+        inUserService.setGuest(newGuestId, response);
+      }
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());
 
