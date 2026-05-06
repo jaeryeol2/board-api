@@ -43,8 +43,8 @@ public class AuthFilter extends OncePerRequestFilter {
         .map(item -> item.split(",")[0].trim())//
         .orElse(request.getRemoteAddr());
     final String accessToken = Optional.ofNullable(inUserService.getAccessToken(request))//
-        .map(token -> token.isBlank() ? token : inUserService.makeNewAccessToken(request))//
-        .orElse(null);
+        .filter(token -> !token.isBlank())
+        .orElseGet(() -> inUserService.makeNewAccessToken(request));
     boolean isGuest = true;
 
     try {

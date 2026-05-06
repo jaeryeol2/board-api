@@ -115,8 +115,11 @@ public class InUserService {
 
   public String makeNewAccessToken(HttpServletRequest request) {
     final String refreshToken = this.getRefreshToken(request);
-    final String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();
-    final Optional<User> user = Optional.ofNullable(readUserRepository.findLoginInfoById(userId));
+    final String userId = Optional.ofNullable(refreshToken)//
+        .map(token -> tokenUtil.getTokenInfo(token).getSubject())//
+        .orElse(null);
+    final Optional<User> user =
+        Optional.ofNullable(userId).map(readUserRepository::findLoginInfoById);
 
     if (user.isPresent()) {
       return tokenUtil.createToken(userId, 1L);
