@@ -2,6 +2,7 @@ package com.board.api.services.board;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class BoardService {
   private final UserReader userReader;
   private final BoardReader boardReader;
   private final BoardWriter boardWriter;
+  private final TaskExecutor vitualThread;
 
   @Async
   public CompletableFuture<ResponseApi<List<Home>>> getHomeBoardData() {
@@ -55,13 +57,13 @@ public class BoardService {
 
   @Async
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {
-    return ResponseApi.completedOk(boardReader.getBoardDetail(id)).thenApplyAsync(detail -> {
-      if (!ObjectUtils.isEmpty(detail)) {
-        boardWriter.updateViewCount(id);
-      }
+    final BoardDetail detail = boardReader.getBoardDetail(id);
 
-      return detail;
-    });
+    if (!ObjectUtils.isEmpty(detail)) {
+      CompletableFuture.runAsync(() -> boardWriter.updateViewCount(id), vitualThread);
+    }
+
+    return ResponseApi.completedOk(detail);
   }
 
   @Async
