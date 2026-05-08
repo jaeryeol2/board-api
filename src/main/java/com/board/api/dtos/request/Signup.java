@@ -12,7 +12,7 @@ import lombok.ToString;
 @ToString(exclude = "password")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Join {
+public class Signup {
   private String userId;
   private String password;
   private String email;

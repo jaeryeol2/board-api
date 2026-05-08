@@ -35,7 +35,7 @@ public class BoardService {
   private final UserReader userReader;
   private final BoardReader boardReader;
   private final BoardWriter boardWriter;
-  private final TaskExecutor vitualThread;
+  private final TaskExecutor appAsync;
 
   @Async
   public CompletableFuture<ResponseApi<List<Home>>> getHomeBoardData() {
@@ -60,7 +60,7 @@ public class BoardService {
     final BoardDetail detail = boardReader.getBoardDetail(id);
 
     if (!ObjectUtils.isEmpty(detail)) {
-      CompletableFuture.runAsync(() -> boardWriter.updateViewCount(id), vitualThread);
+      CompletableFuture.runAsync(() -> boardWriter.updateViewCount(id), appAsync);
     }
 
     return ResponseApi.completedOk(detail);

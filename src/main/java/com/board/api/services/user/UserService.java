@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
-import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
+import com.board.api.dtos.request.Signup;
 import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
-  private final TaskExecutor virtualThread;
+  private final TaskExecutor appAsync;
 
   private final UserReader userReader;
   private final UserWriter userWriter;
@@ -74,7 +74,7 @@ public class UserService {
         log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
             LocalDateTime.now());
       }
-    }, virtualThread);
+    }, appAsync);
 
     ResponseCookie exppireGuestId = ResponseCookie.from("guest_tracking_id", "").path("/")
         .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
@@ -129,8 +129,8 @@ public class UserService {
 
   @Async
   @Transactional
-  public CompletableFuture<ResponseApi<Boolean>> join(Join join) {
-    return ResponseApi.completedOk(userWriter.join(join));
+  public CompletableFuture<ResponseApi<Boolean>> signup(Signup join) {
+    return ResponseApi.completedOk(userWriter.signup(join));
   }
 
   @Async

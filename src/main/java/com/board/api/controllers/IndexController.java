@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.constants.BoardType;
-import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
+import com.board.api.dtos.request.Signup;
 import com.board.api.dtos.response.Home;
 import com.board.api.dtos.response.Menu;
 import com.board.api.services.board.BoardService;
@@ -58,8 +58,8 @@ public class IndexController {
   }
 
   @PostMapping("/signup")
-  public CompletableFuture<ResponseApi<Boolean>> signup(@RequestBody Join join) {
-    return userService.join(join);
+  public CompletableFuture<ResponseApi<Boolean>> signup(@RequestBody Signup join) {
+    return userService.signup(join);
   }
 
   @GetMapping("/menus")

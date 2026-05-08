@@ -10,7 +10,7 @@ import org.springframework.util.ObjectUtils;
 import com.board.api.common.base.BusinessException;
 import com.board.api.common.condition.Case;
 import com.board.api.constants.UserRole;
-import com.board.api.dtos.request.Join;
+import com.board.api.dtos.request.Signup;
 import com.board.api.entities.AppUser;
 import com.board.api.repositories.write.WriteUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class UserWriter {
   private final PasswordEncoder passwordEncoder;
   private final WriteUserRepository writeUserRepository;
 
-  public boolean join(Join join) {
+  public boolean signup(Signup join) {
     try {
       final AppUser appUser = writeUserRepository.save(AppUser.builder()//
           .userId(join.getUserId())//
