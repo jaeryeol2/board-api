@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.scheduling.annotation.Async;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
   private final TokenUtil tokenUtil;
   private final PasswordEncoder passwordEncoder;
+  private final TaskExecutor virtualThread;
 
   private final UserReader userReader;
   private final UserWriter userWriter;
@@ -47,7 +49,6 @@ public class UserService {
   }
 
   @Async
-  @Transactional
   public CompletableFuture<ResponseApi<Boolean>> login(String guestId, Login login,
       HttpServletRequest request, HttpServletResponse response) {
     final Optional<User> checker =
@@ -64,22 +65,21 @@ public class UserService {
       throw new BusinessException("비밀번호가 일치하지 않습니다.");
     }
 
-    try {
-      userReader.makeToken(login.getUserId(), response);
+    userReader.makeToken(login.getUserId(), response);
+
+    CompletableFuture.runAsync(() -> {
       boolean isLoginUpdate = userWriter.updateLastLoginDate(login.getUserId());
 
       if (!isLoginUpdate) {
-        throw new BusinessException("last login date update fail.");
+        log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
+            LocalDateTime.now());
       }
+    }, virtualThread);
 
-      ResponseCookie exppireGuestId = ResponseCookie.from("guest_tracking_id", "").path("/")
-          .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
+    ResponseCookie exppireGuestId = ResponseCookie.from("guest_tracking_id", "").path("/")
+        .httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofSeconds(0L)).build();
 
-      response.addHeader(HttpHeaders.SET_COOKIE, exppireGuestId.toString());
-    } catch (Exception e) {
-      log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
-          LocalDateTime.now());
-    }
+    response.addHeader(HttpHeaders.SET_COOKIE, exppireGuestId.toString());
 
     userWriter.removeGuestIdCache(guestId);
 
