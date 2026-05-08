@@ -38,8 +38,9 @@ public class BoardReader {
     final List<Home> homes = new ArrayList<>();
     List<Menu> menuList = Optional.ofNullable(commonReader.getMenuList()).orElse(new ArrayList<>());
     List<String> boardTypeCodeList = menuList.stream().map(Menu::getBoardCode).toList();
-    Map<String, Menu> menuMap =
-        menuList.stream().collect(Collectors.toMap(Menu::getBoardCode, Function.identity()));
+    Map<String, Menu> menuMap = menuList.stream()//
+        .collect(Collectors.toMap(Menu::getBoardCode, Function.identity(),
+            (oldItem, newItem) -> newItem));
 
 
     for (String boardTypeCode : boardTypeCodeList) {

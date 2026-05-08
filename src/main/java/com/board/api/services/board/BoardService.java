@@ -56,7 +56,10 @@ public class BoardService {
   @Async
   public CompletableFuture<ResponseApi<BoardDetail>> getBoardDetail(final Long id) {
     return ResponseApi.completedOk(boardReader.getBoardDetail(id)).thenApplyAsync(detail -> {
-      boardWriter.updateViewCount(id);
+      if (!ObjectUtils.isEmpty(detail)) {
+        boardWriter.updateViewCount(id);
+      }
+
       return detail;
     });
   }
