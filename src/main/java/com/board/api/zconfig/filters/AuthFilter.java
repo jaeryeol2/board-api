@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.response.User;
-import com.board.api.services.internal.InUserService;
+import com.board.api.services.user.UserReader;
 import com.board.api.zconfig.authority.DefaultAuthority;
 import com.board.api.zconfig.entrypoint.AuthEntryPoint;
 import jakarta.servlet.FilterChain;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
   private final TokenUtil tokenUtil;
-  private final InUserService inUserService;
+  private final UserReader userReader;
   private final AuthEntryPoint authEntryPoint;
 
   @Override
@@ -42,15 +42,14 @@ public class AuthFilter extends OncePerRequestFilter {
         .filter(item -> !item.isBlank() && !"unknown".equals(item))
         .map(item -> item.split(",")[0].trim())//
         .orElse(request.getRemoteAddr());
-    final String accessToken = Optional.ofNullable(inUserService.getAccessToken(request))//
-        .filter(token -> !token.isBlank())
-        .orElseGet(() -> inUserService.makeNewAccessToken(request));
+    final String accessToken = Optional.ofNullable(userReader.getAccessToken(request))//
+        .filter(token -> !token.isBlank()).orElseGet(() -> userReader.makeNewAccessToken(request));
     boolean isGuest = true;
 
     try {
       if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
         final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
-        final Optional<User> user = Optional.ofNullable(inUserService.getUserInfo(userId));
+        final Optional<User> user = Optional.ofNullable(userReader.getUserInfo(userId));
 
         if (user.isPresent()) {
           final GrantedAuthority authority = new SimpleGrantedAuthority(user.get().getUserRole());
@@ -67,7 +66,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
       if (isGuest && !StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
         String newGuestId = UUID.randomUUID().toString();
-        inUserService.setGuest(newGuestId, response);
+        userReader.setGuest(newGuestId, response);
       }
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());

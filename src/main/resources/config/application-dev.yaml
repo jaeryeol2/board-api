@@ -6,7 +6,7 @@ datasource:
       username: root
       password: root
       connection-test-query: SELECT 1
-      maximum-pool-size: 5
+      maximum-pool-size: 10
       minimum-idle: 3
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
   write:

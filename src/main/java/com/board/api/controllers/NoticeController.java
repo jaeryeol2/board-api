@@ -8,7 +8,7 @@ import com.board.api.common.base.ResponseApi;
 import com.board.api.common.base.ResponseApi.ResponseList;
 import com.board.api.dtos.request.NoticeFilter;
 import com.board.api.dtos.response.Notice;
-import com.board.api.services.NoticeService;
+import com.board.api.services.notice.NoticeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

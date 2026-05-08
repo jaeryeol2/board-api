@@ -18,7 +18,7 @@ import com.board.api.dtos.request.CommentWrite;
 import com.board.api.dtos.response.Board;
 import com.board.api.dtos.response.Board.BoardComment;
 import com.board.api.dtos.response.Board.BoardDetail;
-import com.board.api.services.BoardService;
+import com.board.api.services.board.BoardService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,6 @@ public class BoardController {
   @PostMapping("/{boardType}")
   public ResponseApi<Boolean> writeBoard(@PathVariable BoardType boardType, BoardWrite write,
       HttpServletRequest request) {
-
     return boardService.writeBoard(boardType, write, request);
   }
 
@@ -65,7 +64,7 @@ public class BoardController {
   }
 
   @PostMapping("/comment/{boardId}")
-  public ResponseApi<Boolean> writeComment(@PathVariable long boardId,
+  public CompletableFuture<ResponseApi<Boolean>> writeComment(@PathVariable long boardId,
       @RequestBody CommentWrite write, HttpServletRequest request) {
     return boardService.writeComment(boardId, write, request);
   }

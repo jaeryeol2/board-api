@@ -1,4 +1,4 @@
-package com.board.api.services;
+package com.board.api.services.common;
 
 import java.io.IOException;
 import java.time.LocalDate;

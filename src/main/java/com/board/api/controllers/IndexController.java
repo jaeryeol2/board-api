@@ -13,9 +13,9 @@ import com.board.api.dtos.request.Join;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.response.Home;
 import com.board.api.dtos.response.Menu;
-import com.board.api.services.BoardService;
-import com.board.api.services.CommonService;
-import com.board.api.services.UserService;
+import com.board.api.services.board.BoardService;
+import com.board.api.services.common.CommonService;
+import com.board.api.services.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -58,10 +58,9 @@ public class IndexController {
   }
 
   @PostMapping("/signup")
-  public ResponseApi<Boolean> signup(@RequestBody Join join) {
+  public CompletableFuture<ResponseApi<Boolean>> signup(@RequestBody Join join) {
     return userService.join(join);
   }
-
 
   @GetMapping("/menus")
   public CompletableFuture<ResponseApi<List<Menu>>> getMenuList() {

@@ -1,4 +1,4 @@
-package com.board.api.services.internal;
+package com.board.api.services.user;
 
 import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import static com.board.api.constants.GlobalConstant.REFRESH_TOKEN;
@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.response.User;
@@ -23,14 +24,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class InUserService {
+public class UserReader {
   private final TokenUtil tokenUtil;
   private final ReadUserRepository readUserRepository;
 
   @Cacheable(cacheNames = "getUserInfo", key = "#userId", unless = "#result == null")
   public User getUserInfo(String userId) {
     return readUserRepository.findUserById(userId);
+  }
+
+  public User getLoginUserInfo(String userId) {
+    return readUserRepository.findLoginInfoById(userId);
   }
 
   public String getUserId(HttpServletRequest request) {
@@ -100,16 +106,25 @@ public class InUserService {
   }
 
   public void makeToken(String userId, HttpServletResponse response) {
+    this.makeAccessToken(userId, response);
+    this.makeRefreshToken(userId, response);
+  }
+
+  public void makeAccessToken(String userId, HttpServletResponse response) {
     final String accessToken = tokenUtil.createToken(userId, 1L);
-    final String refreshToken = tokenUtil.createToken(userId, 8760L);
-    final LocalDateTime now = LocalDateTime.now();
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), accessToken)
         .path("/").httpOnly(true).secure(true).sameSite("Lax").maxAge(Duration.ofHours(1L)).build();
+
+    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+  }
+
+  public void makeRefreshToken(String userId, HttpServletResponse response) {
+    final String refreshToken = tokenUtil.createToken(userId, 8760L);
+    final LocalDateTime now = LocalDateTime.now();
     final ResponseCookie refreshCookie =
         ResponseCookie.from(REFRESH_TOKEN.getValue(), refreshToken).path("/").httpOnly(true)
             .secure(true).sameSite("Lax").maxAge(Duration.between(now, now.plusYears(1L))).build();
 
-    response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
   }
 
@@ -127,5 +142,4 @@ public class InUserService {
 
     return null;
   }
-
 }
