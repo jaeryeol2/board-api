@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -44,10 +45,12 @@ public class AuthFilter extends OncePerRequestFilter {
         .orElse(request.getRemoteAddr());
     final String accessToken = Optional.ofNullable(userReader.getAccessToken(request))//
         .filter(token -> !token.isBlank()).orElseGet(() -> userReader.makeNewAccessToken(request));
+    final Predicate<String> hasAccessToken =
+        t -> StringUtils.hasText(t) && !tokenUtil.isTokenExpired(t);
     boolean isGuest = true;
 
     try {
-      if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
+      if (hasAccessToken.test(accessToken)) {
         final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
         final Optional<User> user = Optional.ofNullable(userReader.getUserInfo(userId));
 

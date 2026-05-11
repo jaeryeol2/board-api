@@ -1,11 +1,23 @@
 package com.board.api.dtos.request;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-@Getter
 @Setter
+@Getter
+@ToString(callSuper = true)
+@SuperBuilder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class NoticeFilter {
-    private int page = 1;
-    private int rowsPerPage = 10;
+  @Builder.Default
+  private int page = 1;
+  @Builder.Default
+  private int rowsPerPage = 10;
 }

@@ -1,18 +1,17 @@
 package com.board.api.services.notice;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.base.ResponseApi.ResponseList;
-import com.board.api.common.condition.CaseGet;
 import com.board.api.dtos.request.NoticeFilter;
+import com.board.api.dtos.request.Write.NoticeWrite;
 import com.board.api.dtos.response.Notice;
-import com.board.api.repositories.read.ReadNoticeRepository;
+import com.board.api.entities.AppNotice;
+import com.board.api.services.user.UserReader;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,19 +20,21 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class NoticeService {
+  private final UserReader userReader;
+  private final NoticeReader noticeReader;
   private final NoticeWriter noticeWriter;
-  private final ReadNoticeRepository readNoticeRepository;
 
   @Async
   public CompletableFuture<ResponseApi<ResponseList<Notice>>> getNoticeList(NoticeFilter filter) {
-    final long count = readNoticeRepository.findNoticeCount();
+    return ResponseApi.completedOk(noticeReader.getNoticeList(filter));
+  }
 
-    List<Notice> notices = CaseGet.when(count > 0)//
-        .then(Optional.ofNullable(readNoticeRepository.findNotices(filter))//
-            .filter(itmes -> !itmes.isEmpty())//
-            .orElseGet(ArrayList::new))//
-        .get();
+  @Async
+  public CompletableFuture<ResponseApi<Boolean>> writeNotice(NoticeWrite write,
+      HttpServletRequest request) {
+    final String userId = userReader.getUserId(request);
 
-    return ResponseApi.completedOk(((int) count), notices);
+    return ResponseApi.completedOk(noticeWriter.writeNotice(AppNotice.builder()
+        .title(write.getTitle()).content(write.getContent()).writerId(userId).build()));
   }
 }
