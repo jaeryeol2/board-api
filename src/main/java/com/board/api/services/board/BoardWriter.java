@@ -38,7 +38,8 @@ public class BoardWriter {
     return writeBoardRepository.updateViewCount(id);
   }
 
-  public void writeBoardFile(AppBoard appBoard, List<MultipartFile> fileList) throws Exception {
+  public void writeBoardFile(AppBoard appBoard, List<MultipartFile> fileList)
+      throws BusinessException {
     if (fileList == null || fileList.isEmpty()) {
       return;
     }
