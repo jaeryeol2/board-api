@@ -30,7 +30,7 @@ public class BoardWriter {
   private final WriteCommentRepository writeCommentRepository;
 
   @CacheEvict(cacheNames = "getBoardList", key = "#appBoard.boardTypeCode + '_' + 1")
-  public AppBoard writeBoard(AppBoard appBoard) throws IllegalArgumentException {
+  public AppBoard writeBoard(AppBoard appBoard) {
     return writeBoardRepository.save(appBoard);
   }
 
@@ -38,8 +38,7 @@ public class BoardWriter {
     return writeBoardRepository.updateViewCount(id);
   }
 
-  public void writeBoardFile(AppBoard appBoard, List<MultipartFile> fileList)
-      throws BusinessException {
+  public void writeBoardFile(AppBoard appBoard, List<MultipartFile> fileList) {
     if (fileList == null || fileList.isEmpty()) {
       return;
     }
