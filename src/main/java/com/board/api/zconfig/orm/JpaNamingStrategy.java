@@ -1,7 +1,6 @@
 package com.board.api.zconfig.orm;
 
 import java.util.Locale;
-import java.util.Optional;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -35,7 +34,7 @@ public class JpaNamingStrategy implements PhysicalNamingStrategy {
   }
 
   protected boolean isCaseInsensitive(JdbcEnvironment jdbcEnvironment) {
-    return Optional.ofNullable(jdbcEnvironment).isPresent();
+    return jdbcEnvironment != null;
   }
 
   private boolean isUnderscoreRequired(final char before, final char current, final char after) {

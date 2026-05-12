@@ -5,7 +5,7 @@ import static com.board.api.constants.GlobalConstant.REFRESH_TOKEN;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.Objects;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
@@ -40,23 +40,30 @@ public class UserReader {
   }
 
   public String getUserId(HttpServletRequest request) {
-    final String token = Optional.ofNullable(this.getAccessToken(request))//
-        .orElse(this.getRefreshToken(request));
-    return Optional.ofNullable(token).map(t -> tokenUtil.getTokenInfo(t).getSubject()).orElse(null);
+    String token = this.getAccessToken(request);
+
+    if (token == null) {
+      token = this.getRefreshToken(request);
+    }
+
+    return token != null ? tokenUtil.getTokenInfo(token).getSubject() : null;
   }
 
   public boolean checkToken(HttpServletRequest request) {
-    final String token = Optional.ofNullable(this.getAccessToken(request))//
-        .orElse(this.getRefreshToken(request));
+    String token = this.getAccessToken(request);
+
+    if (token == null) {
+      token = this.getRefreshToken(request);
+    }
 
     return !tokenUtil.isTokenExpired(token);
   }
 
   public String getAccessToken(HttpServletRequest request) {
-    Optional<String> optional = Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION));
+    String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-    if (optional.isPresent()) {
-      final String token = optional.get().replaceAll("^(?i)Bearer\\s+", "");
+    if (accessToken != null) {
+      final String token = accessToken.replaceAll("^(?i)Bearer\\s+", "");
       return !tokenUtil.isTokenExpired(token) ? token : null;
     }
 
@@ -64,7 +71,8 @@ public class UserReader {
   }
 
   public String getRefreshToken(HttpServletRequest request) {
-    final Cookie[] cookies = Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]);
+    final Cookie[] cookies =
+        Objects.requireNonNullElseGet(request.getCookies(), () -> new Cookie[0]);
     final String token = Arrays.asList(cookies).stream()
         .filter(
             cookie -> cookie != null && REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))
@@ -130,14 +138,12 @@ public class UserReader {
 
   public String makeNewAccessToken(HttpServletRequest request) {
     final String refreshToken = this.getRefreshToken(request);
-    final String userId = Optional.ofNullable(refreshToken)//
-        .map(token -> tokenUtil.getTokenInfo(token).getSubject())//
-        .orElse(null);
-    final Optional<User> user =
-        Optional.ofNullable(userId).map(readUserRepository::findLoginInfoById);
 
-    if (user.isPresent()) {
-      return tokenUtil.createToken(userId, 1L);
+    if (refreshToken != null) {
+      String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();
+      User user = readUserRepository.findLoginInfoById(userId);
+
+      return user != null ? tokenUtil.createToken(userId, 1L) : null;
     }
 
     return null;

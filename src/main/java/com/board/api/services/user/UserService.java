@@ -3,7 +3,6 @@ package com.board.api.services.user;
 import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpHeaders;
@@ -39,27 +38,25 @@ public class UserService {
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
       HttpServletResponse response) {
     String userId = userReader.getUserId(request);
-    Optional<User> user = Optional.ofNullable(userReader.getUserInfo(userId));
+    User user = userReader.getUserInfo(userId);
 
-    if (user.isEmpty()) {
+    if (user == null) {
       userReader.expireToken(userId, response);
     }
 
-    return ResponseApi.completedOk(user.isPresent());
+    return ResponseApi.completedOk(user != null);
   }
 
   @Async
   public CompletableFuture<ResponseApi<Boolean>> login(String guestId, Login login,
       HttpServletRequest request, HttpServletResponse response) {
-    final Optional<User> checker =
-        Optional.ofNullable(userReader.getLoginUserInfo(login.getUserId()));
+    final User user = userReader.getLoginUserInfo(login.getUserId());
 
-    if (!checker.isPresent()) {
+    if (user == null) {
       throw new BusinessException("존재하지 않는 사용자입니다.");
     }
 
-    final boolean matched =
-        passwordEncoder.matches(login.getPassword(), checker.get().getPassword());
+    final boolean matched = passwordEncoder.matches(login.getPassword(), user.getPassword());
 
     if (!matched) {
       throw new BusinessException("비밀번호가 일치하지 않습니다.");
@@ -89,16 +86,16 @@ public class UserService {
   @Async
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
-    final Optional<String> optional = Optional.ofNullable(userReader.makeNewAccessToken(request));
+    final String token = userReader.makeNewAccessToken(request);
 
-    if (optional.isPresent()) {
+    if (token != null) {
       final ResponseCookie accessCookie =
-          ResponseCookie.from(ACCESS_TOKEN.getValue(), optional.get()).path("/").httpOnly(true)
-              .secure(true).sameSite("Lax").maxAge(Duration.ofHours(1L)).build();
+          ResponseCookie.from(ACCESS_TOKEN.getValue(), token).path("/").httpOnly(true).secure(true)
+              .sameSite("Lax").maxAge(Duration.ofHours(1L)).build();
       response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     }
 
-    return ResponseApi.completedOk(optional.isPresent());
+    return ResponseApi.completedOk(token != null);
   }
 
   @Async

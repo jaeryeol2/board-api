@@ -4,9 +4,7 @@ import static com.board.api.constants.GlobalConstant.X_FORWARDED_FOR;
 import static com.board.api.constants.GlobalConstant.X_GUEST_ID;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Predicate;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,26 +37,20 @@ public class AuthFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     final String path = request.getRequestURI();
-    final String ip = Optional.ofNullable(request.getHeader(X_FORWARDED_FOR.getValue()))
-        .filter(item -> !item.isBlank() && !"unknown".equals(item))
-        .map(item -> item.split(",")[0].trim())//
-        .orElse(request.getRemoteAddr());
-    final String accessToken = Optional.ofNullable(userReader.getAccessToken(request))//
-        .filter(token -> !token.isBlank()).orElseGet(() -> userReader.makeNewAccessToken(request));
-    final Predicate<String> hasAccessToken =
-        t -> StringUtils.hasText(t) && !tokenUtil.isTokenExpired(t);
+    final String ip = this.extractClientIp(request);
+    final String accessToken = this.getToken(request);
     boolean isGuest = true;
 
     try {
-      if (hasAccessToken.test(accessToken)) {
+      if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
         final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
-        final Optional<User> user = Optional.ofNullable(userReader.getUserInfo(userId));
+        final User user = userReader.getUserInfo(userId);
 
-        if (user.isPresent()) {
-          final GrantedAuthority authority = new SimpleGrantedAuthority(user.get().getUserRole());
+        if (user != null) {
+          final GrantedAuthority authority = new SimpleGrantedAuthority(user.getUserRole());
           final List<GrantedAuthority> authorities = List.of(authority);
           final DefaultAuthority authentication =
-              new DefaultAuthority(user.get(), accessToken, authorities);
+              new DefaultAuthority(user, accessToken, authorities);
 
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -84,6 +76,26 @@ public class AuthFilter extends OncePerRequestFilter {
     log.info("api path : {}, client ip : {}", path, ip);
 
     filterChain.doFilter(request, response);
+  }
+
+  private String getToken(HttpServletRequest request) {
+    String token = userReader.getAccessToken(request);
+
+    if (!StringUtils.hasText(token)) {
+      token = userReader.makeNewAccessToken(request);
+    }
+
+    return token;
+  }
+
+  private String extractClientIp(HttpServletRequest request) {
+    String ip = request.getHeader(X_FORWARDED_FOR.getValue());
+
+    if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
+      return ip.split(",")[0].trim();
+    }
+
+    return request.getRemoteAddr();
   }
 
 }

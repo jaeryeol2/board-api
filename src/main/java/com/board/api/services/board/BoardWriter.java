@@ -1,7 +1,7 @@
 package com.board.api.services.board;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -39,23 +39,32 @@ public class BoardWriter {
   }
 
   public void writeBoardFile(AppBoard appBoard, List<MultipartFile> fileList) throws Exception {
+    if (fileList == null || fileList.isEmpty()) {
+      return;
+    }
+
+    List<AppBoardFile> insertFileList = new ArrayList<>();
+
     for (MultipartFile file : fileList) {
-      final ResponseS3 s3 = Optional.ofNullable(s3Service.uploadImage(file))//
-          .orElseThrow(() -> {
-            throw new BusinessException("파일업로드에 실패했습니다.");
-          });
+      if (file.isEmpty())
+        continue;
+
+      final ResponseS3 s3 = s3Service.uploadImage(file);
+      if (s3 == null) {
+        throw new BusinessException("파일업로드에 실패했습니다.");
+      }
+
       final String originName = file.getOriginalFilename();
       final String extension = ".".concat(FilenameUtils.getExtension(originName));
       final String fileName = s3.getFileName().concat(extension);
-      final String fileType = "image";
-      final long fileSize = file.getSize();
-      final AppBoardFile appBoardFile = writeBoardFileRepository.save(
-          AppBoardFile.builder().board(appBoard).originalFileName(originName).fileName(fileName)
-              .fileUrl(s3.getUrl()).fileType(fileType).fileSize(fileSize).build());
 
-      if (appBoardFile.getId() <= 0) {
-        log.warn("file insert fail... file info : {}", appBoardFile);
-      }
+      insertFileList.add(
+          AppBoardFile.builder().board(appBoard).originalFileName(originName).fileName(fileName)
+              .fileUrl(s3.getUrl()).fileType("image").fileSize(file.getSize()).build());
+    }
+
+    if (!insertFileList.isEmpty()) {
+      writeBoardFileRepository.saveAll(insertFileList);
     }
   }
 
