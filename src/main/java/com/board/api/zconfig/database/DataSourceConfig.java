@@ -23,7 +23,7 @@ import com.zaxxer.hikari.HikariDataSource;
 @Configuration
 public class DataSourceConfig {
   private static final String AOP_POINTCUT_EXPRESSION =
-      "execution(* com.board.api.services..*Service.*(..))";
+      "execution(* com.board.api.services..*.*(..))";
 
   private enum TRANSACTION_TYPE {
     READ, WRITE,
