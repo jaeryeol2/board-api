@@ -46,5 +46,4 @@ public class AppBoard {
   @UpdateTimestamp
   private LocalDateTime updatedAt;
 
-
 }

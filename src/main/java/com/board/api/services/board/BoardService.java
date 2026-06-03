@@ -123,5 +123,32 @@ public class BoardService {
             .build()));
   }
 
+  @Transactional
+  public ResponseApi<Boolean> modifyBoard(BoardType boardType, long id, BoardWrite write,
+      HttpServletRequest request) {
+    try {
+      final String userId = userReader.getUserId(request);
+      final BoardDetail detail = boardReader.getBoardDetail(id);
 
+      if (detail == null) {
+        throw new BusinessException("존재하지 않는 게시글입니다.");
+      }
+
+      if (!detail.getWriterId().equals(userId)) {
+        throw new BusinessException("수정 권한이 없습니다.");
+      }
+
+      boardWriter.modifyBoard(id, write.getTitle(), write.getContent());
+    } catch (Exception e) {
+      log.error("modifyBoard error : ", e);
+
+      if (e instanceof BusinessException) {
+        throw new BusinessException(e.getMessage());
+      }
+
+      throw new BusinessException("게시글 수정에 실패했습니다.");
+    }
+
+    return ResponseApi.ok(HttpStatus.OK, "updated", true);
+  }
 }

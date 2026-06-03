@@ -72,4 +72,9 @@ public class BoardWriter {
     AppBoardComment comment = writeCommentRepository.save(write);
     return comment.getId() > 0L;
   }
+
+  @CacheEvict(cacheNames = "getBoardDetail", key = "'board-id-' + #id")
+  public int modifyBoard(long id, String title, String content) {
+    return writeBoardRepository.updateBoard(id, title, content);
+  }
 }
