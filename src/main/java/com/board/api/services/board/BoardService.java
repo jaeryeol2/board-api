@@ -1,5 +1,6 @@
 package com.board.api.services.board;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.core.task.TaskExecutor;
@@ -137,8 +138,21 @@ public class BoardService {
       if (!detail.getWriterId().equals(userId)) {
         throw new BusinessException("수정 권한이 없습니다.");
       }
+      AppBoard appBoard = AppBoard.builder()//
+          .id(id)//
+          .title(write.getTitle())//
+          .content(write.getContent())//
+          .updatedAt(LocalDateTime.now())//
+          .build();
 
-      boardWriter.modifyBoard(id, write.getTitle(), write.getContent());
+      boardWriter.modifyBoard(appBoard);
+
+      if (appBoard.getId() > 0 && !ObjectUtils.isEmpty(write.getAttachments())
+          && !write.getAttachments().isEmpty()) {
+        final List<MultipartFile> fileList = write.getAttachments();
+
+        boardWriter.writeBoardFile(appBoard, fileList);
+      }
     } catch (Exception e) {
       log.error("modifyBoard error : ", e);
 
