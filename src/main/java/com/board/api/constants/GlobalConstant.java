@@ -1,6 +1,5 @@
 package com.board.api.constants;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -20,7 +19,7 @@ public enum GlobalConstant {
     this.value = value;
   }
 
-  private static final Map<String, GlobalConstant> contstanteMap = Collections.unmodifiableMap(
+  private static final Map<String, GlobalConstant> contstanteMap = Map.copyOf(
       Stream.of(values()).collect(Collectors.toMap(GlobalConstant::getValue, Function.identity())));
 
   public static GlobalConstant find(String value) {

@@ -1,7 +1,6 @@
 package com.board.api.constants;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,8 +36,8 @@ public enum CacheTime {
     ttl = time;
   }
 
-  private static final Map<String, CacheTime> cacheMap = Collections.unmodifiableMap(
-      Stream.of(values()).collect(Collectors.toMap(CacheTime::name, Function.identity())));
+  private static final Map<String, CacheTime> cacheMap = Map
+      .copyOf(Stream.of(values()).collect(Collectors.toMap(CacheTime::name, Function.identity())));
 
   public static CacheTime find(String name) {
     if (name == null) {

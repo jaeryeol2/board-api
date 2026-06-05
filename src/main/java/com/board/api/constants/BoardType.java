@@ -1,6 +1,5 @@
 package com.board.api.constants;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,9 +37,9 @@ public enum BoardType {
     this.code = code;
   }
 
-  private static final Map<String, BoardType> boardTypeMapByName = Collections.unmodifiableMap(
-      Stream.of(values()).collect(Collectors.toMap(BoardType::name, Function.identity())));
-  private static final Map<String, BoardType> boardTypeMapByCode = Collections.unmodifiableMap(
+  private static final Map<String, BoardType> boardTypeMapByName = Map
+      .copyOf(Stream.of(values()).collect(Collectors.toMap(BoardType::name, Function.identity())));
+  private static final Map<String, BoardType> boardTypeMapByCode = Map.copyOf(
       Stream.of(values()).collect(Collectors.toMap(BoardType::getCode, Function.identity())));
 
   public static BoardType findByName(String name) {

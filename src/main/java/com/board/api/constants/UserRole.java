@@ -1,6 +1,5 @@
 package com.board.api.constants;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -18,8 +17,8 @@ public enum UserRole {
     this.code = code;
   }
 
-  private static final Map<String, UserRole> userRoleMap = Collections.unmodifiableMap(
-      Stream.of(values()).collect(Collectors.toMap(UserRole::name, Function.identity())));
+  private static final Map<String, UserRole> userRoleMap = Map
+      .copyOf(Stream.of(values()).collect(Collectors.toMap(UserRole::name, Function.identity())));
 
   public static UserRole find(String name) {
     if (name == null) {
