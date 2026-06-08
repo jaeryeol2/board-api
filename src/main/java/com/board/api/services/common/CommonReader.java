@@ -34,28 +34,27 @@ public class CommonReader {
   }
 
   public Long getUserCount() {
-    return Stream.of(CacheTime.GET_GUEST_ID.getCacheName(), CacheTime.GET_USER_INFO.getCacheName())
-        .mapToLong(cacheName -> {
-          String pattern = cacheName.concat("::*");
-          ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
+    return Stream.of(CacheTime.GET_TRAFIC_INFO.getCacheName()).mapToLong(cacheName -> {
+      String pattern = cacheName.concat("::*");
+      ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
 
-          return redisTemplate.execute((RedisCallback<Long>) conn -> {
-            Long count = 0L;
+      return redisTemplate.execute((RedisCallback<Long>) conn -> {
+        Long count = 0L;
 
-            try (Cursor<byte[]> cursor = conn.keyCommands().scan(options)) {
-              while (cursor.hasNext()) {
-                cursor.next();
-                count++;
-              }
-            } catch (Exception e) {
-              log.error("getTraficCount error : {}", e.getMessage());
+        try (Cursor<byte[]> cursor = conn.keyCommands().scan(options)) {
+          while (cursor.hasNext()) {
+            cursor.next();
+            count++;
+          }
+        } catch (Exception e) {
+          log.error("getTraficCount error : {}", e.getMessage());
 
-              return 0L;
-            }
+          return 0L;
+        }
 
-            return count;
-          });
-        }).sum();
+        return count;
+      });
+    }).sum();
 
   }
 

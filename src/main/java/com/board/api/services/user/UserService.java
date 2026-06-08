@@ -11,9 +11,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
+import com.board.api.constants.GlobalConstant;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.request.Signup;
 import com.board.api.dtos.response.PersonalUser;
@@ -78,7 +80,7 @@ public class UserService {
 
     response.addHeader(HttpHeaders.SET_COOKIE, exppireGuestId.toString());
 
-    userWriter.removeGuestIdCache(guestId);
+    userWriter.removeTraficInfoCache(guestId);
 
     return ResponseApi.completedOk(true);
   }
@@ -141,6 +143,17 @@ public class UserService {
     }
 
     return ResponseApi.completedOk(true);
+  }
+
+  @Async
+  public CompletableFuture<ResponseApi<Boolean>> removeUserTrafic(HttpServletRequest request) {
+    String id = request.getHeader(GlobalConstant.X_GUEST_ID.getValue());
+
+    if (!StringUtils.hasText(id)) {
+      id = userReader.getUserId(request);
+    }
+
+    return ResponseApi.completedOk(userWriter.removeTraficUser(id));
   }
 
 }

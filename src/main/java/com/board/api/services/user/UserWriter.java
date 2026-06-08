@@ -62,8 +62,18 @@ public class UserWriter {
     return writeUserRepository.updateLastLoginDate(userId) > 0;
   }
 
-  @CacheEvict(cacheNames = "getGuestId", key = "#guestId")
-  public void removeGuestIdCache(String guestId) {
+  @CacheEvict(cacheNames = "getTraficInfo", key = "#id")
+  public void removeTraficInfoCache(String id) {
     // empty
+  }
+
+  public boolean removeTraficUser(String id) {
+    try {
+      this.removeTraficInfoCache(id);
+      return true;
+    } catch (Exception e) {
+      log.error("removeTraficUser : {}", e.getMessage());
+      return false;
+    }
   }
 }

@@ -1,6 +1,7 @@
 package com.board.api.controllers;
 
 import java.util.concurrent.CompletableFuture;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,22 +22,27 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/user")
 public class UserController {
   private final CommonService commonService;
-  private final UserService readUserService;
+  private final UserService userService;
 
   @GetMapping("")
   public CompletableFuture<ResponseApi<User>> getUserInfo(HttpServletRequest request) {
-    return readUserService.getUserInfo(request);
+    return userService.getUserInfo(request);
   }
 
   @GetMapping("/personal")
   public CompletableFuture<ResponseApi<PersonalUser>> getPersonalUserInfo(
       HttpServletRequest request) {
-    return readUserService.getPersonalUserInfo(request);
+    return userService.getPersonalUserInfo(request);
   }
 
   @GetMapping("/user-count")
   public CompletableFuture<ResponseApi<Long>> getUserCount() {
     return commonService.getUserCount();
+  }
+
+  @DeleteMapping("/user-count")
+  public CompletableFuture<ResponseApi<Boolean>> deleteUserCount(HttpServletRequest request) {
+    return userService.removeUserTrafic(request);
   }
 
 

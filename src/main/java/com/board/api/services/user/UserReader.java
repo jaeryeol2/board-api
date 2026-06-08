@@ -30,7 +30,7 @@ public class UserReader {
   private final TokenUtil tokenUtil;
   private final ReadUserRepository readUserRepository;
 
-  @Cacheable(cacheNames = "getUserInfo", key = "#userId", unless = "#result == null")
+  @Cacheable(cacheNames = "getTraficInfo", key = "#userId", unless = "#result == null")
   public User getUserInfo(String userId) {
     return readUserRepository.findUserById(userId);
   }
@@ -86,7 +86,7 @@ public class UserReader {
     return !tokenUtil.isTokenExpired(token) ? token : null;
   }
 
-  @Cacheable(cacheNames = "getGuestId", key = "#newGuestId")
+  @Cacheable(cacheNames = "getTraficInfo", key = "#newGuestId")
   public ResponseApi<Boolean> setGuest(final String newGuestId, HttpServletResponse response) {
     final ResponseCookie newGuestCookie = ResponseCookie.from("guest_tracking_id", newGuestId)//
         .path("/")//
@@ -101,7 +101,7 @@ public class UserReader {
     return ResponseApi.ok(true);
   }
 
-  @CacheEvict(cacheNames = "getUserInfo", key = "#userId",
+  @CacheEvict(cacheNames = "getTraficInfo", key = "#userId",
       condition = "#userId != null && !#userId.equals('')")
   public void expireToken(String userId, HttpServletResponse response) {
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
