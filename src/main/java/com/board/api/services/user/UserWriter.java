@@ -67,13 +67,5 @@ public class UserWriter {
     // empty
   }
 
-  public boolean removeTraficUser(String id) {
-    try {
-      this.removeTraficInfoCache(id);
-      return true;
-    } catch (Exception e) {
-      log.error("removeTraficUser : {}", e.getMessage());
-      return false;
-    }
-  }
+
 }

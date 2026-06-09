@@ -37,6 +37,7 @@ public class AuthFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     final String path = request.getRequestURI();
+    final String method = request.getMethod();
     final String ip = this.extractClientIp(request);
     final String accessToken = this.getToken(request);
     boolean isGuest = true;
@@ -73,7 +74,7 @@ public class AuthFilter extends OncePerRequestFilter {
       return;
     }
 
-    log.info("api path : {}, client ip : {}", path, ip);
+    log.info("api path : {}, method : {}, client ip : {}", path, method, ip);
 
     filterChain.doFilter(request, response);
   }

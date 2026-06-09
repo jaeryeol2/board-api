@@ -107,6 +107,15 @@ public class ResponseApi<T> {
   }
 
   /**
+   * 리턴 타입이 Void일때 인자는 없이 보낸다
+   * 
+   * @return
+   */
+  public static CompletableFuture<ResponseApi<Void>> completedOk() {
+    return CompletableFuture.completedFuture(ok(null));
+  }
+
+  /**
    * DB 쿼리 실행, 외부 API 호출 등 메인(호출) 스레드를 멈추게(Blocking) 할 수 있는 무거운 작업을 처리할 때 사용. 전달받은 로직(Supplier)을
    * 백그라운드 스레드(ForkJoinPool 등)에서 비동기적으로 실행하고, 작업이 완료되면 그 결과를 공통 응답 포맷으로 래핑하여 반환.<br/>
    * <br/>
