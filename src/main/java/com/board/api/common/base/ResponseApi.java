@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.jackson.Jacksonized;
 
@@ -259,4 +263,16 @@ public class ResponseApi<T> {
     }
   }
 
+}
+
+
+@Component
+@RequiredArgsConstructor
+class ResponseApiInitializer {
+  private final TaskExecutor appAsync;
+
+  @PostConstruct
+  public void init() {
+    ResponseApi.setExecutor(appAsync);
+  }
 }
