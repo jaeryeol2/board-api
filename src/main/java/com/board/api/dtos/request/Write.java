@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
 @ToString
 @SuperBuilder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Write {
   private String title;
   private String content;
@@ -28,7 +28,7 @@ public class Write {
   @ToString(callSuper = true)
   @SuperBuilder
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
   public static class BoardWrite extends Write {
     private Long id;
     private String boardTypeCode;
@@ -40,7 +40,7 @@ public class Write {
   @ToString(callSuper = true)
   @SuperBuilder
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
   public static class NoticeWrite extends Write {
     private Long id;
   }
@@ -50,7 +50,7 @@ public class Write {
   @ToString(callSuper = true)
   @SuperBuilder
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
   public static class CommentWrite {
     private String content;
     private long boardId;

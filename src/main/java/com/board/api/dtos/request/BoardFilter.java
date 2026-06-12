@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @ToString
 @SuperBuilder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardFilter {
   @Setter
   private String boardTypeCode;

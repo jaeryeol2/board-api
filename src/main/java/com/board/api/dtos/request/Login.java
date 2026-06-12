@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @ToString(exclude = "password")
 @SuperBuilder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Login {
   private String userId;
   private String password;
