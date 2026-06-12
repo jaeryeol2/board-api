@@ -9,8 +9,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
@@ -18,6 +21,8 @@ import lombok.ToString;
 @Table(name = "app_board")
 @ToString
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class AppBoard {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,5 +50,10 @@ public class AppBoard {
   private LocalDateTime createdAt;
   @UpdateTimestamp
   private LocalDateTime updatedAt;
+
+  public void update(String title, String content) {
+    this.title = title;
+    this.content = content;
+  }
 
 }

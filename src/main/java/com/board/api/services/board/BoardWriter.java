@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +30,8 @@ public class BoardWriter {
   private final WriteBoardFileRepository writeBoardFileRepository;
   private final WriteCommentRepository writeCommentRepository;
 
-  @CacheEvict(cacheNames = "getBoardList", key = "#appBoard.boardTypeCode + '_' + 1")
+  @Caching(evict = {@CacheEvict(cacheNames = "getBoardList", allEntries = true),
+      @CacheEvict(cacheNames = "getHomeBoardData", allEntries = true)})
   public AppBoard writeBoard(AppBoard appBoard) {
     return writeBoardRepository.save(appBoard);
   }
@@ -68,14 +70,19 @@ public class BoardWriter {
     }
   }
 
+  @CacheEvict(cacheNames = "getBoardDetail", key = "'board-id-' + #write.board.id")
   public boolean writeComment(AppBoardComment write) {
     AppBoardComment comment = writeCommentRepository.save(write);
     return comment.getId() > 0L;
   }
 
-  @CacheEvict(cacheNames = "getBoardDetail", key = "'board-id-' + #appBoard.id")
+  @Caching(evict = {@CacheEvict(cacheNames = "getBoardDetail", key = "'board-id-' + #appBoard.id"),
+      @CacheEvict(cacheNames = "getBoardList", allEntries = true),
+      @CacheEvict(cacheNames = "getHomeBoardData", allEntries = true)})
   public int modifyBoard(AppBoard appBoard) {
-    return writeBoardRepository.updateBoard(appBoard.getId(), appBoard.getTitle(),
-        appBoard.getContent());
+    AppBoard originBoard = writeBoardRepository.findById(appBoard.getId())
+        .orElseThrow(() -> new BusinessException("존재하지 않는 게시글입니다."));
+    originBoard.update(appBoard.getTitle(), appBoard.getContent());
+    return 1;
   }
 }
