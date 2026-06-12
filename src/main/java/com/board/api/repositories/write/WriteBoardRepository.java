@@ -4,10 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import com.board.api.entities.AppBoard;
 
-@Repository
 public interface WriteBoardRepository extends JpaRepository<AppBoard, Long> {
 
   @Modifying
@@ -16,5 +14,6 @@ public interface WriteBoardRepository extends JpaRepository<AppBoard, Long> {
 
   @Modifying(clearAutomatically = true)
   @Query("UPDATE AppBoard b SET b.title = :title, b.content = :content WHERE b.id = :boardId")
-  public int updateBoard(@Param("boardId") long boardId, @Param("title") String title, @Param("content") String content);
+  public int updateBoard(@Param("boardId") long boardId, @Param("title") String title,
+      @Param("content") String content);
 }
