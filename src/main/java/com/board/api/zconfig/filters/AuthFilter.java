@@ -1,10 +1,14 @@
 package com.board.api.zconfig.filters;
 
+import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import static com.board.api.constants.GlobalConstant.X_FORWARDED_FOR;
 import static com.board.api.constants.GlobalConstant.X_GUEST_ID;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,7 +43,7 @@ public class AuthFilter extends OncePerRequestFilter {
     final String path = request.getRequestURI();
     final String method = request.getMethod();
     final String ip = this.extractClientIp(request);
-    final String accessToken = this.getAccessToken(request);
+    final String accessToken = this.getAccessToken(request, response);
     boolean isGuest = true;
 
     try {
@@ -79,12 +83,23 @@ public class AuthFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private String getAccessToken(HttpServletRequest request) {
+  private String getAccessToken(HttpServletRequest request, HttpServletResponse response) {
     String accessToken = userReader.getAccessToken(request);
     String refreshToken = userReader.getRefreshToken(request);
 
     if (!StringUtils.hasText(accessToken) && StringUtils.hasText(refreshToken)) {
-      return userReader.makeNewAccessToken(request);
+      final String newAccessToken = userReader.makeNewAccessToken(request);
+      final ResponseCookie accessCookie =
+          ResponseCookie.from(ACCESS_TOKEN.getValue(), newAccessToken)//
+              .path("/")//
+              .httpOnly(true).secure(true)//
+              .sameSite("Lax")//
+              .maxAge(Duration.ofHours(1L))//
+              .build();
+
+      response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+      return newAccessToken;
     }
 
     return accessToken;
