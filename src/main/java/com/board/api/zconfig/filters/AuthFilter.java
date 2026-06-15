@@ -39,7 +39,7 @@ public class AuthFilter extends OncePerRequestFilter {
     final String path = request.getRequestURI();
     final String method = request.getMethod();
     final String ip = this.extractClientIp(request);
-    final String accessToken = this.getToken(request);
+    final String accessToken = this.getAccessToken(request);
     boolean isGuest = true;
 
     try {
@@ -79,14 +79,15 @@ public class AuthFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private String getToken(HttpServletRequest request) {
-    String token = userReader.getAccessToken(request);
+  private String getAccessToken(HttpServletRequest request) {
+    String accessToken = userReader.getAccessToken(request);
+    String refreshToken = userReader.getRefreshToken(request);
 
-    if (!StringUtils.hasText(token)) {
-      token = userReader.makeNewAccessToken(request);
+    if (!StringUtils.hasText(accessToken) && StringUtils.hasText(refreshToken)) {
+      return userReader.makeNewAccessToken(request);
     }
 
-    return token;
+    return accessToken;
   }
 
   private String extractClientIp(HttpServletRequest request) {
