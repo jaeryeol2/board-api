@@ -73,15 +73,17 @@ public class UserReader {
   public String getRefreshToken(HttpServletRequest request) {
     final Cookie[] cookies =
         Objects.requireNonNullElseGet(request.getCookies(), () -> new Cookie[0]);
-    final String token = Arrays.asList(cookies).stream()
-        .filter(
-            cookie -> cookie != null && REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))
-        .findFirst().orElseGet(() -> {
+    final String token = Arrays.asList(cookies).stream()//
+        .filter(Objects::nonNull)//
+        .filter(cookie -> REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()))//
+        .findFirst()//
+        .orElseGet(() -> {
           final Cookie cookie = new Cookie(REFRESH_TOKEN.getValue(), null);
           cookie.setSecure(true);
 
           return cookie;
-        }).getValue();
+        })//
+        .getValue();
 
     return !tokenUtil.isTokenExpired(token) ? token : null;
   }
