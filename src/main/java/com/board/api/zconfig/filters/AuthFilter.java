@@ -1,14 +1,10 @@
 package com.board.api.zconfig.filters;
 
-import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import static com.board.api.constants.GlobalConstant.X_FORWARDED_FOR;
 import static com.board.api.constants.GlobalConstant.X_GUEST_ID;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -43,25 +39,22 @@ public class AuthFilter extends OncePerRequestFilter {
     final String path = request.getRequestURI();
     final String method = request.getMethod();
     final String ip = this.extractClientIp(request);
-    final String accessToken = this.getAccessToken(request, response);
+    final String accessToken = userReader.getAccessToken(request);
+    final String refreshToken = userReader.getRefreshToken(request);
     boolean isGuest = true;
 
     try {
       if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
         final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
-        final User user = userReader.getUserInfo(userId);
 
-        if (user != null) {
-          final GrantedAuthority authority = new SimpleGrantedAuthority(user.getUserRole());
-          final List<GrantedAuthority> authorities = List.of(authority);
-          final DefaultAuthority authentication =
-              new DefaultAuthority(user, accessToken, authorities);
+        isGuest = !this.processAuthentication(request, accessToken, userId);
+      }
+      if (isGuest && "/api/auth/access".equals(path) && StringUtils.hasText(refreshToken)
+          && !tokenUtil.isTokenExpired(refreshToken)) {
+        final String newAccessToken = userReader.makeNewAccessToken(request);
+        final String userId = tokenUtil.getTokenInfo(newAccessToken).getSubject();
 
-          authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-          SecurityContextHolder.getContext().setAuthentication(authentication);
-
-          isGuest = false;
-        }
+        isGuest = !this.processAuthentication(request, newAccessToken, userId);
       }
 
       if (isGuest && !StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
@@ -83,26 +76,23 @@ public class AuthFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private String getAccessToken(HttpServletRequest request, HttpServletResponse response) {
-    String accessToken = userReader.getAccessToken(request);
-    String refreshToken = userReader.getRefreshToken(request);
+  private boolean processAuthentication(HttpServletRequest request, final String accessToken,
+      final String userId) {
+    boolean isRegist = false;
+    final User user = userReader.getUserInfo(userId);
 
-    if (!StringUtils.hasText(accessToken) && StringUtils.hasText(refreshToken)) {
-      final String newAccessToken = userReader.makeNewAccessToken(request);
-      final ResponseCookie accessCookie =
-          ResponseCookie.from(ACCESS_TOKEN.getValue(), newAccessToken)//
-              .path("/")//
-              .httpOnly(true).secure(true)//
-              .sameSite("Lax")//
-              .maxAge(Duration.ofHours(1L))//
-              .build();
+    if (user != null) {
+      final GrantedAuthority authority = new SimpleGrantedAuthority(user.getUserRole());
+      final List<GrantedAuthority> authorities = List.of(authority);
+      final DefaultAuthority authentication = new DefaultAuthority(user, accessToken, authorities);
 
-      response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+      SecurityContextHolder.getContext().setAuthentication(authentication);
 
-      return newAccessToken;
+      isRegist = true;
     }
 
-    return accessToken;
+    return isRegist;
   }
 
   private String extractClientIp(HttpServletRequest request) {
