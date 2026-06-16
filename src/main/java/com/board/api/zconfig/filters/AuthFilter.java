@@ -47,14 +47,14 @@ public class AuthFilter extends OncePerRequestFilter {
       if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
         final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
 
-        isGuest = !this.processAuthentication(request, accessToken, userId);
+        isGuest = !this.processAuthorityAndResult(request, accessToken, userId);
       }
       if (isGuest && "/api/auth/access".equals(path) && StringUtils.hasText(refreshToken)
           && !tokenUtil.isTokenExpired(refreshToken)) {
         final String newAccessToken = userReader.makeNewAccessToken(request);
         final String userId = tokenUtil.getTokenInfo(newAccessToken).getSubject();
 
-        isGuest = !this.processAuthentication(request, newAccessToken, userId);
+        isGuest = !this.processAuthorityAndResult(request, newAccessToken, userId);
       }
 
       if (isGuest && !StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
@@ -76,23 +76,22 @@ public class AuthFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private boolean processAuthentication(HttpServletRequest request, final String accessToken,
+  private boolean processAuthorityAndResult(HttpServletRequest request, final String accessToken,
       final String userId) {
-    boolean isRegist = false;
     final User user = userReader.getUserInfo(userId);
 
-    if (user != null) {
-      final GrantedAuthority authority = new SimpleGrantedAuthority(user.getUserRole());
-      final List<GrantedAuthority> authorities = List.of(authority);
-      final DefaultAuthority authentication = new DefaultAuthority(user, accessToken, authorities);
-
-      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-
-      isRegist = true;
+    if (user == null) {
+      return false;
     }
 
-    return isRegist;
+    final GrantedAuthority authority = new SimpleGrantedAuthority(user.getUserRole());
+    final List<GrantedAuthority> authorities = List.of(authority);
+    final DefaultAuthority authentication = new DefaultAuthority(user, accessToken, authorities);
+
+    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    return true;
   }
 
   private String extractClientIp(HttpServletRequest request) {
