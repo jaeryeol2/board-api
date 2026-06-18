@@ -4,6 +4,7 @@ import static com.board.api.constants.GlobalConstant.X_FORWARDED_FOR;
 import static com.board.api.constants.GlobalConstant.X_GUEST_ID;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -58,8 +59,15 @@ public class AuthFilter extends OncePerRequestFilter {
       }
 
       if (isGuest && !StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
-        String newGuestId = UUID.randomUUID().toString();
+        final String newGuestId = UUID.randomUUID().toString();
         userReader.setGuest(newGuestId, response);
+
+        if (StringUtils.hasText(accessToken) || StringUtils.hasText(refreshToken)) {
+          final String token = Objects.requireNonNullElseGet(accessToken, () -> refreshToken);
+          final String userId = tokenUtil.getTokenInfo(token).getSubject();
+
+          userReader.expireToken(userId, response);
+        }
       }
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());
