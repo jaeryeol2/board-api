@@ -18,6 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.board.api.constants.BoardType;
+import com.board.api.constants.ProfileActive;
 import com.board.api.zconfig.entrypoint.AuthAccessDeniedHandler;
 import com.board.api.zconfig.entrypoint.AuthEntryPoint;
 import com.board.api.zconfig.filters.AuthFilter;
@@ -57,7 +58,7 @@ public class SecurityConfig {
               "/board/".concat(BoardType.BOARD_FREE.name()).concat("/{id}"))//
               .permitAll();
 
-          if (!"prod".equalsIgnoreCase(active)) {
+          if (!ProfileActive.PROD.getValue().equalsIgnoreCase(active)) {
             auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")
                 .permitAll();
           } else {
