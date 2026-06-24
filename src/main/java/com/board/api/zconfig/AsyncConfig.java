@@ -62,4 +62,36 @@ public class AsyncConfig {
     // 3. Spring Security 컨텍스트 위임 (TaskExecutor 타입에 맞게 AsyncTaskExecutor 래퍼 사용)
     return new DelegatingSecurityContextAsyncTaskExecutor(executor);
   }
+
+  // s : spring.threads.virtual.enable=true(클라이언트 요청부터 가상스레드로 받음) MDC설정 방법
+
+  // // 1. MDC를 복사 전파 동기화할 데코레이터 정의
+  // // @Bean
+  // public TaskDecorator mdcTaskDecorator() {
+  // return runnable -> {
+  // Map<String, String> contextMap = MDC.getCopyOfContextMap();
+
+  // return () -> {
+  // try {
+  // if (Objects.nonNull(contextMap)) {
+  // MDC.setContextMap(contextMap);
+  // }
+
+  // runnable.run();
+  // } finally {
+  // MDC.clear();
+  // }
+  // };
+  // };
+  // }
+
+  // // 2. 스프링 부트의 가상스레드 익스큐터 빌더에 데코레이터 주입
+  // // @Async 가상 스레드 구동 시 MDC가 전파됩니다.
+  // @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
+  // public AsyncTaskExecutor appTaskExecutor(SimpleAsyncTaskExecutorBuilder builder,
+  // @Qualifier("mdcTaskDecorator") TaskDecorator taskDecorator) {
+  // return builder.taskDecorator(taskDecorator).build();
+  // }
+
+  // e : spring.threads.virtual.enable=true(클라이언트 요청부터 가상스레드로 받음) MDC설정 방법
 }
