@@ -38,6 +38,8 @@ public class SecurityConfig {
 
   private static final String[] IGNORE_PATH_ARRAY = {"/actuator/health", "/home", "/login",
       "/logout", "/token-expire", "/auth/guest", "/user/user-count", "/signup", "/menus/**"};
+  private static final String[] SWAGGER_PATH_ARRAY =
+      {"/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**"};
 
   @Bean
   SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -59,11 +61,9 @@ public class SecurityConfig {
               .permitAll();
 
           if (!ProfileActive.PROD.getValue().equalsIgnoreCase(active)) {
-            auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")
-                .permitAll();
+            auth.requestMatchers(SWAGGER_PATH_ARRAY).permitAll();
           } else {
-            auth.requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**")
-                .denyAll();
+            auth.requestMatchers(SWAGGER_PATH_ARRAY).denyAll();
           }
 
           auth.anyRequest().authenticated();
