@@ -3,9 +3,11 @@ package com.board.api.services.user;
 import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -69,7 +71,7 @@ public class UserService {
 
       if (!isLoginUpdate) {
         log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
-            LocalDateTime.now());
+            LocalDateTime.now(ZoneId.of("Asia/Seoul")));
       }
     }, appAsync);
 
@@ -127,7 +129,7 @@ public class UserService {
   @Async
   @Transactional
   public CompletableFuture<ResponseApi<Boolean>> signup(Signup join) {
-    return ResponseApi.completedOk(userWriter.signup(join));
+    return ResponseApi.completedOk(HttpStatus.CREATED, "회원가입이 완료되었습니다.", userWriter.signup(join));
   }
 
   @Async

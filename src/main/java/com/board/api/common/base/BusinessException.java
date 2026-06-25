@@ -10,8 +10,8 @@ public class BusinessException extends RuntimeException {
 
   public BusinessException(final String message) {
     super(message);
-    this.status = HttpStatus.INTERNAL_SERVER_ERROR.value();
-    this.code = HttpStatus.INTERNAL_SERVER_ERROR.name();
+    this.status = 999;
+    this.code = "Business Error.";
   }
 
   public BusinessException(final String message, final HttpStatus httpStatus) {
