@@ -79,6 +79,7 @@ public class UserReader {
         .findFirst()//
         .orElseGet(() -> {
           final Cookie cookie = new Cookie(REFRESH_TOKEN.getValue(), null);
+          cookie.setHttpOnly(true);
           cookie.setSecure(true);
 
           return cookie;
