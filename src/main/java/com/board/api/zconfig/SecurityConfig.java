@@ -36,8 +36,9 @@ public class SecurityConfig {
   private final AuthEntryPoint authEntryPoint;
   private final AuthAccessDeniedHandler authAccessDeniedHandler;
 
-  private static final String[] IGNORE_PATH_ARRAY = {"/actuator/health", "/home", "/login",
-      "/logout", "/token-expire", "/auth/guest", "/user/user-count", "/signup", "/menus/**"};
+  private static final String[] IGNORE_PATH_ARRAY =
+      {"/actuator/health", "/home", "/user/login", "/user/logout", "/auth/token-expire",
+          "/auth/guest", "/user/user-count", "/user/signup", "/menus/**"};
   private static final String[] SWAGGER_PATH_ARRAY =
       {"/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**"};
 

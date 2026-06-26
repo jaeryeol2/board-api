@@ -44,20 +44,20 @@ public class IndexController {
     return userService.getNewAccessToken(request, response);
   }
 
-  @PostMapping("/login")
+  @PostMapping("/user/login")
   public CompletableFuture<ResponseApi<Boolean>> login(@RequestBody Login login,
       HttpServletRequest request, HttpServletResponse response) {
     String guestId = request.getHeader("X-Guest-Id");
     return userService.login(guestId, login, request, response);
   }
 
-  @PostMapping({"/logout", "/token-expire"})
+  @PostMapping({"/user/logout", "/user/token-expire"})
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
     return userService.logout(request, response);
   }
 
-  @PostMapping("/signup")
+  @PostMapping("/user/signup")
   public CompletableFuture<ResponseApi<Boolean>> signup(@RequestBody Signup join) {
     return userService.signup(join);
   }
