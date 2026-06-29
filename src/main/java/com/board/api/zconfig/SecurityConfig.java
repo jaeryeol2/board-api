@@ -1,7 +1,6 @@
 package com.board.api.zconfig;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
   @Value("${spring.profiles.active}")
   private String active;
-  @Value("${front.url}")
-  private String frontURL;
+
   private final AuthFilter authFilter;
   private final AuthEntryPoint authEntryPoint;
   private final AuthAccessDeniedHandler authAccessDeniedHandler;
@@ -81,7 +79,6 @@ public class SecurityConfig {
 
     config.setAllowCredentials(true);
     config.setMaxAge(Duration.ofHours(1L));
-    config.setAllowedOrigins(Arrays.asList(frontURL.split(",")));
     config.setAllowedHeaders(List.of(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION));
 
     // 보완: 모든 REST Method 허용 (PUT, PATCH, DELETE, OPTIONS 추가)

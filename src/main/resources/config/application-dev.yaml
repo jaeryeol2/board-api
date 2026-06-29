@@ -35,6 +35,3 @@ spring:
       lettuce:
         pool:
           max-active: 5
-
-front:
-  url: ${FRONT_URL}
