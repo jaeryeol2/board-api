@@ -1,6 +1,7 @@
 package com.board.api.zconfig.entrypoint;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -28,10 +29,11 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
 
   private void setResponse(HttpServletResponse response, AuthenticationException e)
       throws IOException {
+    final ObjectMapper mapper = this.objectMapper.copy();
     log.warn("security exception : {}", e.getMessage());
     // 1. Content-Type 및 인코딩 설정 (한글 깨짐 방지)
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-    response.setCharacterEncoding("UTF-8");
+    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
     // 2. 상태 코드 설정
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -40,7 +42,7 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
     ResponseApi<Boolean> fail = ResponseApi.fail(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 
     // 4. 응답 Body에 직접 JSON 문자열 쓰기
-    response.getWriter().print(this.objectMapper.writeValueAsString(fail));
+    response.getWriter().print(mapper.writeValueAsString(fail));
   }
 
 }
