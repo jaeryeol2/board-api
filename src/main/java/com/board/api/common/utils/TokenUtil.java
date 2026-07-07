@@ -1,8 +1,8 @@
 package com.board.api.common.utils;
 
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,10 +29,11 @@ public class TokenUtil {
   }
 
   public String createToken(final String username, final long hour) {
-    return Jwts.builder().subject(username).issuedAt(new Date())
-        .expiration(Date.from(OffsetDateTime.now(ZoneOffset.UTC).plusHours(hour).toInstant()))
-        .signWith(secretKey, Jwts.SIG.HS256) // HS256 알고리즘으로 서명
-        .compact();
+    final Instant now = Instant.now();
+    return Jwts.builder().subject(username).issuedAt(Date.from(now))
+        .expiration(Date.from(now.plus(Duration.ofHours(hour))))
+        // HS256 알고리즘으로 서명
+        .signWith(secretKey, Jwts.SIG.HS256).compact();
   }
 
   public Claims getTokenInfo(final String token) {
@@ -47,7 +48,7 @@ public class TokenUtil {
   public boolean isTokenExpired(final String token) {
     try {
       Jws<Claims> jws = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
-      return jws.getPayload().getExpiration().before(new Date());
+      return jws.getPayload().getExpiration().toInstant().isBefore(Instant.now());
     } catch (Exception e) {
       return true;
     }
