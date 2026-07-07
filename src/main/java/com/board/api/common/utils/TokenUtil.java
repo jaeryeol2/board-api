@@ -2,11 +2,11 @@ package com.board.api.common.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import com.board.api.constants.TimeZone;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
@@ -30,8 +30,7 @@ public class TokenUtil {
 
   public String createToken(final String username, final long hour) {
     return Jwts.builder().subject(username).issuedAt(new Date())
-        .expiration(
-            Date.from(OffsetDateTime.now(TimeZone.SEOUL.getZoneId()).plusHours(hour).toInstant()))
+        .expiration(Date.from(OffsetDateTime.now(ZoneOffset.UTC).plusHours(hour).toInstant()))
         .signWith(secretKey, Jwts.SIG.HS256) // HS256 알고리즘으로 서명
         .compact();
   }

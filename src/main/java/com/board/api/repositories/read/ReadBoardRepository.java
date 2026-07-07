@@ -1,11 +1,11 @@
 package com.board.api.repositories.read;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 import com.board.api.common.utils.QueryDslUtil;
 import com.board.api.constants.BoardType;
-import com.board.api.constants.TimeZone;
 import com.board.api.dtos.request.BoardFilter;
 import com.board.api.dtos.response.Board;
 import com.board.api.dtos.response.Board.BoardComment;
@@ -142,8 +142,8 @@ public class ReadBoardRepository {
   public List<Board> findPopularBoardListByBoardTypeCode(String boardTypeCode) {
     final QBean<Board> columns = Projections.fields(Board.class, board.id, board.boardTypeCode,
         board.title, board.viewCount);
-    final OffsetDateTime from = OffsetDateTime.now(TimeZone.SEOUL.getZoneId()).minusDays(1L);
-    final OffsetDateTime now = OffsetDateTime.now(TimeZone.SEOUL.getZoneId());
+    final OffsetDateTime from = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1L);
+    final OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
     return factory.select(columns)//
         .from(board)//
