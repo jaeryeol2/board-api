@@ -3,7 +3,7 @@ package com.board.api.services.user;
 import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import static com.board.api.constants.GlobalConstant.REFRESH_TOKEN;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 import org.springframework.cache.annotation.CacheEvict;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
+import com.board.api.constants.TimeZone;
 import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadUserRepository;
 import jakarta.servlet.http.Cookie;
@@ -131,7 +132,7 @@ public class UserReader {
 
   public void makeRefreshToken(String userId, HttpServletResponse response) {
     final String refreshToken = tokenUtil.createToken(userId, 8760L);
-    final LocalDateTime now = LocalDateTime.now();
+    final ZonedDateTime now = ZonedDateTime.now(TimeZone.SEOUL.getZoneId());
     final ResponseCookie refreshCookie =
         ResponseCookie.from(REFRESH_TOKEN.getValue(), refreshToken).path("/").httpOnly(true)
             .secure(true).sameSite("Lax").maxAge(Duration.between(now, now.plusYears(1L))).build();

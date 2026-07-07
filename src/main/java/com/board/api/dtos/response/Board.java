@@ -1,6 +1,6 @@
 package com.board.api.dtos.response;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import com.board.api.constants.BoardType;
 import lombok.Getter;
@@ -15,7 +15,7 @@ public class Board {
   private String boardTypeCode;
   private String writerId;
   private String writerName;
-  private LocalDateTime createdAt;
+  private OffsetDateTime createdAt;
   private int viewCount;
 
   public String getWriterName() {
@@ -38,8 +38,8 @@ public class Board {
     private int viewCount;
     private long likeCount;
     private boolean isDeleted;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     @Setter
     private List<BoardComment> commentList;
     @Setter
@@ -56,8 +56,8 @@ public class Board {
     private String writerId;
     private String writerName;
     private boolean isDeleted;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
   }
 
   @Getter
@@ -70,7 +70,7 @@ public class Board {
     private String fileUrl;
     private String fileType;
     private long fileSize;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
   }
 
 }

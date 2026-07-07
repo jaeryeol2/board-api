@@ -2,7 +2,7 @@ package com.board.api.services.user;
 
 import static com.board.api.constants.GlobalConstant.ACCESS_TOKEN;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.core.task.TaskExecutor;
@@ -71,7 +71,7 @@ public class UserService {
 
       if (!isLoginUpdate) {
         log.warn("user last login date update fail. id : {}, date : {}", login.getUserId(),
-            LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+            OffsetDateTime.now(ZoneId.of("Asia/Seoul")));
       }
     }, appAsync);
 

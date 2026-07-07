@@ -1,6 +1,6 @@
 package com.board.api.dtos.response;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -11,5 +11,5 @@ public class Notice {
   private String title;
   private String content;
   private String writerName;
-  private LocalDateTime createdAt;
+  private OffsetDateTime createdAt;
 }

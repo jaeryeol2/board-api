@@ -1,6 +1,6 @@
 package com.board.api.entities;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,18 +19,18 @@ import lombok.NoArgsConstructor;
 @Entity(name = "app_notice")
 public class AppNotice {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private long id;
 
-    @Column(nullable = false)
-    private String title;
+  @Column(nullable = false)
+  private String title;
 
-    @Column(nullable = false)
-    private String content;
+  @Column(nullable = false)
+  private String content;
 
-    private String writerId;
+  private String writerId;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+  @CreationTimestamp
+  private OffsetDateTime createdAt;
 }

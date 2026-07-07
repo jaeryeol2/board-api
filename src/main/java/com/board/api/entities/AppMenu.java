@@ -1,6 +1,6 @@
 package com.board.api.entities;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import com.board.api.constants.MenuType;
@@ -41,7 +41,7 @@ public class AppMenu {
   private boolean isActive;
   @CreationTimestamp
   @Column(updatable = false)
-  private LocalDateTime createdAt;
+  private OffsetDateTime createdAt;
   @UpdateTimestamp
-  private LocalDateTime updatedAt;
+  private OffsetDateTime updatedAt;
 }

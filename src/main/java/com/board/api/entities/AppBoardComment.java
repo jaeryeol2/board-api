@@ -1,6 +1,6 @@
 package com.board.api.entities;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.Column;
@@ -43,7 +43,7 @@ public class AppBoardComment {
 
   @CreationTimestamp
   @Column(updatable = false)
-  private LocalDateTime createdAt;
+  private OffsetDateTime createdAt;
   @UpdateTimestamp
-  private LocalDateTime updatedAt;
+  private OffsetDateTime updatedAt;
 }

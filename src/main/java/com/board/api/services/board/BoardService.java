@@ -1,6 +1,5 @@
 package com.board.api.services.board;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.core.task.TaskExecutor;
@@ -142,7 +141,6 @@ public class BoardService {
           .id(id)//
           .title(write.getTitle())//
           .content(write.getContent())//
-          .updatedAt(LocalDateTime.now())//
           .build();
 
       boardWriter.modifyBoard(appBoard);

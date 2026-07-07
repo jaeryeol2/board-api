@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import com.board.api.constants.TimeZone;
 import com.board.api.dtos.response.ResponseS3;
 import io.awspring.cloud.s3.S3Resource;
 import io.awspring.cloud.s3.S3Template;
@@ -20,7 +21,8 @@ public class S3Service {
   private static final String IMAGE_BUCKET = "board-image";
 
   private ResponseS3 baseUploadImage(final MultipartFile file) throws IOException {
-    final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    final String now =
+        LocalDate.now(TimeZone.SEOUL.getZoneId()).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     final String uuid = UUID.randomUUID().toString();
     final String key = now.concat("/").concat(uuid);
     final S3Resource resource = s3Template.upload(IMAGE_BUCKET, key, file.getInputStream());
@@ -49,7 +51,8 @@ public class S3Service {
         return baseUploadImage(file);
       }
 
-      final String now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+      final String now =
+          LocalDate.now(TimeZone.SEOUL.getZoneId()).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
       final String fileName = file.getOriginalFilename();
       final String key = now.concat("/").concat(fileName);
       final S3Resource resource = s3Template.upload(IMAGE_BUCKET, key, file.getInputStream());
