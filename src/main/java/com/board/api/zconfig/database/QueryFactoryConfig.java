@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @Configuration
-public class PostgreConfig {
+public class QueryFactoryConfig {
   @PersistenceContext
   private EntityManager entityManager;
 
