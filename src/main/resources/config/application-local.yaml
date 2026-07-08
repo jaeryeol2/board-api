@@ -6,6 +6,7 @@ datasource:
       username: postgres
       password: root
       connection-test-query: SELECT 1
+      pool-name: read-pool
       maximum-pool-size: 5
       minimum-idle: 3
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
@@ -16,6 +17,7 @@ datasource:
       username: postgres
       password: root
       connection-test-query: SELECT 1
+      pool-name: write-pool
       maximum-pool-size: 5
       minimum-idle: 3
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))

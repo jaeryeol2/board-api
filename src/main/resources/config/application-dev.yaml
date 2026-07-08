@@ -2,20 +2,22 @@ datasource:
   read:
     hikari:
       driver-class-name: org.postgresql.Driver
-      jdbc-url: jdbc:mariadb://localhost:3306/shoppingmall?useUnicode=true?serverTimezone=Asia/Seoul&characterEncoding=utf8
-      username: root
+      jdbc-url: jdbc:postgresql://localhost:5432/postgres?currentSchema=board_store
+      username: postgres
       password: root
       connection-test-query: SELECT 1
-      maximum-pool-size: 10
+      pool-name: read-pool
+      maximum-pool-size: 5
       minimum-idle: 3
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
   write:
     hikari:
       driver-class-name: org.postgresql.Driver
-      jdbc-url: jdbc:mariadb://localhost:3306/shoppingmall?useUnicode=true?serverTimezone=Asia/Seoul&characterEncoding=utf8
-      username: root
+      jdbc-url: jdbc:postgresql://localhost:5432/postgres?currentSchema=board_store
+      username: postgres
       password: root
       connection-test-query: SELECT 1
+      pool-name: write-pool
       maximum-pool-size: 5
       minimum-idle: 3
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
