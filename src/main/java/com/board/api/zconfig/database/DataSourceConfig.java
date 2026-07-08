@@ -82,7 +82,6 @@ public class DataSourceConfig {
   // jpa - new JpaTransactionManager(entityManagerFactory)
   // mybatis + jpa - new JpaTransactionManager(entityManagerFactory)
   @Bean
-  @Primary
   public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
     return new JpaTransactionManager(entityManagerFactory);
   }
