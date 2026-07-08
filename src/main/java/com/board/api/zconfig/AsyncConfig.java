@@ -52,6 +52,8 @@ public class AsyncConfig {
           }
 
           runnable.run(); // 실제 @Async 비즈니스 로직 실행
+        } catch (Exception e) {
+          log.error("app async error : {}", e.getMessage());
         } finally {
           // 스레드 종료 시점 정리 (메모리 릭 방지)
           MDC.clear();
