@@ -29,6 +29,7 @@ public class AsyncConfig {
         new TaskExecutorAdapter(new VirtualThreadTaskExecutor(VIRTUAL_THREAD_NAME));
 
     // 2. TaskDecorator 설정 (MDC 복사)
+    // - 비동기 스레드가 실행할 작업코드를 감싸서 실행 전/후에 해당 코드를 끼워 넣어서 실행함.
     executor.setTaskDecorator(runnable -> {
 
       // [실행 시점: 메인 톰캣 스레드]
