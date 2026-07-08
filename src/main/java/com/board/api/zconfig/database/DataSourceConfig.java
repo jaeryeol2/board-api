@@ -13,12 +13,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.interceptor.NameMatchTransactionAttributeSource;
 import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.persistence.EntityManagerFactory;
 
 @Configuration
 public class DataSourceConfig {
@@ -73,6 +76,15 @@ public class DataSourceConfig {
   @Primary
   public DataSource dataSource(@Qualifier("routingDataSource") DataSource routingDataSource) {
     return new LazyConnectionDataSourceProxy(routingDataSource);
+  }
+
+  // mybatis - new DataSourceTransactionManager(dataSource)
+  // jpa - new JpaTransactionManager(entityManagerFactory)
+  // mybatis + jpa - new JpaTransactionManager(entityManagerFactory)
+  @Bean
+  @Primary
+  public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+    return new JpaTransactionManager(entityManagerFactory);
   }
 
   @Bean
