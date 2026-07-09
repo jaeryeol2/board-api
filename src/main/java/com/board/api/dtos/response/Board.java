@@ -23,7 +23,7 @@ public class Board {
       return null;
     }
 
-    return this.writerName;
+    return writerName;
   }
 
   @Getter

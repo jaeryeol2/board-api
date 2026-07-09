@@ -41,20 +41,20 @@ public class UserReader {
   }
 
   public String getUserId(HttpServletRequest request) {
-    String token = this.getAccessToken(request);
+    String token = getAccessToken(request);
 
     if (token == null) {
-      token = this.getRefreshToken(request);
+      token = getRefreshToken(request);
     }
 
     return token != null ? tokenUtil.getTokenInfo(token).getSubject() : null;
   }
 
   public boolean checkToken(HttpServletRequest request) {
-    String token = this.getAccessToken(request);
+    String token = getAccessToken(request);
 
     if (token == null) {
-      token = this.getRefreshToken(request);
+      token = getRefreshToken(request);
     }
 
     return !tokenUtil.isTokenExpired(token);
@@ -118,8 +118,8 @@ public class UserReader {
   }
 
   public void makeToken(String userId, HttpServletResponse response) {
-    this.makeAccessToken(userId, response);
-    this.makeRefreshToken(userId, response);
+    makeAccessToken(userId, response);
+    makeRefreshToken(userId, response);
   }
 
   public void makeAccessToken(String userId, HttpServletResponse response) {
@@ -141,7 +141,7 @@ public class UserReader {
   }
 
   public String makeNewAccessToken(HttpServletRequest request) {
-    final String refreshToken = this.getRefreshToken(request);
+    final String refreshToken = getRefreshToken(request);
 
     if (refreshToken != null) {
       String userId = tokenUtil.getTokenInfo(refreshToken).getSubject();

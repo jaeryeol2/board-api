@@ -39,7 +39,7 @@ public class AuthFilter extends OncePerRequestFilter {
       FilterChain filterChain) throws ServletException, IOException {
     final String path = request.getRequestURI();
     final String method = request.getMethod();
-    final String ip = this.extractClientIp(request);
+    final String ip = extractClientIp(request);
     final String accessToken = userReader.getAccessToken(request);
     final String refreshToken = userReader.getRefreshToken(request);
     boolean isGuest = true;
@@ -48,14 +48,14 @@ public class AuthFilter extends OncePerRequestFilter {
       if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
         final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
 
-        isGuest = !this.processAuthorityAndResult(request, accessToken, userId);
+        isGuest = !processAuthorityAndResult(request, accessToken, userId);
       }
       if (isGuest && "/api/auth/access".equals(path) && StringUtils.hasText(refreshToken)
           && !tokenUtil.isTokenExpired(refreshToken)) {
         final String newAccessToken = userReader.makeNewAccessToken(request);
         final String userId = tokenUtil.getTokenInfo(newAccessToken).getSubject();
 
-        isGuest = !this.processAuthorityAndResult(request, newAccessToken, userId);
+        isGuest = !processAuthorityAndResult(request, newAccessToken, userId);
       }
 
       if (isGuest && !StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
