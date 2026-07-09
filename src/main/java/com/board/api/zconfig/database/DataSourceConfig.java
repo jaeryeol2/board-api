@@ -59,7 +59,9 @@ public class DataSourceConfig {
       @Qualifier("readHikariDataSource") DataSource readHikariDataSource) {
 
     RoutingDataSource routingDataSource = new RoutingDataSource();
-    Map<Object, Object> dataSourceMap = Map.of(TRANSACTION_TYPE.WRITE, writeHikariDataSource,
+    Map<Object, Object> dataSourceMap = Map.of(
+        // read, write에따라 hikari 정보 가져오기위함
+        TRANSACTION_TYPE.WRITE, writeHikariDataSource, //
         TRANSACTION_TYPE.READ, readHikariDataSource);
 
     routingDataSource.setTargetDataSources(dataSourceMap);
@@ -87,7 +89,6 @@ public class DataSourceConfig {
   // TransactionManager 파라미터를 제거하여 빈 생성 시점의 강제 의존성을 끊습니다.
   public TransactionInterceptor transactionAdvice() {
     NameMatchTransactionAttributeSource source = new NameMatchTransactionAttributeSource();
-
     RuleBasedTransactionAttribute readOnlyRule = new RuleBasedTransactionAttribute();
     RuleBasedTransactionAttribute writeRule = new RuleBasedTransactionAttribute();
 
@@ -103,7 +104,6 @@ public class DataSourceConfig {
         "select*", readOnlyRule, //
         // 쓰기/수정/삭제 등 나머지 모든 메서드
         "*", writeRule);
-
 
     source.setNameMap(txMethods);
 
