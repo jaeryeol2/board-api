@@ -1,6 +1,5 @@
 package com.board.api.zconfig.database;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.springframework.aop.Advisor;
@@ -60,10 +59,8 @@ public class DataSourceConfig {
       @Qualifier("readHikariDataSource") DataSource readHikariDataSource) {
 
     RoutingDataSource routingDataSource = new RoutingDataSource();
-
-    Map<Object, Object> dataSourceMap = new HashMap<>();
-    dataSourceMap.put(TRANSACTION_TYPE.WRITE, writeHikariDataSource);
-    dataSourceMap.put(TRANSACTION_TYPE.READ, readHikariDataSource);
+    Map<Object, Object> dataSourceMap = Map.of(TRANSACTION_TYPE.WRITE, writeHikariDataSource,
+        TRANSACTION_TYPE.READ, readHikariDataSource);
 
     routingDataSource.setTargetDataSources(dataSourceMap);
     routingDataSource.setDefaultTargetDataSource(writeHikariDataSource);
@@ -92,21 +89,21 @@ public class DataSourceConfig {
     NameMatchTransactionAttributeSource source = new NameMatchTransactionAttributeSource();
 
     RuleBasedTransactionAttribute readOnlyRule = new RuleBasedTransactionAttribute();
-    readOnlyRule.setReadOnly(true);
-
     RuleBasedTransactionAttribute writeRule = new RuleBasedTransactionAttribute();
+
+    readOnlyRule.setReadOnly(true);
     writeRule.setReadOnly(false);
 
-    Map<String, TransactionAttribute> txMethods = new HashMap<>();
-    // 읽기 전용 메서드 패턴
-    txMethods.put("get*", readOnlyRule);
-    txMethods.put("find*", readOnlyRule);
-    txMethods.put("read*", readOnlyRule);
-    txMethods.put("search*", readOnlyRule);
-    txMethods.put("select*", readOnlyRule);
+    Map<String, TransactionAttribute> txMethods = Map.of(
+        // 읽기 전용 메서드 패턴
+        "get*", readOnlyRule, //
+        "find*", readOnlyRule, //
+        "read*", readOnlyRule, //
+        "search*", readOnlyRule, //
+        "select*", readOnlyRule, //
+        // 쓰기/수정/삭제 등 나머지 모든 메서드
+        "*", writeRule);
 
-    // 쓰기/수정/삭제 등 나머지 모든 메서드
-    txMethods.put("*", writeRule);
 
     source.setNameMap(txMethods);
 
