@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,11 +90,8 @@ public class BoardReader {
 
   @Cacheable(cacheNames = "getBoardDetail", key = "'board-id-' + #id")
   public BoardDetail getBoardDetail(final Long id) {
-    BoardDetail detail = readBoardRepository.findBoardById(id);
-
-    if (detail == null) {
-      throw new BusinessException("존재하지 않는 게시물입니다.");
-    }
+    BoardDetail detail = Optional.ofNullable(readBoardRepository.findBoardById(id))
+        .orElseThrow(() -> new BusinessException("존재하지 않는 게시물입니다."));
 
     detail.setCommentList(readBoardRepository.findBoardCommentByBoardId(id));
     detail.setFileList(readBoardRepository.findBoardFileByBoardId(id));
