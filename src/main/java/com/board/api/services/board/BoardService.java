@@ -23,6 +23,8 @@ import com.board.api.dtos.response.Home;
 import com.board.api.dtos.response.User;
 import com.board.api.entities.AppBoard;
 import com.board.api.entities.AppBoardComment;
+import com.board.api.dtos.response.ResponseS3;
+import com.board.api.services.common.S3Service;
 import com.board.api.services.user.UserReader;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class BoardService {
   private final UserReader userReader;
   private final BoardReader boardReader;
   private final BoardWriter boardWriter;
+  private final S3Service s3Service;
   private final TaskExecutor appAsync;
 
   @Async
@@ -162,5 +165,57 @@ public class BoardService {
     }
 
     return ResponseApi.ok(HttpStatus.OK, "updated", true);
+  }
+
+  @Async
+  public CompletableFuture<ResponseApi<String>> uploadImage(MultipartFile file,
+      HttpServletRequest request) {
+    try {
+      final String userId = userReader.getUserId(request);
+      if (ObjectUtils.isEmpty(userId)) {
+        throw new BusinessException("로그인이 필요한 서비스입니다.");
+      }
+
+      if (file == null || file.isEmpty()) {
+        throw new BusinessException("업로드할 파일이 비어있습니다.");
+      }
+
+      final ResponseS3 s3 = s3Service.uploadImage(file);
+      if (s3 == null || ObjectUtils.isEmpty(s3.getUrl())) {
+        throw new BusinessException("이미지 업로드에 실패했습니다.");
+      }
+
+      return ResponseApi.completedOk(HttpStatus.OK, "uploaded", s3.getUrl());
+    } catch (Exception e) {
+      log.error("uploadImage error : ", e);
+      if (e instanceof BusinessException) {
+        throw new BusinessException(e.getMessage());
+      }
+      throw new BusinessException("이미지 업로드 중 오류가 발생했습니다.");
+    }
+  }
+
+  @Async
+  public CompletableFuture<ResponseApi<Boolean>> deleteImage(String url,
+      HttpServletRequest request) {
+    try {
+      final String userId = userReader.getUserId(request);
+      if (ObjectUtils.isEmpty(userId)) {
+        throw new BusinessException("로그인이 필요한 서비스입니다.");
+      }
+
+      if (ObjectUtils.isEmpty(url)) {
+        throw new BusinessException("삭제할 이미지 URL이 올바르지 않습니다.");
+      }
+
+      final boolean deleted = s3Service.deleteImage(url);
+      return ResponseApi.completedOk(HttpStatus.OK, "deleted", deleted);
+    } catch (Exception e) {
+      log.error("deleteImage error : ", e);
+      if (e instanceof BusinessException) {
+        throw new BusinessException(e.getMessage());
+      }
+      throw new BusinessException("이미지 삭제 중 오류가 발생했습니다.");
+    }
   }
 }

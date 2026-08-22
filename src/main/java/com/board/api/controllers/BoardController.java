@@ -2,13 +2,16 @@ package com.board.api.controllers;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.base.ResponseApi.ResponseList;
 import com.board.api.common.condition.CaseGet;
@@ -76,6 +79,16 @@ public class BoardController {
     return boardService.writeComment(boardId, write, request);
   }
 
+  @PostMapping("/image")
+  public CompletableFuture<ResponseApi<String>> uploadImage(
+      @RequestParam("file") MultipartFile file, HttpServletRequest request) {
+    return boardService.uploadImage(file, request);
+  }
 
+  @DeleteMapping("/image")
+  public CompletableFuture<ResponseApi<Boolean>> deleteImage(
+      @RequestParam("url") String url, HttpServletRequest request) {
+    return boardService.deleteImage(url, request);
+  }
 
 }

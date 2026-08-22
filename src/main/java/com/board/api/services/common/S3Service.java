@@ -74,4 +74,33 @@ public class S3Service {
     return s3Template.download(IMAGE_BUCKET, key);
   }
 
+  public boolean deleteImage(final String fileUrl) {
+    if (fileUrl == null || fileUrl.isBlank()) {
+      return false;
+    }
+
+    try {
+      final String key = extractKeyFromUrl(fileUrl);
+      if (key != null && !key.isBlank()) {
+        s3Template.deleteObject(IMAGE_BUCKET, key);
+        log.info("s3 delete success for key: {}", key);
+        return true;
+      }
+    } catch (Exception e) {
+      log.error("s3 delete error for url {}: ", fileUrl, e);
+    }
+
+    return false;
+  }
+
+  private String extractKeyFromUrl(final String fileUrl) {
+    // yyyyMMdd/uuid 또는 yyyyMMdd/filename 추출
+    final java.util.regex.Matcher matcher =
+        java.util.regex.Pattern.compile("(\\d{8}/[^?#\\s]+)").matcher(fileUrl);
+    if (matcher.find()) {
+      return matcher.group(1);
+    }
+    return null;
+  }
+
 }
