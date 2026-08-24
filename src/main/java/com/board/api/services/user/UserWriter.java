@@ -63,7 +63,7 @@ public class UserWriter {
     return writeUserRepository.updateLastLoginDate(userId) > 0;
   }
 
-  public void removeTraficInfoCache(String id) {
+  public void removeTrafficInfoCache(String id) {
     commonReader.removeUserActivity(id);
   }
 

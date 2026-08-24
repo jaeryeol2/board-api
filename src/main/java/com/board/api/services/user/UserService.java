@@ -80,7 +80,7 @@ public class UserService {
 
     response.addHeader(HttpHeaders.SET_COOKIE, exppireGuestId.toString());
 
-    userWriter.removeTraficInfoCache(guestId);
+    userWriter.removeTrafficInfoCache(guestId);
     userReader.recordUserActivity(login.getUserId());
 
     return ResponseApi.completedOk(true);

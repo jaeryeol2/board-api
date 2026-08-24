@@ -13,8 +13,8 @@ public enum CacheTime {
   ACCESS_TOKEN("access_token", Duration.ofHours(1L)),
   /** refresh token */
   REFRESH_TOKEN("refresh_token", Duration.ofDays(30L)),
-  /** trafic info */
-  GET_TRAFIC_INFO("getTraficInfo", Duration.ofMinutes(1L)),
+  /** traffic info */
+  GET_TRAFFIC_INFO("getTrafficInfo", Duration.ofMinutes(1L)),
   /** user info */
   GET_USER_INFO("getUserInfo", Duration.ofMinutes(5L)),
   /** menu list */

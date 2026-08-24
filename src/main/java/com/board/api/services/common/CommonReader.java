@@ -30,9 +30,9 @@ public class CommonReader {
   }
 
   public Long getUserCount() {
-    final String key = CacheTime.GET_TRAFIC_INFO.getCacheName();
+    final String key = CacheTime.GET_TRAFFIC_INFO.getCacheName();
     final double now = System.currentTimeMillis();
-    final double windowStart = now - CacheTime.GET_TRAFIC_INFO.getTtl().toMillis();
+    final double windowStart = now - CacheTime.GET_TRAFFIC_INFO.getTtl().toMillis();
 
     try {
       redisTemplate.opsForZSet().removeRangeByScore(key, 0, windowStart);
@@ -48,7 +48,7 @@ public class CommonReader {
     if (userId == null || userId.isBlank()) {
       return;
     }
-    final String key = CacheTime.GET_TRAFIC_INFO.getCacheName();
+    final String key = CacheTime.GET_TRAFFIC_INFO.getCacheName();
     final double now = System.currentTimeMillis();
     try {
       redisTemplate.opsForZSet().add(key, userId, now);
@@ -61,7 +61,7 @@ public class CommonReader {
     if (userId == null || userId.isBlank()) {
       return;
     }
-    final String key = CacheTime.GET_TRAFIC_INFO.getCacheName();
+    final String key = CacheTime.GET_TRAFFIC_INFO.getCacheName();
     try {
       redisTemplate.opsForZSet().remove(key, userId);
     } catch (Exception e) {
