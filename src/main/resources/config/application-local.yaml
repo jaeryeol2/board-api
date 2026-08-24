@@ -25,7 +25,7 @@ datasource:
 spring:
   jpa:
     hibernate:
-      ddl-auto: create-only
+      ddl-auto: none
   sql:
     init:
       mode: always
