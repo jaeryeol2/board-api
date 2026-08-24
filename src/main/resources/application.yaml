@@ -15,6 +15,10 @@ spring:
     virtual:
       enabled: false
 
+  sql:
+    init:
+      mode: never
+
   jpa:
     show-sql: false
     hibernate:

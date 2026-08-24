@@ -23,6 +23,11 @@ datasource:
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
 
 spring:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true
   servlet:
     multipart:
       maxFileSize: 10MB
