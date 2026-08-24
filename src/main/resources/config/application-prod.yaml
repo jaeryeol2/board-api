@@ -23,12 +23,6 @@ datasource:
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
 
 spring:
-  sql:
-    init:
-      mode: never
-  jpa:
-    hibernate:
-      ddl-auto: none
   servlet:
     multipart:
       maxFileSize: 10MB

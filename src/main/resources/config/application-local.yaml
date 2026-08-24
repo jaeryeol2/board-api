@@ -23,6 +23,9 @@ datasource:
       transaction-pointcut: execution(* com.board.api.services.*..*Service.*(..))
 
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-only
   sql:
     init:
       mode: always
