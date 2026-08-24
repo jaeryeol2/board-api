@@ -4,7 +4,6 @@ import static com.board.api.constants.GlobalConstant.X_FORWARDED_FOR;
 import static com.board.api.constants.GlobalConstant.X_GUEST_ID;
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -40,35 +39,9 @@ public class AuthFilter extends OncePerRequestFilter {
     final String path = request.getRequestURI();
     final String method = request.getMethod();
     final String ip = extractClientIp(request);
-    final String accessToken = userReader.getAccessToken(request);
-    final String refreshToken = userReader.getRefreshToken(request);
-    boolean isGuest = true;
 
     try {
-      if (StringUtils.hasText(accessToken) && !tokenUtil.isTokenExpired(accessToken)) {
-        final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
-
-        isGuest = !processAuthorityAndResult(request, accessToken, userId);
-      }
-      if (isGuest && "/api/auth/access".equals(path) && StringUtils.hasText(refreshToken)
-          && !tokenUtil.isTokenExpired(refreshToken)) {
-        final String newAccessToken = userReader.makeNewAccessToken(request);
-        final String userId = tokenUtil.getTokenInfo(newAccessToken).getSubject();
-
-        isGuest = !processAuthorityAndResult(request, newAccessToken, userId);
-      }
-
-      if (isGuest && !StringUtils.hasText(request.getHeader(X_GUEST_ID.getValue()))) {
-        final String newGuestId = UUID.randomUUID().toString();
-        userReader.setGuest(newGuestId, response);
-
-        if (StringUtils.hasText(accessToken) || StringUtils.hasText(refreshToken)) {
-          final String token = Objects.requireNonNullElseGet(accessToken, () -> refreshToken);
-          final String userId = tokenUtil.getTokenInfo(token).getSubject();
-
-          userReader.expireToken(userId, response);
-        }
-      }
+      authenticateAndTrack(request, response, path);
     } catch (Exception e) {
       log.warn("Authentication failed for IP: {}, Path: {}, Error: {}", ip, path, e.getMessage());
 
@@ -82,6 +55,77 @@ public class AuthFilter extends OncePerRequestFilter {
     log.info("api path : {}, method : {}, client ip : {}", path, method, ip);
 
     filterChain.doFilter(request, response);
+  }
+
+  private void authenticateAndTrack(HttpServletRequest request, HttpServletResponse response,
+      String path) {
+    final String accessToken = userReader.getAccessToken(request);
+    final String refreshToken = userReader.getRefreshToken(request);
+
+    if (tryAuthenticateAccessToken(request, accessToken)) {
+      return;
+    }
+
+    if (tryReissueAndAuthenticate(request, path, refreshToken)) {
+      return;
+    }
+
+    handleGuest(request, response, accessToken, refreshToken);
+  }
+
+  private boolean tryAuthenticateAccessToken(HttpServletRequest request, String accessToken) {
+    if (!StringUtils.hasText(accessToken) || tokenUtil.isTokenExpired(accessToken)) {
+      return false;
+    }
+
+    final String userId = tokenUtil.getTokenInfo(accessToken).getSubject();
+    if (processAuthorityAndResult(request, accessToken, userId)) {
+      userReader.recordUserActivity(userId);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean tryReissueAndAuthenticate(HttpServletRequest request, String path,
+      String refreshToken) {
+    if (!"/api/auth/access".equals(path) || !StringUtils.hasText(refreshToken)
+        || tokenUtil.isTokenExpired(refreshToken)) {
+      return false;
+    }
+
+    final String newAccessToken = userReader.makeNewAccessToken(request);
+    if (!StringUtils.hasText(newAccessToken)) {
+      return false;
+    }
+
+    final String userId = tokenUtil.getTokenInfo(newAccessToken).getSubject();
+    if (processAuthorityAndResult(request, newAccessToken, userId)) {
+      userReader.recordUserActivity(userId);
+      return true;
+    }
+    return false;
+  }
+
+  private void handleGuest(HttpServletRequest request, HttpServletResponse response,
+      String accessToken, String refreshToken) {
+    final String guestId = request.getHeader(X_GUEST_ID.getValue());
+    if (StringUtils.hasText(guestId)) {
+      userReader.recordUserActivity(guestId);
+      return;
+    }
+
+    final String newGuestId = UUID.randomUUID().toString();
+    userReader.setGuest(newGuestId, response);
+    expireInvalidTokens(accessToken, refreshToken, response);
+  }
+
+  private void expireInvalidTokens(String accessToken, String refreshToken,
+      HttpServletResponse response) {
+    final String token = StringUtils.hasText(accessToken) ? accessToken : refreshToken;
+    if (StringUtils.hasText(token)) {
+      final String userId = tokenUtil.getTokenInfo(token).getSubject();
+      userReader.expireToken(userId, response);
+    }
   }
 
   private boolean processAuthorityAndResult(HttpServletRequest request, final String accessToken,

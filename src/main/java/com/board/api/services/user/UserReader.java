@@ -17,6 +17,7 @@ import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadUserRepository;
+import com.board.api.services.common.CommonReader;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,8 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 public class UserReader {
   private final TokenUtil tokenUtil;
   private final ReadUserRepository readUserRepository;
+  private final CommonReader commonReader;
 
-  @Cacheable(cacheNames = "getTraficInfo", key = "#userId", unless = "#result == null")
+  @Cacheable(cacheNames = "getUserInfo", key = "#userId", unless = "#result == null")
   public User getUserInfo(String userId) {
     return readUserRepository.findUserById(userId);
   }
@@ -90,7 +92,6 @@ public class UserReader {
     return !tokenUtil.isTokenExpired(token) ? token : null;
   }
 
-  @Cacheable(cacheNames = "getTraficInfo", key = "#newGuestId")
   public ResponseApi<Boolean> setGuest(final String newGuestId, HttpServletResponse response) {
     final ResponseCookie newGuestCookie = ResponseCookie.from("guest_tracking_id", newGuestId)//
         .path("/")//
@@ -101,11 +102,12 @@ public class UserReader {
         .build();
 
     response.addHeader(HttpHeaders.SET_COOKIE, newGuestCookie.toString());
+    commonReader.recordUserActivity(newGuestId);
 
     return ResponseApi.ok(true);
   }
 
-  @CacheEvict(cacheNames = "getTraficInfo", key = "#userId",
+  @CacheEvict(cacheNames = "getUserInfo", key = "#userId",
       condition = "#userId != null && !#userId.equals('')")
   public void expireToken(String userId, HttpServletResponse response) {
     final ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN.getValue(), "").path("/")
@@ -115,6 +117,15 @@ public class UserReader {
 
     response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+    commonReader.removeUserActivity(userId);
+  }
+
+  public void recordUserActivity(String id) {
+    commonReader.recordUserActivity(id);
+  }
+
+  public void removeUserActivity(String id) {
+    commonReader.removeUserActivity(id);
   }
 
   public void makeToken(String userId, HttpServletResponse response) {

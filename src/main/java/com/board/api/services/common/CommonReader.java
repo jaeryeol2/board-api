@@ -1,12 +1,8 @@
 package com.board.api.services.common;
 
 import java.util.List;
-import java.util.stream.Stream;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.constants.CacheTime;
@@ -34,28 +30,43 @@ public class CommonReader {
   }
 
   public Long getUserCount() {
-    return Stream.of(CacheTime.GET_TRAFIC_INFO.getCacheName()).mapToLong(cacheName -> {
-      String pattern = cacheName.concat("::*");
-      ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
+    final String key = CacheTime.GET_TRAFIC_INFO.getCacheName();
+    final double now = System.currentTimeMillis();
+    final double windowStart = now - CacheTime.GET_TRAFIC_INFO.getTtl().toMillis();
 
-      return redisTemplate.execute((RedisCallback<Long>) conn -> {
-        Long count = 0L;
+    try {
+      redisTemplate.opsForZSet().removeRangeByScore(key, 0, windowStart);
+      final Long count = redisTemplate.opsForZSet().zCard(key);
+      return count != null ? count : 0L;
+    } catch (Exception e) {
+      log.error("getUserCount error : {}", e.getMessage());
+      return 0L;
+    }
+  }
 
-        try (Cursor<byte[]> cursor = conn.keyCommands().scan(options)) {
-          while (cursor.hasNext()) {
-            cursor.next();
-            count++;
-          }
-        } catch (Exception e) {
-          log.error("getTraficCount error : {}", e.getMessage());
+  public void recordUserActivity(String userId) {
+    if (userId == null || userId.isBlank()) {
+      return;
+    }
+    final String key = CacheTime.GET_TRAFIC_INFO.getCacheName();
+    final double now = System.currentTimeMillis();
+    try {
+      redisTemplate.opsForZSet().add(key, userId, now);
+    } catch (Exception e) {
+      log.error("recordUserActivity error : {}", e.getMessage());
+    }
+  }
 
-          return 0L;
-        }
-
-        return count;
-      });
-    }).sum();
-
+  public void removeUserActivity(String userId) {
+    if (userId == null || userId.isBlank()) {
+      return;
+    }
+    final String key = CacheTime.GET_TRAFIC_INFO.getCacheName();
+    try {
+      redisTemplate.opsForZSet().remove(key, userId);
+    } catch (Exception e) {
+      log.error("removeUserActivity error : {}", e.getMessage());
+    }
   }
 
 }

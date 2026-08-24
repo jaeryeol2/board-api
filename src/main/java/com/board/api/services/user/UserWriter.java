@@ -1,7 +1,6 @@
 package com.board.api.services.user;
 
 import java.util.Optional;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import com.board.api.constants.UserRole;
 import com.board.api.dtos.request.Signup;
 import com.board.api.entities.AppUser;
 import com.board.api.repositories.write.WriteUserRepository;
+import com.board.api.services.common.CommonReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserWriter {
   private final PasswordEncoder passwordEncoder;
   private final WriteUserRepository writeUserRepository;
+  private final CommonReader commonReader;
 
   public boolean signup(Signup join) {
     try {
@@ -62,9 +63,8 @@ public class UserWriter {
     return writeUserRepository.updateLastLoginDate(userId) > 0;
   }
 
-  @CacheEvict(cacheNames = "getTraficInfo", key = "#id")
   public void removeTraficInfoCache(String id) {
-    // empty
+    commonReader.removeUserActivity(id);
   }
 
 
