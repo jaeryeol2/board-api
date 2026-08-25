@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS board_store.app_user (
     password VARCHAR(255) NOT NULL,
     user_name VARCHAR(100),
     user_addr VARCHAR(255),
+    user_gender VARCHAR(10),
     user_role VARCHAR(50) DEFAULT 'USER',
     email VARCHAR(255),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -31,6 +32,7 @@ COMMENT ON COLUMN board_store.app_user.user_id IS '사용자 로그인 아이디
 COMMENT ON COLUMN board_store.app_user.password IS '암호화된 비밀번호';
 COMMENT ON COLUMN board_store.app_user.user_name IS '사용자 이름';
 COMMENT ON COLUMN board_store.app_user.user_addr IS '사용자 주소';
+COMMENT ON COLUMN board_store.app_user.user_gender IS '사용자 성별 (M: 남성, W: 여성)';
 COMMENT ON COLUMN board_store.app_user.user_role IS '사용자 권한 (예: USER, ADMIN)';
 COMMENT ON COLUMN board_store.app_user.email IS '이메일 주소';
 COMMENT ON COLUMN board_store.app_user.is_active IS '계정 활성화 상태 여부 (true: 활성, false: 비활성)';

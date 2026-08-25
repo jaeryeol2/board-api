@@ -13,5 +13,6 @@ public class User {
   private String userRole;
   private String userName;
   private String email;
+  private String userGender;
 
 }

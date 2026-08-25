@@ -33,6 +33,7 @@ public class AppUser {
   private String password;
   private String userName;
   private String userAddr;
+  private String userGender;
   private String userRole;
   private String email;
   private boolean isActive;
@@ -47,10 +48,11 @@ public class AppUser {
     this.lastLoginAt = lastLoginAt;
   }
 
-  public void updateProfile(String userName, String email, String userAddr) {
+  public void updateProfile(String userName, String email, String userAddr, String userGender) {
     this.userName = userName;
     this.email = email;
     this.userAddr = userAddr;
+    this.userGender = userGender;
   }
 
   public void updatePassword(String password) {

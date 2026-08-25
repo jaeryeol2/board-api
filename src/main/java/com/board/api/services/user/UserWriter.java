@@ -76,8 +76,8 @@ public class UserWriter {
   public boolean updateProfile(String userId, UserProfileUpdate updateDto) {
     return writeUserRepository.findByUserId(userId)//
         .map(user -> {
-          user.updateProfile(updateDto.getUserName(), updateDto.getEmail(),
-              updateDto.getUserAddr());
+          user.updateProfile(updateDto.getUserName(), updateDto.getEmail(), updateDto.getUserAddr(),
+              updateDto.getUserGender());
           return true;
         })//
         .orElse(false);

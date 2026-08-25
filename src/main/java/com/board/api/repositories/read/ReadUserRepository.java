@@ -16,8 +16,9 @@ public class ReadUserRepository {
   private static final QAppUser entity = QAppUser.appUser;
 
   public PersonalUser findLoginInfoById(final String userId) {
-    final QBean<PersonalUser> columns = Projections.fields(PersonalUser.class, entity.userId,
-        entity.password, entity.userName, entity.email, entity.userAddr, entity.userRole);
+    final QBean<PersonalUser> columns =
+        Projections.fields(PersonalUser.class, entity.userId, entity.password, entity.userName,
+            entity.email, entity.userAddr, entity.userGender, entity.userRole);
     return factory.select(columns)//
         .from(entity)//
         .where(entity.userId.eq(userId)//
@@ -26,8 +27,8 @@ public class ReadUserRepository {
   }
 
   public User findUserById(final String userId) {
-    final QBean<User> columns =
-        Projections.fields(User.class, entity.userId, entity.userName, entity.userRole);
+    final QBean<User> columns = Projections.fields(User.class, entity.userId, entity.userName,
+        entity.email, entity.userGender, entity.userRole);
     return factory.select(columns)//
         .from(entity)//
         .where(entity.userId.eq(userId)//

@@ -20,4 +20,5 @@ public class UserProfileUpdate {
   private String userName;
   private String email;
   private String userAddr;
+  private String userGender;
 }
