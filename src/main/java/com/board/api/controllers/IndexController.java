@@ -51,7 +51,7 @@ public class IndexController {
     return userService.login(guestId, login, request, response);
   }
 
-  @PostMapping({"/user/logout", "/user/token-expire"})
+  @PostMapping({"/user/logout", "/auth/token-expire"})
   public CompletableFuture<ResponseApi<Boolean>> logout(HttpServletRequest request,
       HttpServletResponse response) {
     return userService.logout(request, response);
