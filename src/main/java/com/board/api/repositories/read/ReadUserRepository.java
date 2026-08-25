@@ -1,6 +1,7 @@
 package com.board.api.repositories.read;
 
 import org.springframework.stereotype.Repository;
+import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import com.board.api.entities.QAppUser;
 import com.querydsl.core.types.Projections;
@@ -14,8 +15,9 @@ public class ReadUserRepository {
   private final JPAQueryFactory factory;
   private static final QAppUser entity = QAppUser.appUser;
 
-  public User findLoginInfoById(final String userId) {
-    final QBean<User> columns = Projections.fields(User.class, entity.userId, entity.password);
+  public PersonalUser findLoginInfoById(final String userId) {
+    final QBean<PersonalUser> columns = Projections.fields(PersonalUser.class, entity.userId,
+        entity.password, entity.userName, entity.email, entity.userAddr, entity.userRole);
     return factory.select(columns)//
         .from(entity)//
         .where(entity.userId.eq(userId)//

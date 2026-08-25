@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
+import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
+import com.board.api.repositories.read.ReadBoardRepository;
 import com.board.api.repositories.read.ReadUserRepository;
 import com.board.api.services.common.CommonReader;
 import jakarta.servlet.http.Cookie;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserReader {
   private final TokenUtil tokenUtil;
   private final ReadUserRepository readUserRepository;
+  private final ReadBoardRepository readBoardRepository;
   private final CommonReader commonReader;
 
   @Cacheable(cacheNames = "getUserInfo", key = "#userId", unless = "#result == null")
@@ -38,8 +41,13 @@ public class UserReader {
     return readUserRepository.findUserById(userId);
   }
 
-  public User getLoginUserInfo(String userId) {
-    return readUserRepository.findLoginInfoById(userId);
+  public PersonalUser getLoginUserInfo(String userId) {
+    final PersonalUser loginUser = readUserRepository.findLoginInfoById(userId);
+    if (loginUser != null) {
+      loginUser.setWritedContentList(readBoardRepository.findBoardListByWriterId(userId));
+      loginUser.setWritedCommentList(readBoardRepository.findBoardCommentListByWriterId(userId));
+    }
+    return loginUser;
   }
 
   public String getUserId(HttpServletRequest request) {

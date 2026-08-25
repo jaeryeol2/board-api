@@ -18,6 +18,8 @@ import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.request.Signup;
+import com.board.api.dtos.request.UserPasswordUpdate;
+import com.board.api.dtos.request.UserProfileUpdate;
 import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -122,15 +124,40 @@ public class UserService {
   public CompletableFuture<ResponseApi<PersonalUser>> getPersonalUserInfo(
       HttpServletRequest request) {
     final String userId = userReader.getUserId(request);
-    log.info(userId);
+    final PersonalUser loginUser = userReader.getLoginUserInfo(userId);
 
-    return ResponseApi.completedOk(null);
+    return ResponseApi.completedOk(loginUser);
   }
 
   @Async
   @Transactional
   public CompletableFuture<ResponseApi<Boolean>> signup(Signup join) {
     return ResponseApi.completedOk(HttpStatus.CREATED, "회원가입이 완료되었습니다.", userWriter.signup(join));
+  }
+
+  @Async
+  @Transactional
+  public CompletableFuture<ResponseApi<Boolean>> updateProfile(HttpServletRequest request,
+      UserProfileUpdate updateDto) {
+    final String userId = userReader.getUserId(request);
+    if (userId == null) {
+      throw new BusinessException("인증 정보가 유효하지 않습니다.");
+    }
+    final boolean updated = userWriter.updateProfile(userId, updateDto);
+    return ResponseApi.completedOk(HttpStatus.OK, "프로필이 수정되었습니다.", updated);
+  }
+
+  @Async
+  @Transactional
+  public CompletableFuture<ResponseApi<Boolean>> updatePassword(HttpServletRequest request,
+      UserPasswordUpdate updateDto) {
+    final String userId = userReader.getUserId(request);
+    if (userId == null) {
+      throw new BusinessException("인증 정보가 유효하지 않습니다.");
+    }
+    final boolean updated = userWriter.updatePassword(userId, updateDto.getCurrentPassword(),
+        updateDto.getNewPassword());
+    return ResponseApi.completedOk(HttpStatus.OK, "비밀번호가 변경되었습니다.", updated);
   }
 
   @Async

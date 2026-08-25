@@ -167,4 +167,45 @@ public class ReadBoardRepository {
         .fetch();
   }
 
+  public List<Board> findBoardListByWriterId(final String writerId) {
+    if (writerId == null) {
+      return Collections.emptyList();
+    }
+    final QBean<Board> columns = QueryDslUtil.generateFields(Board.class, board,
+        board.boardTypeCode.when(BoardType.BOARD_ANONY.getCode())//
+            .then("")//
+            .otherwise(user.userName).as(WRITER_NAME));
+
+    return factory.select(columns)//
+        .from(board)//
+        .leftJoin(user)//
+        .on(board.writerId.eq(user.userId))//
+        .where(board.writerId.eq(writerId)//
+            .and(board.isDeleted.eq(false)))//
+        .orderBy(board.createdAt.desc(), board.id.desc())//
+        .fetch();
+  }
+
+  public List<BoardComment> findBoardCommentListByWriterId(final String writerId) {
+    if (writerId == null) {
+      return Collections.emptyList();
+    }
+    final QBean<BoardComment> columns = QueryDslUtil.generateFields(BoardComment.class, comment,
+        comment.board.boardTypeCode//
+            .when(BoardType.BOARD_ANONY.getCode())//
+            .then("익명")//
+            .otherwise(user.userName).as(WRITER_NAME));
+
+    return factory.select(columns)//
+        .from(comment)//
+        .join(board)//
+        .on(comment.board.id.eq(board.id))//
+        .leftJoin(user)//
+        .on(comment.writerId.eq(user.userId))//
+        .where(comment.writerId.eq(writerId)//
+            .and(comment.isDeleted.eq(false)))//
+        .orderBy(comment.createdAt.desc())//
+        .fetch();
+  }
+
 }

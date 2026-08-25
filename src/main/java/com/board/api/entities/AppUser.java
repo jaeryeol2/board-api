@@ -46,4 +46,14 @@ public class AppUser {
   public void updateLastLoginAt(OffsetDateTime lastLoginAt) {
     this.lastLoginAt = lastLoginAt;
   }
+
+  public void updateProfile(String userName, String email, String userAddr) {
+    this.userName = userName;
+    this.email = email;
+    this.userAddr = userAddr;
+  }
+
+  public void updatePassword(String password) {
+    this.password = password;
+  }
 }

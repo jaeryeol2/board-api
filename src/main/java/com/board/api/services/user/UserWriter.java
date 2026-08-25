@@ -3,6 +3,7 @@ package com.board.api.services.user;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import com.board.api.common.base.BusinessException;
 import com.board.api.common.condition.Case;
 import com.board.api.constants.UserRole;
 import com.board.api.dtos.request.Signup;
+import com.board.api.dtos.request.UserProfileUpdate;
 import com.board.api.entities.AppUser;
 import com.board.api.repositories.write.WriteUserRepository;
 import com.board.api.services.common.CommonReader;
@@ -70,9 +72,31 @@ public class UserWriter {
         .orElse(false);
   }
 
+  @CacheEvict(cacheNames = "getUserInfo", key = "#userId")
+  public boolean updateProfile(String userId, UserProfileUpdate updateDto) {
+    return writeUserRepository.findByUserId(userId)//
+        .map(user -> {
+          user.updateProfile(updateDto.getUserName(), updateDto.getEmail(),
+              updateDto.getUserAddr());
+          return true;
+        })//
+        .orElse(false);
+  }
+
+  public boolean updatePassword(String userId, String currentPassword, String newPassword) {
+    return writeUserRepository.findByUserId(userId)//
+        .map(user -> {
+          if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new BusinessException("현재 비밀번호가 일치하지 않습니다.");
+          }
+          user.updatePassword(passwordEncoder.encode(newPassword));
+          return true;
+        })//
+        .orElse(false);
+  }
+
   public void removeTrafficInfoCache(String id) {
     commonReader.removeUserActivity(id);
   }
-
 
 }
