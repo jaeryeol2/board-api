@@ -1,6 +1,7 @@
 package com.board.api.repositories.read;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Repository;
 import com.board.api.common.utils.QueryDslUtil;
 import com.board.api.dtos.request.NoticeFilter;
@@ -14,26 +15,27 @@ import lombok.RequiredArgsConstructor;
 @Repository
 @RequiredArgsConstructor
 public class ReadNoticeRepository {
-    private final JPAQueryFactory factory;
-    private static final QAppNotice notice = QAppNotice.appNotice;
-    private static final QAppUser user = QAppUser.appUser;
-    private static final String WRITER_NAME = "writerName";
+  private final JPAQueryFactory factory;
+  private static final QAppNotice notice = QAppNotice.appNotice;
+  private static final QAppUser user = QAppUser.appUser;
+  private static final String WRITER_NAME = "writerName";
 
 
-    public long findNoticeCount() {
-        return factory.select(notice.id.count()).from(notice).fetchOne();
-    }
+  public long findNoticeCount() {
+    return Optional.ofNullable(factory.select(notice.id.count()).from(notice).fetchOne())
+        .orElse(0L);
+  }
 
-    public List<Notice> findNotices(NoticeFilter filter) {
-        final QBean<Notice> columns =
-                QueryDslUtil.generateFields(Notice.class, notice, user.userName.as(WRITER_NAME));
+  public List<Notice> findNotices(NoticeFilter filter) {
+    final QBean<Notice> columns =
+        QueryDslUtil.generateFields(Notice.class, notice, user.userName.as(WRITER_NAME));
 
-        return factory.select(columns)//
-                .from(notice)//
-                .leftJoin(user).on(notice.writerId.eq(user.userId))//
-                .orderBy(notice.createdAt.desc())//
-                .limit(filter.getRowsPerPage())//
-                .offset((long) (filter.getPage() - 1) * filter.getRowsPerPage())//
-                .fetch();
-    }
+    return factory.select(columns)//
+        .from(notice)//
+        .leftJoin(user).on(notice.writerId.eq(user.userId))//
+        .orderBy(notice.createdAt.desc())//
+        .limit(filter.getRowsPerPage())//
+        .offset((long) (filter.getPage() - 1) * filter.getRowsPerPage())//
+        .fetch();
+  }
 }

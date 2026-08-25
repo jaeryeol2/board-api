@@ -2,7 +2,9 @@ package com.board.api.repositories.read;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Repository;
 import com.board.api.common.utils.QueryDslUtil;
 import com.board.api.constants.BoardType;
@@ -34,10 +36,10 @@ public class ReadBoardRepository {
   private static final String WRITER_NAME = "writerName";
 
   public long findBoardCountById(BoardFilter filter) {
-    return factory.select(board.id.count())//
+    return Optional.ofNullable(factory.select(board.id.count())//
         .from(board)//
         .where(board.boardTypeCode.eq(filter.getBoardTypeCode()))//
-        .fetchOne();
+        .fetchOne()).orElse(0L);
   }
 
   public List<Long> findBoardByIds(BoardFilter filter) {
@@ -50,6 +52,10 @@ public class ReadBoardRepository {
   }
 
   public List<Board> findBoardList(String boardTypeCode, List<Long> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     final QBean<Board> colums = QueryDslUtil.generateFields(Board.class, board,
         board.boardTypeCode.when(BoardType.BOARD_ANONY.getCode())//
             .then("")//
@@ -77,7 +83,7 @@ public class ReadBoardRepository {
         .from(board)//
         .leftJoin(user)//
         .on(board.writerId.eq(user.userId))//
-        .leftJoin(like).on(board.id.eq(like.id))//
+        .leftJoin(like).on(board.id.eq(like.board.id))//
         .where(board.id.eq(id))//
         .groupBy(board.id, user.userName)//
         .fetchOne();
@@ -111,10 +117,10 @@ public class ReadBoardRepository {
   }
 
   public long findBoardPopularCount() {
-    return factory.select(board.id.count())//
+    return Optional.ofNullable(factory.select(board.id.count())//
         .from(board)//
         .where(board.viewCount.goe(30))//
-        .fetchOne();
+        .fetchOne()).orElse(0L);
   }
 
   public List<Long> findBoardPopularByIds(BoardFilter filter) {
@@ -127,6 +133,10 @@ public class ReadBoardRepository {
   }
 
   public List<Board> findBoardPopularList(List<Long> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     final QBean<Board> columns =
         QueryDslUtil.generateFields(Board.class, board, user.userName.as(WRITER_NAME));
 
