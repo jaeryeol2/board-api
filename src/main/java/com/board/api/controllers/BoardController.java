@@ -86,8 +86,8 @@ public class BoardController {
   }
 
   @DeleteMapping("/image")
-  public CompletableFuture<ResponseApi<Boolean>> deleteImage(
-      @RequestParam("url") String url, HttpServletRequest request) {
+  public CompletableFuture<ResponseApi<Boolean>> deleteImage(@RequestParam("url") String url,
+      HttpServletRequest request) {
     return boardService.deleteImage(url, request);
   }
 

@@ -5,16 +5,33 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+/**
+ * 다중 조건에 따라 값을 매핑/반환(Expression)하는 유틸리티입니다.
+ * 
+ * <p>
+ * <b>사용 가이드:</b>
+ * </p>
+ * <ul>
+ * <li><b>지연 평가 (권장 - NPE 안전 & 비용 지연):</b>
+ * {@code when(() -> user.isAdmin()).then(() -> expensiveCalc())}</li>
+ * <li><b>즉시 평가 (단순 리터럴/기계산 변수):</b> {@code when(isGuest).then("GUEST")}</li>
+ * </ul>
+ */
 public interface CaseGet<T> {
 
   // --- 값을 반환하는 실행 메서드 ---
   T get();
 
-  // --- 진입점 (static 메서드로 선언하여 인스턴스에서 호출 불가) ---
+  /**
+   * 지연 평가 조건식으로 분기를 시작합니다. (NPE 방지 및 연산 지연 시 권장)
+   */
   static InitialWhenBuilder when(BooleanSupplier condition) {
     return new InitialWhenBuilder(condition);
   }
 
+  /**
+   * 즉시 평가된 boolean 값으로 분기를 시작합니다. (단순 변수/리터럴에 사용)
+   */
   static InitialWhenBuilder when(boolean condition) {
     return new InitialWhenBuilder(() -> condition);
   }
@@ -119,8 +136,8 @@ class DefaultCaseGet<T> implements CaseGet<T> {
   private final List<ValueRule<T>> rules;
 
   DefaultCaseGet(List<ValueRule<T>> rules) {
-    // 방어적 복사 적용: 생성 후 외부에서 조건 추가/변경 방지
-    this.rules = new ArrayList<>(rules);
+    // 불변 방어적 복사 적용
+    this.rules = List.copyOf(rules);
   }
 
   @Override

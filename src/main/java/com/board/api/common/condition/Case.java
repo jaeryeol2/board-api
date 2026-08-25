@@ -4,16 +4,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
+/**
+ * 다중 조건 분기(if-else if-else)를 체이닝 형태로 실행하는 유틸리티입니다.
+ * 
+ * <p>
+ * <b>사용 가이드:</b>
+ * </p>
+ * <ul>
+ * <li><b>지연 평가 (권장 - NPE 안전):</b> {@code when(() -> user != null && user.isActive())}</li>
+ * <li><b>즉시 평가 (단순 리터럴/기계산 변수):</b> {@code when(isDuplicate)}</li>
+ * </ul>
+ */
 public interface Case {
 
   // --- 실행 메서드 ---
   void execute();
 
-  // --- 진입점 (static 메서드로 선언하여 인스턴스에서 호출 불가) ---
+  /**
+   * 지연 평가 조건식으로 분기를 시작합니다. (NPE 방지 및 연산 지연 시 권장)
+   */
   static InitialWhenBuilder when(BooleanSupplier condition) {
     return new InitialWhenBuilder(condition);
   }
 
+  /**
+   * 즉시 평가된 boolean 값으로 분기를 시작합니다. (단순 변수/리터럴에 사용)
+   */
   static InitialWhenBuilder when(boolean condition) {
     return new InitialWhenBuilder(() -> condition);
   }
