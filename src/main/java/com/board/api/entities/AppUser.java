@@ -43,4 +43,7 @@ public class AppUser {
   private OffsetDateTime updatedAt;
   private OffsetDateTime lastLoginAt;
 
+  public void updateLastLoginAt(OffsetDateTime lastLoginAt) {
+    this.lastLoginAt = lastLoginAt;
+  }
 }

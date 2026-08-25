@@ -1,5 +1,7 @@
 package com.board.api.services.user;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,7 +62,12 @@ public class UserWriter {
   }
 
   public boolean updateLastLoginDate(String userId) {
-    return writeUserRepository.updateLastLoginDate(userId) > 0;
+    return writeUserRepository.findByUserId(userId)//
+        .map(user -> {
+          user.updateLastLoginAt(OffsetDateTime.now(ZoneOffset.UTC));
+          return true;
+        })//
+        .orElse(false);
   }
 
   public void removeTrafficInfoCache(String id) {
