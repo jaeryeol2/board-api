@@ -17,6 +17,7 @@ import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.request.Login;
+import com.board.api.dtos.request.PasswordVerify;
 import com.board.api.dtos.request.Signup;
 import com.board.api.dtos.request.UserPasswordUpdate;
 import com.board.api.dtos.request.UserProfileUpdate;
@@ -89,6 +90,24 @@ public class UserService {
   }
 
   @Async
+  public CompletableFuture<ResponseApi<Boolean>> verifyPassword(HttpServletRequest request,
+      PasswordVerify verifyDto) {
+    final String userId = userReader.getUserId(request);
+    if (userId == null) {
+      throw new BusinessException("인증 정보가 유효하지 않습니다.");
+    }
+    final User user = userReader.getLoginUserInfo(userId);
+    if (user == null) {
+      throw new BusinessException("존재하지 않는 사용자입니다.");
+    }
+    final boolean matched = passwordEncoder.matches(verifyDto.getPassword(), user.getPassword());
+    if (!matched) {
+      throw new BusinessException("비밀번호가 일치하지 않습니다.");
+    }
+    return ResponseApi.completedOk(HttpStatus.OK, "비밀번호가 일치합니다.", true);
+  }
+
+  @Async
   public CompletableFuture<ResponseApi<Boolean>> getNewAccessToken(HttpServletRequest request,
       HttpServletResponse response) {
     final String token = userReader.makeNewAccessToken(request);
@@ -150,14 +169,17 @@ public class UserService {
   @Async
   @Transactional
   public CompletableFuture<ResponseApi<Boolean>> updatePassword(HttpServletRequest request,
-      UserPasswordUpdate updateDto) {
+      HttpServletResponse response, UserPasswordUpdate updateDto) {
     final String userId = userReader.getUserId(request);
     if (userId == null) {
       throw new BusinessException("인증 정보가 유효하지 않습니다.");
     }
     final boolean updated = userWriter.updatePassword(userId, updateDto.getCurrentPassword(),
         updateDto.getNewPassword());
-    return ResponseApi.completedOk(HttpStatus.OK, "비밀번호가 변경되었습니다.", updated);
+    if (updated) {
+      userReader.expireToken(userId, response);
+    }
+    return ResponseApi.completedOk(HttpStatus.OK, "비밀번호가 변경되었습니다. 다시 로그인해 주세요.", updated);
   }
 
   @Async
