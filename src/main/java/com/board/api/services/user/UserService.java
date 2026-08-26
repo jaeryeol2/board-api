@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
+import com.board.api.common.condition.Case;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.request.PasswordVerify;
@@ -57,15 +58,13 @@ public class UserService {
       HttpServletRequest request, HttpServletResponse response) {
     final User user = userReader.getLoginUserInfo(login.getUserId());
 
-    if (user == null) {
-      throw new BusinessException("존재하지 않는 사용자입니다.");
-    }
-
-    final boolean matched = passwordEncoder.matches(login.getPassword(), user.getPassword());
-
-    if (!matched) {
-      throw new BusinessException("비밀번호가 일치하지 않습니다.");
-    }
+    Case.when(() -> user == null)//
+        .thenThrow(() -> new BusinessException("존재하지 않는 사용자입니다."))//
+        .when(() -> !passwordEncoder.matches(login.getPassword(), user.getPassword()))//
+        .thenThrow(() -> new BusinessException("비밀번호가 일치하지 않습니다."))//
+        .when(() -> !user.isActive())//
+        .thenThrow(() -> new BusinessException("가입 심사중에 있습니다."))//
+        .execute();
 
     userReader.makeToken(login.getUserId(), response);
 

@@ -3,6 +3,7 @@ package com.board.api.common.condition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 /**
  * 다중 조건 분기(if-else if-else)를 체이닝 형태로 실행하는 유틸리티입니다.
@@ -11,8 +12,7 @@ import java.util.function.BooleanSupplier;
  * <b>사용 가이드:</b>
  * </p>
  * <ul>
- * <li><b>지연 평가 (권장 - NPE 안전):</b> {@code when(() -> user != null && user.isActive())}</li>
- * <li><b>즉시 평가 (단순 리터럴/기계산 변수):</b> {@code when(isDuplicate)}</li>
+ * <li><b>지연 평가 (NPE 안전):</b> {@code when(() -> user != null && user.isActive())}</li>
  * </ul>
  */
 public interface Case {
@@ -21,17 +21,10 @@ public interface Case {
   void execute();
 
   /**
-   * 지연 평가 조건식으로 분기를 시작합니다. (NPE 방지 및 연산 지연 시 권장)
+   * 지연 평가 조건식으로 분기를 시작합니다. (NPE 방지 및 단락 평가 보장)
    */
   static InitialWhenBuilder when(BooleanSupplier condition) {
     return new InitialWhenBuilder(condition);
-  }
-
-  /**
-   * 즉시 평가된 boolean 값으로 분기를 시작합니다. (단순 변수/리터럴에 사용)
-   */
-  static InitialWhenBuilder when(boolean condition) {
-    return new InitialWhenBuilder(() -> condition);
   }
 
   // --- Builders (인터페이스 내부의 class는 자동으로 public static이 됩니다) ---
@@ -48,6 +41,12 @@ public interface Case {
       rules.add(new ActionRule(this.currentCondition, action));
       return new ActionThenBuilder(rules);
     }
+
+    public ActionThenBuilder thenThrow(Supplier<? extends RuntimeException> exceptionSupplier) {
+      return then(() -> {
+        throw exceptionSupplier.get();
+      });
+    }
   }
 
   class ActionThenBuilder {
@@ -59,10 +58,6 @@ public interface Case {
 
     public ActionWhenBuilder when(BooleanSupplier condition) {
       return new ActionWhenBuilder(this.rules, condition);
-    }
-
-    public ActionWhenBuilder when(boolean condition) {
-      return new ActionWhenBuilder(this.rules, () -> condition);
     }
 
     public ActionOtherBuilder other(Runnable action) {
@@ -91,6 +86,12 @@ public interface Case {
     public ActionThenBuilder then(Runnable action) {
       this.rules.add(new ActionRule(this.currentCondition, action));
       return new ActionThenBuilder(this.rules);
+    }
+
+    public ActionThenBuilder thenThrow(Supplier<? extends RuntimeException> exceptionSupplier) {
+      return then(() -> {
+        throw exceptionSupplier.get();
+      });
     }
   }
 

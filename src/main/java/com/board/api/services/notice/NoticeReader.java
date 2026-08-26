@@ -22,7 +22,7 @@ public class NoticeReader {
     long count = readNoticeRepository.findNoticeCount();
 
     return ResponseList.of(Math.toIntExact(count),
-        CaseGet.when(count > 0).then(() -> readNoticeRepository.findNotices(filter))//
+        CaseGet.when(() -> count > 0).then(() -> readNoticeRepository.findNotices(filter))//
             .other(Collections::emptyList)//
             .get());
   }

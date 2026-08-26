@@ -12,9 +12,8 @@ import java.util.function.Supplier;
  * <b>사용 가이드:</b>
  * </p>
  * <ul>
- * <li><b>지연 평가 (권장 - NPE 안전 & 비용 지연):</b>
+ * <li><b>지연 평가 (NPE 안전 & 비용 지연):</b>
  * {@code when(() -> user.isAdmin()).then(() -> expensiveCalc())}</li>
- * <li><b>즉시 평가 (단순 리터럴/기계산 변수):</b> {@code when(isGuest).then("GUEST")}</li>
  * </ul>
  */
 public interface CaseGet<T> {
@@ -23,17 +22,10 @@ public interface CaseGet<T> {
   T get();
 
   /**
-   * 지연 평가 조건식으로 분기를 시작합니다. (NPE 방지 및 연산 지연 시 권장)
+   * 지연 평가 조건식으로 분기를 시작합니다. (NPE 방지 및 단락 평가 보장)
    */
   static InitialWhenBuilder when(BooleanSupplier condition) {
     return new InitialWhenBuilder(condition);
-  }
-
-  /**
-   * 즉시 평가된 boolean 값으로 분기를 시작합니다. (단순 변수/리터럴에 사용)
-   */
-  static InitialWhenBuilder when(boolean condition) {
-    return new InitialWhenBuilder(() -> condition);
   }
 
   // --- Builders (인터페이스 내부의 class는 자동으로 public static) ---
@@ -66,10 +58,6 @@ public interface CaseGet<T> {
 
     public ValueWhenBuilder<T> when(BooleanSupplier condition) {
       return new ValueWhenBuilder<>(this.rules, condition);
-    }
-
-    public ValueWhenBuilder<T> when(boolean condition) {
-      return new ValueWhenBuilder<>(this.rules, () -> condition);
     }
 
     public ValueOtherBuilder<T> other(Supplier<T> action) {

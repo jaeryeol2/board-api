@@ -50,11 +50,11 @@ public class UserWriter {
       final boolean isDuplicate = e instanceof DataIntegrityViolationException;
       final String[] resMessage = new String[] {"회원가입에 실패 했습니다."};
 
-      Case.when(isDuplicate && message.contains("user_id"))//
+      Case.when(() -> isDuplicate && message.contains("user_id"))//
           .then(() -> resMessage[firstIndex] = "이미 존재하는 아이디입니다.")//
-          .when(isDuplicate && message.contains("email"))//
+          .when(() -> isDuplicate && message.contains("email"))//
           .then(() -> resMessage[firstIndex] = "이미 존재하는 이메일입니다.")//
-          .when(isDuplicate)//
+          .when(() -> isDuplicate)//
           .then(() -> resMessage[firstIndex] = "중복되는 데이터가 있습니다.")//
           .execute();
 

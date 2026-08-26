@@ -65,7 +65,7 @@ public class BoardReader {
     filter.setBoardTypeCode(boardTypeCode);
     final long count = readBoardRepository.findBoardCountById(filter);
 
-    return ResponseList.of(Math.toIntExact(count), CaseGet.when(count > 0)//
+    return ResponseList.of(Math.toIntExact(count), CaseGet.when(() -> count > 0)//
         .then(() -> {
           final List<Long> ids = readBoardRepository.findBoardByIds(filter);
           return readBoardRepository.findBoardList(boardTypeCode, ids);
@@ -78,7 +78,7 @@ public class BoardReader {
   public ResponseList<Board> getBoardPopularList(final BoardFilter filter) {
     final long count = readBoardRepository.findBoardPopularCount();
 
-    return ResponseList.of(Math.toIntExact(count), CaseGet.when(count > 0)//
+    return ResponseList.of(Math.toIntExact(count), CaseGet.when(() -> count > 0)//
         .then(() -> {
           final List<Long> ids = readBoardRepository.findBoardPopularByIds(filter);
           return readBoardRepository.findBoardPopularList(ids);

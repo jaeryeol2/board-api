@@ -18,11 +18,10 @@ public class ReadUserRepository {
   public PersonalUser findLoginInfoById(final String userId) {
     final QBean<PersonalUser> columns =
         Projections.fields(PersonalUser.class, entity.userId, entity.password, entity.userName,
-            entity.email, entity.userAddr, entity.userGender, entity.userRole);
+            entity.email, entity.userAddr, entity.userGender, entity.userRole, entity.isActive);
     return factory.select(columns)//
         .from(entity)//
-        .where(entity.userId.eq(userId)//
-            .and(entity.isActive.eq(true)))//
+        .where(entity.userId.eq(userId))//
         .fetchOne();
   }
 
