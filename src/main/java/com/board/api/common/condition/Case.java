@@ -65,6 +65,12 @@ public interface Case {
       return new ActionOtherBuilder(this.rules);
     }
 
+    public ActionOtherBuilder otherThrow(Supplier<? extends RuntimeException> exceptionSupplier) {
+      return other(() -> {
+        throw exceptionSupplier.get();
+      });
+    }
+
     public Case build() {
       return new DefaultCase(this.rules);
     }
