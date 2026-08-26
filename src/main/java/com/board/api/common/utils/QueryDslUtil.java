@@ -29,23 +29,27 @@ public class QueryDslUtil {
    */
   public static <T1, T2> QBean<T1> generateFields(Class<T1> clazz, EntityPathBase<T2> entity,
       Expression<?>... aliases) {
-    final List<Expression<?>> expressions = new ArrayList<>();
 
     try {
+      final boolean isAliases = aliases != null && aliases.length > 0;
       final Field[] qFields = entity.getClass().getFields();
+      final int initialCapacity = (isAliases ? aliases.length : 0) + qFields.length;
+      final List<Expression<?>> expressions = new ArrayList<>(initialCapacity);
 
-      if (aliases != null && aliases.length > 0) {
+      if (isAliases) {
         expressions.addAll(Arrays.asList(aliases));
       }
 
       for (Field qField : qFields) {
         addExpressionIfFieldExists(clazz, qField, entity, expressions);
       }
+
+      return Projections.fields(clazz, expressions.toArray(new Expression[0]));
     } catch (Exception e) {
       log.error("Failed to generate QueryDSL fields : ", e);
     }
 
-    return Projections.fields(clazz, expressions.toArray(new Expression[0]));
+    return Projections.fields(clazz);
   }
 
   /**
