@@ -69,6 +69,12 @@ public interface CaseGet<T> {
       return other(() -> value);
     }
 
+    public ValueOtherBuilder<T> otherThrow(Supplier<? extends RuntimeException> exceptionSupplier) {
+      return other(() -> {
+        throw exceptionSupplier.get();
+      });
+    }
+
     // 지연 평가를 위한 build() 추가
     public CaseGet<T> build() {
       return new DefaultCaseGet<>(this.rules);
