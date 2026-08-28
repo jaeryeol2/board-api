@@ -15,13 +15,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
+import com.board.api.common.base.ResponseApi.ResponseList;
 import com.board.api.common.condition.Case;
 import com.board.api.common.utils.TokenUtil;
+import com.board.api.dtos.request.BoardFilter;
 import com.board.api.dtos.request.Login;
 import com.board.api.dtos.request.PasswordVerify;
 import com.board.api.dtos.request.Signup;
 import com.board.api.dtos.request.UserPasswordUpdate;
 import com.board.api.dtos.request.UserProfileUpdate;
+import com.board.api.dtos.response.Board;
+import com.board.api.dtos.response.Board.BoardComment;
 import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -145,6 +149,26 @@ public class UserService {
     final PersonalUser loginUser = userReader.getLoginUserInfo(userId);
 
     return ResponseApi.completedOk(loginUser);
+  }
+
+  @Async
+  public CompletableFuture<ResponseApi<ResponseList<Board>>> getMyPosts(HttpServletRequest request,
+      final BoardFilter filter) {
+    final String userId = userReader.getUserId(request);
+    if (userId == null) {
+      throw new BusinessException("인증 정보가 유효하지 않습니다.");
+    }
+    return ResponseApi.completedOk(userReader.getMyPosts(userId, filter));
+  }
+
+  @Async
+  public CompletableFuture<ResponseApi<ResponseList<BoardComment>>> getMyComments(
+      HttpServletRequest request, final BoardFilter filter) {
+    final String userId = userReader.getUserId(request);
+    if (userId == null) {
+      throw new BusinessException("인증 정보가 유효하지 않습니다.");
+    }
+    return ResponseApi.completedOk(userReader.getMyComments(userId, filter));
   }
 
   @Async

@@ -8,9 +8,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.board.api.common.base.ResponseApi;
+import com.board.api.common.base.ResponseApi.ResponseList;
+import com.board.api.dtos.request.BoardFilter;
 import com.board.api.dtos.request.PasswordVerify;
 import com.board.api.dtos.request.UserPasswordUpdate;
 import com.board.api.dtos.request.UserProfileUpdate;
+import com.board.api.dtos.response.Board;
+import com.board.api.dtos.response.Board.BoardComment;
 import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import com.board.api.services.common.CommonService;
@@ -38,6 +42,18 @@ public class UserController {
   public CompletableFuture<ResponseApi<PersonalUser>> getPersonalUserInfo(
       HttpServletRequest request) {
     return userService.getPersonalUserInfo(request);
+  }
+
+  @GetMapping("/posts")
+  public CompletableFuture<ResponseApi<ResponseList<Board>>> getMyPosts(HttpServletRequest request,
+      BoardFilter filter) {
+    return userService.getMyPosts(request, filter);
+  }
+
+  @GetMapping("/comments")
+  public CompletableFuture<ResponseApi<ResponseList<BoardComment>>> getMyComments(
+      HttpServletRequest request, BoardFilter filter) {
+    return userService.getMyComments(request, filter);
   }
 
   @PostMapping("/verify-password")

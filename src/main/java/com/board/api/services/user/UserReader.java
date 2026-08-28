@@ -6,6 +6,8 @@ import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -14,7 +16,12 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.ResponseApi;
+import com.board.api.common.base.ResponseApi.ResponseList;
+import com.board.api.common.condition.CaseGet;
 import com.board.api.common.utils.TokenUtil;
+import com.board.api.dtos.request.BoardFilter;
+import com.board.api.dtos.response.Board;
+import com.board.api.dtos.response.Board.BoardComment;
 import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
 import com.board.api.repositories.read.ReadBoardRepository;
@@ -48,6 +55,25 @@ public class UserReader {
       loginUser.setWritedCommentList(readBoardRepository.findBoardCommentListByWriterId(userId));
     }
     return loginUser;
+  }
+
+  public ResponseList<Board> getMyPosts(final String userId, final BoardFilter filter) {
+    final long count = readBoardRepository.findBoardCountByWriterId(userId);
+    return ResponseList.of(Math.toIntExact(count), CaseGet.when(() -> count > 0)//
+        .then(() -> {
+          final List<Long> ids = readBoardRepository.findBoardIdsByWriterId(userId, filter);
+          return readBoardRepository.findBoardListByWriterId(userId, ids);
+        })//
+        .other(Collections::emptyList)//
+        .get());
+  }
+
+  public ResponseList<BoardComment> getMyComments(final String userId, final BoardFilter filter) {
+    final long count = readBoardRepository.findBoardCommentCountByWriterId(userId);
+    return ResponseList.of(Math.toIntExact(count), CaseGet.when(() -> count > 0)//
+        .then(() -> readBoardRepository.findBoardCommentListByWriterId(userId, filter))//
+        .other(Collections::emptyList)//
+        .get());
   }
 
   public String getUserId(HttpServletRequest request) {
