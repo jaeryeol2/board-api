@@ -1,13 +1,11 @@
 package com.board.api.services.board;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import com.board.api.common.base.BusinessException;
 import com.board.api.dtos.response.ResponseS3;
 import com.board.api.entities.AppBoard;
@@ -16,7 +14,6 @@ import com.board.api.entities.AppBoardFile;
 import com.board.api.repositories.write.WriteBoardFileRepository;
 import com.board.api.repositories.write.WriteBoardRepository;
 import com.board.api.repositories.write.WriteCommentRepository;
-import com.board.api.services.common.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = false)
 @RequiredArgsConstructor
 public class BoardWriter {
-  private final S3Service s3Service;
   private final WriteBoardRepository writeBoardRepository;
   private final WriteBoardFileRepository writeBoardFileRepository;
   private final WriteCommentRepository writeCommentRepository;
@@ -40,34 +36,30 @@ public class BoardWriter {
     return writeBoardRepository.updateViewCount(id);
   }
 
-  public void writeBoardFile(AppBoard appBoard, List<MultipartFile> fileList) {
+  /**
+   * 트랜잭션 밖에서 S3 업로드를 마친 첨부 파일 정보.
+   */
+  public record UploadedFile(String originalFileName, long fileSize, ResponseS3 s3) {
+  }
+
+  /**
+   * 업로드가 끝난 첨부 파일의 메타 정보만 저장합니다. (S3 업로드는 BoardService에서 트랜잭션 DB 작업 전에 수행)
+   */
+  public void writeBoardFile(AppBoard appBoard, List<UploadedFile> fileList) {
     if (fileList == null || fileList.isEmpty()) {
       return;
     }
 
-    List<AppBoardFile> insertFileList = new ArrayList<>();
+    final List<AppBoardFile> insertFileList = fileList.stream().map(file -> {
+      final String extension = ".".concat(FilenameUtils.getExtension(file.originalFileName()));
+      final String fileName = file.s3().getFileName().concat(extension);
 
-    for (MultipartFile file : fileList) {
-      if (file.isEmpty())
-        continue;
+      return AppBoardFile.builder().board(appBoard).originalFileName(file.originalFileName())
+          .fileName(fileName).fileUrl(file.s3().getUrl()).fileType("image")
+          .fileSize(file.fileSize()).build();
+    }).toList();
 
-      final ResponseS3 s3 = s3Service.uploadImage(file);
-      if (s3 == null) {
-        throw new BusinessException("파일업로드에 실패했습니다.");
-      }
-
-      final String originName = file.getOriginalFilename();
-      final String extension = ".".concat(FilenameUtils.getExtension(originName));
-      final String fileName = s3.getFileName().concat(extension);
-
-      insertFileList.add(
-          AppBoardFile.builder().board(appBoard).originalFileName(originName).fileName(fileName)
-              .fileUrl(s3.getUrl()).fileType("image").fileSize(file.getSize()).build());
-    }
-
-    if (!insertFileList.isEmpty()) {
-      writeBoardFileRepository.saveAll(insertFileList);
-    }
+    writeBoardFileRepository.saveAll(insertFileList);
   }
 
   @CacheEvict(cacheNames = "getBoardDetail", key = "'board-id-' + #write.board.id")

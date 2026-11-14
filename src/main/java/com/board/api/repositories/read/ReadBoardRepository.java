@@ -94,7 +94,12 @@ public class ReadBoardRepository {
         comment.board.boardTypeCode//
             .when(BoardType.BOARD_ANONY.getCode())//
             .then("익명")//
-            .otherwise(user.userName).as(WRITER_NAME));
+            .otherwise(user.userName).as(WRITER_NAME),
+        // 익명게시판 댓글은 작성자 로그인 ID를 노출하지 않습니다.
+        comment.board.boardTypeCode//
+            .when(BoardType.BOARD_ANONY.getCode())//
+            .then("")//
+            .otherwise(comment.writerId).as("writerId"));
     return factory.select(columns)//
         .from(comment)//
         .join(board)//
@@ -212,25 +217,6 @@ public class ReadBoardRepository {
         .fetch();
   }
 
-  public List<Board> findBoardListByWriterId(final String writerId) {
-    if (writerId == null) {
-      return Collections.emptyList();
-    }
-    final QBean<Board> columns = QueryDslUtil.generateFields(Board.class, board,
-        board.boardTypeCode.when(BoardType.BOARD_ANONY.getCode())//
-            .then("")//
-            .otherwise(user.userName).as(WRITER_NAME));
-
-    return factory.select(columns)//
-        .from(board)//
-        .leftJoin(user)//
-        .on(board.writerId.eq(user.userId))//
-        .where(board.writerId.eq(writerId)//
-            .and(board.isDeleted.eq(false)))//
-        .orderBy(board.createdAt.desc(), board.id.desc())//
-        .fetch();
-  }
-
   public long findBoardCommentCountByWriterId(final String writerId) {
     if (writerId == null) {
       return 0L;
@@ -267,26 +253,29 @@ public class ReadBoardRepository {
         .fetch();
   }
 
-  public List<BoardComment> findBoardCommentListByWriterId(final String writerId) {
-    if (writerId == null) {
-      return Collections.emptyList();
-    }
-    final QBean<BoardComment> columns = QueryDslUtil.generateFields(BoardComment.class, comment,
-        comment.board.boardTypeCode//
-            .when(BoardType.BOARD_ANONY.getCode())//
-            .then("익명")//
-            .otherwise(user.userName).as(WRITER_NAME));
+  /** 권한 확인용 실제 작성자 ID (캐시·마스킹 없이 조회) */
+  public String findBoardWriterId(final long id) {
+    return factory.select(board.writerId)//
+        .from(board)//
+        .where(board.id.eq(id))//
+        .fetchOne();
+  }
 
-    return factory.select(columns)//
+  public boolean existsBoardById(final long id) {
+    return factory.selectOne()//
+        .from(board)//
+        .where(board.id.eq(id))//
+        .fetchFirst() != null;
+  }
+
+  /** 부모 댓글이 같은 게시글에 속하는지 확인합니다. */
+  public boolean existsCommentInBoard(final long commentId, final long boardId) {
+    return factory.selectOne()//
         .from(comment)//
-        .join(board)//
-        .on(comment.board.id.eq(board.id))//
-        .leftJoin(user)//
-        .on(comment.writerId.eq(user.userId))//
-        .where(comment.writerId.eq(writerId)//
+        .where(comment.id.eq(commentId)//
+            .and(comment.board.id.eq(boardId))//
             .and(comment.isDeleted.eq(false)))//
-        .orderBy(comment.createdAt.desc())//
-        .fetch();
+        .fetchFirst() != null;
   }
 
 }

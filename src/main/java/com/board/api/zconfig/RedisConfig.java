@@ -6,7 +6,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
-import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
@@ -68,12 +67,34 @@ public class RedisConfig implements CachingConfigurer {
     return new GenericJackson2JsonRedisSerializer(mapper);
   }
 
-  private static class RelaxedCacheErrorHandler extends SimpleCacheErrorHandler {
+  /**
+   * 캐시(Redis) 오류가 인증·쓰기 등 본 기능 장애로 번지지 않도록 모든 캐시 오류를 로깅 후 무시합니다.
+   * (조회 실패 시 원본 메서드 실행, 저장·삭제 실패 시 캐시만 건너뜀)
+   */
+  private static class RelaxedCacheErrorHandler implements CacheErrorHandler {
     @Override
     public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
-      if (log.isErrorEnabled()) {
-        log.error("handleCacheGetError error : {}", exception.getMessage());
-      }
+      log.error("handleCacheGetError cache : {}, error : {}", cache.getName(),
+          exception.getMessage());
+    }
+
+    @Override
+    public void handleCachePutError(RuntimeException exception, Cache cache, Object key,
+        Object value) {
+      log.error("handleCachePutError cache : {}, error : {}", cache.getName(),
+          exception.getMessage());
+    }
+
+    @Override
+    public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
+      log.error("handleCacheEvictError cache : {}, error : {}", cache.getName(),
+          exception.getMessage());
+    }
+
+    @Override
+    public void handleCacheClearError(RuntimeException exception, Cache cache) {
+      log.error("handleCacheClearError cache : {}, error : {}", cache.getName(),
+          exception.getMessage());
     }
   }
 

@@ -1,12 +1,15 @@
 package com.board.api.controllers;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.constants.BoardType;
 import com.board.api.dtos.request.Login;
@@ -18,6 +21,7 @@ import com.board.api.services.common.CommonService;
 import com.board.api.services.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,8 +62,9 @@ public class IndexController {
   }
 
   @PostMapping("/user/signup")
-  public CompletableFuture<ResponseApi<Boolean>> signup(@RequestBody Signup join) {
-    return userService.signup(join);
+  public CompletableFuture<ResponseApi<Boolean>> signup(@RequestBody @Valid Signup join,
+      HttpServletRequest request) {
+    return userService.signup(join, request);
   }
 
   @GetMapping("/menus")
@@ -69,7 +74,9 @@ public class IndexController {
 
   @GetMapping("/menus/{boardType}")
   public CompletableFuture<ResponseApi<Menu>> getMenu(@PathVariable String boardType) {
-    return commonService.getMenuInfo(BoardType.findByName(boardType).getCode());
+    final BoardType type = Optional.ofNullable(BoardType.findByName(boardType)).orElseThrow(
+        () -> new BusinessException("존재하지 않는 게시판입니다.", HttpStatus.NOT_FOUND));
+    return commonService.getMenuInfo(type.getCode());
   }
 
   @GetMapping("/home")

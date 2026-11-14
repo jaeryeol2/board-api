@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.board.api.constants.BoardType;
 import com.board.api.constants.ProfileActive;
+import com.board.api.constants.UserRole;
 import com.board.api.zconfig.entrypoint.AuthAccessDeniedHandler;
 import com.board.api.zconfig.entrypoint.AuthEntryPoint;
 import com.board.api.zconfig.filters.AuthFilter;
@@ -36,6 +37,7 @@ public class SecurityConfig {
   private static final String[] IGNORE_PATH_ARRAY =
       {"/actuator/health", "/home", "/user/login", "/user/logout", "/auth/token-expire",
           "/auth/guest", "/user/user-count", "/user/signup", "/menus/**"};
+  private static final String NOTICE_PATH = "/notice";
   private static final String[] SWAGGER_PATH_ARRAY =
       {"/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**"};
 
@@ -57,6 +59,10 @@ public class SecurityConfig {
           auth.requestMatchers(HttpMethod.GET, "/board/{boardType}",
               "/board/".concat(BoardType.BOARD_FREE.name()).concat("/{id}"))//
               .permitAll();
+          // 공지 목록은 비로그인 공개, 공지 작성은 관리자만 가능합니다.
+          auth.requestMatchers(HttpMethod.GET, NOTICE_PATH).permitAll();
+          auth.requestMatchers(HttpMethod.POST, NOTICE_PATH)
+              .hasAuthority(UserRole.USER_ADMIN.getCode());
 
           if (!ProfileActive.PROD.getValue().equalsIgnoreCase(active)) {
             auth.requestMatchers(SWAGGER_PATH_ARRAY).permitAll();

@@ -30,6 +30,7 @@ public class NoticeService {
   }
 
   @Async
+  @Transactional
   public CompletableFuture<ResponseApi<Boolean>> writeNotice(NoticeWrite write,
       HttpServletRequest request) {
     final String userId = userReader.getUserId(request);

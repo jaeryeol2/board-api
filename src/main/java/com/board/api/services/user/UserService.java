@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi;
 import com.board.api.common.base.ResponseApi.ResponseList;
-import com.board.api.common.condition.Case;
+import com.board.api.common.utils.RequestUtil;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.request.BoardFilter;
 import com.board.api.dtos.request.Login;
@@ -28,6 +28,7 @@ import com.board.api.dtos.response.Board;
 import com.board.api.dtos.response.Board.BoardComment;
 import com.board.api.dtos.response.PersonalUser;
 import com.board.api.dtos.response.User;
+import com.board.api.services.common.RequestGuard;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,9 @@ public class UserService {
 
   private final UserReader userReader;
   private final UserWriter userWriter;
+  private final RequestGuard requestGuard;
+
+  private static final String LOGIN_FAIL_MESSAGE = "아이디 또는 비밀번호가 일치하지 않습니다.";
 
   @Async
   public CompletableFuture<ResponseApi<Boolean>> authCheck(HttpServletRequest request,
@@ -60,15 +64,24 @@ public class UserService {
   @Async
   public CompletableFuture<ResponseApi<Boolean>> login(String guestId, Login login,
       HttpServletRequest request, HttpServletResponse response) {
+    final String ip = RequestUtil.getClientIp(request);
+
+    // 계정·IP별 연속 실패 횟수를 넘으면 비밀번호 확인 전에 차단합니다.
+    requestGuard.checkLoginAllowed(login.getUserId(), ip);
+
     final User user = userReader.getLoginUserInfo(login.getUserId());
 
-    Case.when(() -> user == null)//
-        .thenThrow(() -> new BusinessException("존재하지 않는 사용자입니다."))//
-        .when(() -> !passwordEncoder.matches(login.getPassword(), user.getPassword()))//
-        .thenThrow(() -> new BusinessException("비밀번호가 일치하지 않습니다."))//
-        .when(() -> !user.isActive())//
-        .thenThrow(() -> new BusinessException("가입 심사중에 있습니다."))//
-        .execute();
+    // 계정 존재 여부가 드러나지 않도록 아이디 없음·비밀번호 불일치는 같은 메시지로 응답합니다.
+    if (user == null || !passwordEncoder.matches(login.getPassword(), user.getPassword())) {
+      requestGuard.recordLoginFailure(login.getUserId(), ip);
+      throw new BusinessException(LOGIN_FAIL_MESSAGE);
+    }
+
+    if (!user.isActive()) {
+      throw new BusinessException("가입 심사중에 있습니다.");
+    }
+
+    requestGuard.clearLoginFailure(login.getUserId());
 
     userReader.makeToken(login.getUserId(), response);
 
@@ -146,7 +159,7 @@ public class UserService {
   public CompletableFuture<ResponseApi<PersonalUser>> getPersonalUserInfo(
       HttpServletRequest request) {
     final String userId = userReader.getUserId(request);
-    final PersonalUser loginUser = userReader.getLoginUserInfo(userId);
+    final PersonalUser loginUser = userReader.getPersonalUserInfo(userId);
 
     return ResponseApi.completedOk(loginUser);
   }
@@ -173,7 +186,10 @@ public class UserService {
 
   @Async
   @Transactional
-  public CompletableFuture<ResponseApi<Boolean>> signup(Signup join) {
+  public CompletableFuture<ResponseApi<Boolean>> signup(Signup join, HttpServletRequest request) {
+    // IP별 가입 요청 횟수 제한 (Argon2 해싱 남용 방지)
+    requestGuard.checkSignupAllowed(RequestUtil.getClientIp(request));
+
     return ResponseApi.completedOk(HttpStatus.CREATED, "회원가입이 완료되었습니다.", userWriter.signup(join));
   }
 

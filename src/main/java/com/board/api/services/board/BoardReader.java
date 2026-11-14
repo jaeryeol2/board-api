@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.board.api.common.base.BusinessException;
 import com.board.api.common.base.ResponseApi.ResponseList;
 import com.board.api.common.condition.CaseGet;
+import com.board.api.common.utils.HtmlSanitizer;
 import com.board.api.constants.BoardType;
 import com.board.api.dtos.request.BoardFilter;
 import com.board.api.dtos.response.Board;
@@ -59,7 +61,8 @@ public class BoardReader {
     return homes;
   }
 
-  @Cacheable(cacheNames = "getBoardList", key = "#type.code + '_' + #filter.page")
+  @Cacheable(cacheNames = "getBoardList",
+      key = "#type.code + '_' + #filter.page + '_' + #filter.rowsPerPage")
   public ResponseList<Board> getBoardList(final BoardType type, final BoardFilter filter) {
     final String boardTypeCode = type.getCode();
     filter.setBoardTypeCode(boardTypeCode);
@@ -74,7 +77,8 @@ public class BoardReader {
         .get());
   }
 
-  @Cacheable(cacheNames = "getBoardList", key = "'board-popular' + '_' + #filter.page")
+  @Cacheable(cacheNames = "getBoardList",
+      key = "'board-popular' + '_' + #filter.page + '_' + #filter.rowsPerPage")
   public ResponseList<Board> getBoardPopularList(final BoardFilter filter) {
     final long count = readBoardRepository.findBoardPopularCount();
 
@@ -91,8 +95,11 @@ public class BoardReader {
   @Cacheable(cacheNames = "getBoardDetail", key = "'board-id-' + #id")
   public BoardDetail getBoardDetail(final Long id) {
     BoardDetail detail = Optional.ofNullable(readBoardRepository.findBoardById(id))
-        .orElseThrow(() -> new BusinessException("존재하지 않는 게시물입니다."));
+        .orElseThrow(
+            () -> new BusinessException("존재하지 않는 게시물입니다.", HttpStatus.NOT_FOUND));
 
+    // 정제 이전에 저장된 본문도 안전하게 내려가도록 조회 시점에도 정제합니다. (캐시에는 정제된 본문이 저장됨)
+    detail.setContent(HtmlSanitizer.sanitize(detail.getContent()));
     detail.setCommentList(readBoardRepository.findBoardCommentByBoardId(id));
     detail.setFileList(readBoardRepository.findBoardFileByBoardId(id));
 
@@ -101,5 +108,18 @@ public class BoardReader {
 
   public List<BoardComment> getCommentList(long boardId) {
     return readBoardRepository.findBoardCommentByBoardId(boardId);
+  }
+
+  /** 권한 확인용 실제 작성자 ID (캐시 미사용, 없는 글이면 null) */
+  public String getBoardWriterId(final long id) {
+    return readBoardRepository.findBoardWriterId(id);
+  }
+
+  public boolean existsBoard(final long id) {
+    return readBoardRepository.existsBoardById(id);
+  }
+
+  public boolean existsCommentInBoard(final long commentId, final long boardId) {
+    return readBoardRepository.existsCommentInBoard(commentId, boardId);
   }
 }

@@ -24,7 +24,8 @@ public class CommonReader {
     return readMenuRepository.findMenuList();
   }
 
-  @Cacheable(cacheNames = "getMenuInfo", key = "#boardTypeCode")
+  // null 캐싱 비활성화 설정이라 결과가 없으면 저장하지 않습니다. (저장 시 예외 발생)
+  @Cacheable(cacheNames = "getMenuInfo", key = "#boardTypeCode", unless = "#result == null")
   public Menu getMenuInfo(String boardTypeCode) {
     return readMenuRepository.findMenuByCode(boardTypeCode);
   }

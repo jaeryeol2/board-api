@@ -43,18 +43,39 @@ public class UserReader {
   private final ReadBoardRepository readBoardRepository;
   private final CommonReader commonReader;
 
+  // 마이페이지 첫 화면에 담는 최근 작성 글·댓글 수 (프론트 MyActivities의 페이지당 개수와 동일)
+  private static final int PERSONAL_RECENT_ROWS = 10;
+
   @Cacheable(cacheNames = "getUserInfo", key = "#userId", unless = "#result == null")
   public User getUserInfo(String userId) {
     return readUserRepository.findUserById(userId);
   }
 
+  /**
+   * 로그인·비밀번호 확인용 사용자 정보 (작성 글·댓글은 조회하지 않음)
+   */
   public PersonalUser getLoginUserInfo(String userId) {
-    final PersonalUser loginUser = readUserRepository.findLoginInfoById(userId);
-    if (loginUser != null) {
-      loginUser.setWritedContentList(readBoardRepository.findBoardListByWriterId(userId));
-      loginUser.setWritedCommentList(readBoardRepository.findBoardCommentListByWriterId(userId));
+    return readUserRepository.findLoginInfoById(userId);
+  }
+
+  /**
+   * 마이페이지용 사용자 정보. 작성 글·댓글은 최근 PERSONAL_RECENT_ROWS건과 전체 개수만 담습니다.
+   * (나머지 페이지는 /user/posts, /user/comments로 조회)
+   */
+  public PersonalUser getPersonalUserInfo(String userId) {
+    final PersonalUser personalUser = readUserRepository.findLoginInfoById(userId);
+    if (personalUser != null) {
+      final BoardFilter firstPage =
+          BoardFilter.builder().page(1).rowsPerPage(PERSONAL_RECENT_ROWS).build();
+      final ResponseList<Board> posts = getMyPosts(userId, firstPage);
+      final ResponseList<BoardComment> comments = getMyComments(userId, firstPage);
+
+      personalUser.setWritedContentList(posts.getList());
+      personalUser.setWritedContentCount(posts.getTotal());
+      personalUser.setWritedCommentList(comments.getList());
+      personalUser.setWritedCommentCount(comments.getTotal());
     }
-    return loginUser;
+    return personalUser;
   }
 
   public ResponseList<Board> getMyPosts(final String userId, final BoardFilter filter) {
@@ -124,6 +145,14 @@ public class UserReader {
         .getValue();
 
     return !tokenUtil.isTokenExpired(token) ? token : null;
+  }
+
+  /** 값과 관계없이 refresh 토큰 쿠키가 요청에 포함되어 있는지 여부 */
+  public boolean hasRefreshTokenCookie(HttpServletRequest request) {
+    final Cookie[] cookies =
+        Objects.requireNonNullElseGet(request.getCookies(), () -> new Cookie[0]);
+    return Arrays.stream(cookies).filter(Objects::nonNull)
+        .anyMatch(cookie -> REFRESH_TOKEN.getValue().equalsIgnoreCase(cookie.getName()));
   }
 
   public ResponseApi<Boolean> setGuest(final String newGuestId, HttpServletResponse response) {

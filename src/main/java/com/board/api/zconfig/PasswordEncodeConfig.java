@@ -2,6 +2,8 @@ package com.board.api.zconfig;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
+import java.util.function.Supplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -37,6 +39,45 @@ public class PasswordEncodeConfig {
     // 생성된 인코더의 기본 인코딩 알고리즘을 argon2로 명시적으로 설정
     delegatingPasswordEncoder.setDefaultPasswordEncoderForMatches(argon2Encoder);
 
-    return delegatingPasswordEncoder;
+    return new ConcurrencyLimitedPasswordEncoder(delegatingPasswordEncoder);
+  }
+
+  /**
+   * Argon2는 해싱 1회당 약 64MB를 사용하므로, 가상 스레드에서 무제한 동시 실행되면 메모리가 고갈됩니다.
+   * 동시 해싱 수를 제한하고 초과 요청은 대기시킵니다.
+   */
+  private static final class ConcurrencyLimitedPasswordEncoder implements PasswordEncoder {
+    private static final int MAX_CONCURRENT_HASHING = 4;
+
+    private final PasswordEncoder delegate;
+    private final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_HASHING, true);
+
+    private ConcurrencyLimitedPasswordEncoder(PasswordEncoder delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public String encode(CharSequence rawPassword) {
+      return limit(() -> delegate.encode(rawPassword));
+    }
+
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+      return limit(() -> delegate.matches(rawPassword, encodedPassword));
+    }
+
+    @Override
+    public boolean upgradeEncoding(String encodedPassword) {
+      return delegate.upgradeEncoding(encodedPassword);
+    }
+
+    private <T> T limit(Supplier<T> task) {
+      semaphore.acquireUninterruptibly();
+      try {
+        return task.get();
+      } finally {
+        semaphore.release();
+      }
+    }
   }
 }

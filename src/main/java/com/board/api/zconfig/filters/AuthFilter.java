@@ -1,7 +1,5 @@
 package com.board.api.zconfig.filters;
 
-import static com.board.api.constants.GlobalConstant.X_FORWARDED_FOR;
-import static com.board.api.constants.GlobalConstant.X_GUEST_ID;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -13,6 +11,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import com.board.api.common.utils.RequestUtil;
 import com.board.api.common.utils.TokenUtil;
 import com.board.api.dtos.response.User;
 import com.board.api.services.user.UserReader;
@@ -38,7 +37,7 @@ public class AuthFilter extends OncePerRequestFilter {
       FilterChain filterChain) throws ServletException, IOException {
     final String path = request.getRequestURI();
     final String method = request.getMethod();
-    final String ip = extractClientIp(request);
+    final String ip = RequestUtil.getClientIp(request);
 
     try {
       authenticateAndTrack(request, response, path);
@@ -70,7 +69,7 @@ public class AuthFilter extends OncePerRequestFilter {
       return;
     }
 
-    handleGuest(request, response, accessToken, refreshToken);
+    handleGuest(request, response, refreshToken);
   }
 
   private boolean tryAuthenticateAccessToken(HttpServletRequest request, String accessToken) {
@@ -107,24 +106,27 @@ public class AuthFilter extends OncePerRequestFilter {
   }
 
   private void handleGuest(HttpServletRequest request, HttpServletResponse response,
-      String accessToken, String refreshToken) {
-    final String guestId = request.getHeader(X_GUEST_ID.getValue());
-    if (StringUtils.hasText(guestId)) {
+      String refreshToken) {
+    // 형식이 올바른(서버가 발급한 UUID) 게스트 ID만 접속자로 기록합니다.
+    final String guestId = RequestUtil.getGuestId(request);
+    if (guestId != null) {
       userReader.recordUserActivity(guestId);
       return;
     }
 
     final String newGuestId = UUID.randomUUID().toString();
     userReader.setGuest(newGuestId, response);
-    expireInvalidTokens(accessToken, refreshToken, response);
+    expireInvalidTokens(request, refreshToken, response);
   }
 
-  private void expireInvalidTokens(String accessToken, String refreshToken,
+  /**
+   * refresh 쿠키가 있지만 무효(만료·위조)일 때만 토큰 쿠키를 삭제합니다.
+   * access 토큰만 만료되고 refresh가 유효한 경우에는 재발급이 가능하도록 쿠키를 유지합니다.
+   */
+  private void expireInvalidTokens(HttpServletRequest request, String refreshToken,
       HttpServletResponse response) {
-    final String token = StringUtils.hasText(accessToken) ? accessToken : refreshToken;
-    if (StringUtils.hasText(token)) {
-      final String userId = tokenUtil.getTokenInfo(token).getSubject();
-      userReader.expireToken(userId, response);
+    if (refreshToken == null && userReader.hasRefreshTokenCookie(request)) {
+      userReader.expireToken(null, response);
     }
   }
 
@@ -144,16 +146,6 @@ public class AuthFilter extends OncePerRequestFilter {
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
     return true;
-  }
-
-  private String extractClientIp(HttpServletRequest request) {
-    String ip = request.getHeader(X_FORWARDED_FOR.getValue());
-
-    if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-      return ip.split(",")[0].trim();
-    }
-
-    return request.getRemoteAddr();
   }
 
 }

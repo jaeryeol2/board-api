@@ -3,8 +3,14 @@ package com.board.api.common.utils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.Operation;
+import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.QBean;
 import com.querydsl.core.types.dsl.EntityPathBase;
@@ -36,12 +42,19 @@ public class QueryDslUtil {
       final int initialCapacity = (isAliases ? aliases.length : 0) + qFields.length;
       final List<Expression<?>> expressions = new ArrayList<>(initialCapacity);
 
+      final Set<String> aliasNames = new HashSet<>();
+
       if (isAliases) {
         expressions.addAll(Arrays.asList(aliases));
+        Arrays.stream(aliases).map(QueryDslUtil::getExpressionName).filter(Objects::nonNull)
+            .forEach(aliasNames::add);
       }
 
       for (Field qField : qFields) {
-        addExpressionIfFieldExists(clazz, qField, entity, expressions);
+        // alias로 직접 지정한 필드는 엔티티 컬럼으로 덮어쓰지 않습니다. (QBean은 같은 이름이면 나중 값이 우선)
+        if (!aliasNames.contains(qField.getName())) {
+          addExpressionIfFieldExists(clazz, qField, entity, expressions);
+        }
       }
 
       return Projections.fields(clazz, expressions.toArray(new Expression[0]));
@@ -50,6 +63,20 @@ public class QueryDslUtil {
     }
 
     return Projections.fields(clazz);
+  }
+
+  /**
+   * alias 표현식(expr.as("name"))이나 Path의 바인딩 이름을 반환합니다.
+   */
+  private static String getExpressionName(Expression<?> expression) {
+    if (expression instanceof Operation<?> operation && operation.getOperator() == Ops.ALIAS
+        && operation.getArg(1) instanceof Path<?> alias) {
+      return alias.getMetadata().getName();
+    }
+    if (expression instanceof Path<?> path) {
+      return path.getMetadata().getName();
+    }
+    return null;
   }
 
   /**
