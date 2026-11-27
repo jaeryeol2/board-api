@@ -50,6 +50,7 @@ decorator:
 
 jasypt:
   encryptor:
+    bean: encryptor
     password: ${JASYPT_PASSWORD}
 
 jwt:

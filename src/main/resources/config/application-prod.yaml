@@ -4,7 +4,7 @@ datasource:
       driver-class-name: org.postgresql.Driver
       jdbc-url: jdbc:postgresql://localhost:5432/postgres?currentSchema=board_store
       username: postgres
-      password: root
+      password: ENC(n1Niafpbw8zwigtbs6X1PfFLPzpOcTzkWjsHFs6lSZNe3LOiLF6uI6kvXR8ComA9)
       connection-test-query: SELECT 1
       pool-name: read-pool
       maximum-pool-size: 5
@@ -15,7 +15,7 @@ datasource:
       driver-class-name: org.postgresql.Driver
       jdbc-url: jdbc:postgresql://localhost:5432/postgres?currentSchema=board_store
       username: postgres
-      password: root
+      password: ENC(n1Niafpbw8zwigtbs6X1PfFLPzpOcTzkWjsHFs6lSZNe3LOiLF6uI6kvXR8ComA9)
       connection-test-query: SELECT 1
       pool-name: write-pool
       maximum-pool-size: 5
