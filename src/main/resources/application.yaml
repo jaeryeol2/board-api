@@ -45,7 +45,8 @@ decorator:
       enable-logging: true
       multiline: true
       logging: slf4j
-    exclude-beans: writeHikariDataSource, readHikariDataSource, routingDataSource
+    # p6spy는 두 Hikari 풀만 감싼다. Lazy 프록시(dataSource) 바깥을 감싸면 트랜잭션 시작 시 커넥션을 미리 가져가 readOnly 반영 전에 write로 라우팅된다.
+    exclude-beans: routingDataSource, dataSource
 
 jasypt:
   encryptor:
