@@ -191,7 +191,10 @@ COMMENT ON COLUMN board_store.app_notice.created_at IS '공지사항 등록 일�
 --------------------------------------------------------------------------------
 -- 8. 성능 최적화 인덱스 생성
 --------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_board_type_created ON board_store.app_board(board_type_code, created_at DESC);
+-- 게시글 목록 페이징(id만 먼저 조회) 커버링 인덱스. PostgreSQL 보조 인덱스는 PK를 포함하지 않으므로 id를 키 컬럼으로 넣어
+-- 테이블 접근(heap) 없이 Index Only Scan으로 정렬(created_at DESC, id DESC)까지 처리합니다.
+DROP INDEX IF EXISTS board_store.idx_board_type_created;
+CREATE INDEX IF NOT EXISTS idx_board_type_created_id ON board_store.app_board(board_type_code, created_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_board_group ON board_store.app_board(group_id, group_seq);
 CREATE INDEX IF NOT EXISTS idx_comment_board ON board_store.app_board_comment(board_id);
 CREATE INDEX IF NOT EXISTS idx_file_board ON board_store.app_board_file(board_id);
